@@ -18,23 +18,24 @@
 - [x] Define `Chat` schema (Conversations & Messages)
 
 ## 3. Backend Logic (Server Actions / API)
-- [ ] **Auth**: Login / Signup / Logout
-- [ ] **Recording**: Upload Audio to Storage
-- [ ] **Recording**: Save Metadata to DB
-- [ ] **Audio Processing**: Split large files (>25MB)
-- [ ] **Transcription**: OpenAI Whisper API integration
-- [ ] **AI Processing**: Generate Summaries, Decisions, Tasks from Transcript
-- [ ] **Project**: Create / Update / Delete / List
+- [x] **Auth**: Login / Signup / Logout
+- [x] **Recording**: Upload Audio to Storage
+- [x] **Recording**: Save Metadata to DB
+- [x] **Audio Processing**: Split large files (>25MB)
+- [x] **Transcription**: OpenAI Whisper API integration
+- [x] **AI Processing**: Generate Summaries, Decisions, Tasks from Transcript
+- [x] **Project**: Create / Update / Delete / List
 - [ ] **Task**: Create / Update / Delete / List / Approve
 - [ ] **Chat**: RAG (Search Notes) + Chat Response Generation
 
-## 4. Frontend UI Components
-- [ ] **Base**: Layouts (Root, Dashboard, Auth)
-- [ ] **Base**: Design System (Colors, Typography, Icons)
-- [ ] **Auth**: Login Page
-- [ ] **Dashboard**: Project List / Grid View
-- [ ] **Recording**: Recording Interface (Microphone access, Visualizer)
-- [ ] **Note View**: Markdown Display of Meeting Minutes
+## 4. Frontend Implementation
+- [x] **Auth UI**: Login / Signup Pages
+- [x] **Dashboard UI**: Sidebar & Layout
+- [x] **Project UI**: List & Create Modal
+- [x] **Project Detail**: Recording List & Upload Button
+- [x] **Recording Detail**: Audio Player & Transcript View
+- [ ] **Task UI**: Task Board / List & Task Detail
+- [ ] **Chat UI**: Chat Interface
 - [ ] **Calendar**: Monthly View with Task indicators
 - [ ] **Task List**: Daily/Weekly Task Management
 - [ ] **Chat**: AI Assistant Interface

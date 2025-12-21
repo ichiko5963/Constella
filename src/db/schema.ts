@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, int } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 // --- Auth Tables (BetterAuth) ---
 

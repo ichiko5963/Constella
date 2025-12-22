@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 // --- Auth Tables (BetterAuth) ---
 
@@ -98,6 +98,8 @@ export const transcriptSegments = sqliteTable("transcript_segment", {
     start: integer("start").notNull(), // 開始時間（ミリ秒）
     end: integer("end").notNull(), // 終了時間（ミリ秒）
     speaker: text("speaker"), // 話者ラベル（将来実装）
+    speakerId: integer("speakerId"), // 話者ID（0, 1, 2...）
+    speakerName: text("speakerName"), // 話者名（推定またはユーザー指定）
     wordIndex: integer("wordIndex").notNull(), // 単語の順序
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
 });
@@ -525,6 +527,48 @@ export const integrations = sqliteTable("integration", {
 export const integrationsRelations = relations(integrations, ({ one }) => ({
     user: one(users, {
         fields: [integrations.userId],
+        references: [users.id],
+    }),
+}));
+
+// --- Recording Segments (Speaker Diarization) ---
+
+export const recordingSegments = sqliteTable("recording_segment", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    recordingId: integer("recordingId").notNull().references(() => recordings.id, { onDelete: 'cascade' }),
+    speakerId: integer("speakerId").notNull(), // 0, 1, 2...
+    speakerLabel: text("speakerLabel"), // "Speaker 1", "Speaker 2" or user-assigned name
+    startTime: integer("startTime").notNull(), // milliseconds
+    endTime: integer("endTime").notNull(), // milliseconds
+    confidence: real("confidence"), // 話者識別の信頼度
+    embedding: text("embedding"), // JSON array of voice embedding vector
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+});
+
+export const recordingSegmentsRelations = relations(recordingSegments, ({ one }) => ({
+    recording: one(recordings, {
+        fields: [recordingSegments.recordingId],
+        references: [recordings.id],
+    }),
+}));
+
+// --- Audit Logs (Security) ---
+
+export const auditLogs = sqliteTable("audit_log", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").references(() => users.id),
+    action: text("action").notNull(), // 'create', 'update', 'delete', 'view', 'export', etc.
+    resourceType: text("resourceType").notNull(), // 'recording', 'note', 'task', etc.
+    resourceId: integer("resourceId"),
+    ipAddress: text("ipAddress"),
+    userAgent: text("userAgent"),
+    metadata: text("metadata"), // JSON object with additional context
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+});
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+    user: one(users, {
+        fields: [auditLogs.userId],
         references: [users.id],
     }),
 }));

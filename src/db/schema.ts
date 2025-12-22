@@ -456,3 +456,28 @@ export const commentsRelations = relations(comments, ({ one }) => ({
         references: [meetingNotes.id],
     }),
 }));
+
+// --- Weekly Reports ---
+
+export const weeklyReports = sqliteTable("weekly_report", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    weekStartDate: integer("weekStartDate", { mode: "timestamp" }).notNull(), // 週の開始日（月曜日）
+    weekEndDate: integer("weekEndDate", { mode: "timestamp" }).notNull(), // 週の終了日（日曜日）
+    totalMeetings: integer("totalMeetings").default(0),
+    totalDuration: integer("totalDuration").default(0), // 合計時間（秒）
+    totalTasks: integer("totalTasks").default(0),
+    completedTasks: integer("completedTasks").default(0),
+    summary: text("summary"), // AI生成の週間サマリー
+    keyMetrics: text("keyMetrics"), // JSON object with metrics
+    topProjects: text("topProjects"), // JSON array of project IDs
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const weeklyReportsRelations = relations(weeklyReports, ({ one }) => ({
+    user: one(users, {
+        fields: [weeklyReports.userId],
+        references: [users.id],
+    }),
+}));

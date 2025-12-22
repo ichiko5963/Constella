@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { recordings, projects } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { RecorderTriggerCard } from '@/components/recording/recorder-trigger-card';
+import { WeeklyReportCard } from '@/components/dashboard/weekly-report-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mic, Clock, Calendar, ArrowRight, PlayCircle, FileText } from 'lucide-react';
 import Link from 'next/link';
@@ -88,6 +89,9 @@ export default async function DashboardPage() {
                     </Link>
                 </div>
             </div>
+
+            {/* Weekly Report */}
+            <WeeklyReportCard />
 
             {/* Recent Activity Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

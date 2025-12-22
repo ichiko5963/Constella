@@ -504,3 +504,27 @@ export const summaryTemplatesRelations = relations(summaryTemplates, ({ one }) =
         references: [users.id],
     }),
 }));
+
+// --- Integrations ---
+
+export const integrations = sqliteTable("integration", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    provider: text("provider").notNull(), // 'slack', 'notion', 'hubspot', 'salesforce'
+    accessToken: text("accessToken"),
+    refreshToken: text("refreshToken"),
+    expiresAt: integer("expiresAt", { mode: "timestamp" }),
+    webhookUrl: text("webhookUrl"), // 送信先Webhook URL
+    enabled: integer("enabled", { mode: "boolean" }).default(true),
+    settings: text("settings"), // JSON object with provider-specific settings
+    lastSyncAt: integer("lastSyncAt", { mode: "timestamp" }),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const integrationsRelations = relations(integrations, ({ one }) => ({
+    user: one(users, {
+        fields: [integrations.userId],
+        references: [users.id],
+    }),
+}));

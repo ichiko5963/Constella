@@ -172,6 +172,12 @@ export async function processRecording(recordingId: number) {
             await indexMeetingNote(note.id, transcription.text).catch(e => console.error('Indexing failed:', e));
         }
 
+        // 5.6 Notify integrations
+        if (note) {
+            const { notifyIntegrations } = await import('./integration');
+            notifyIntegrations(note.id).catch(e => console.error('Integration notification failed:', e));
+        }
+
         // 6. Create Task Candidates
         const candidates = result.actionItems.map((item: any) => ({
             userId: session!.user!.id!,

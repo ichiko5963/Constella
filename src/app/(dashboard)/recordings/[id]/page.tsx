@@ -8,6 +8,7 @@ import { ArrowLeft, CheckSquare } from 'lucide-react';
 import { NoteViewerWithEditor } from '@/components/note/note-viewer-with-editor';
 import { TaskReviewer } from '@/components/task/task-reviewer';
 import { RecordingDetailClient } from '@/components/recording/recording-detail-client';
+import { MindMapViewer } from '@/components/mindmap/mindmap-viewer';
 
 export default async function RecordingDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -110,6 +111,13 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
                             Review Suggested Tasks
                         </h3>
                         <TaskReviewer candidates={candidates} recordingId={recordingId} />
+                    </div>
+                )}
+
+                {/* Mind Map Section */}
+                {note?.formattedMinutes && (
+                    <div className="lg:col-span-12 mt-8">
+                        <MindMapViewer markdown={note.formattedMinutes} noteId={note.id} />
                     </div>
                 )}
             </div>

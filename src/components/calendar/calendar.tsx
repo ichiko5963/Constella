@@ -24,6 +24,8 @@ type Task = {
     title: string;
     dueDate: Date;
     completed: boolean;
+    priority?: 'low' | 'medium' | 'high';
+    projectId?: number;
 };
 
 export function Calendar({ tasks = [] }: { tasks?: Task[] }) {

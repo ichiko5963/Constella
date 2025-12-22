@@ -1,6 +1,7 @@
 import { Calendar } from '@/components/calendar/calendar';
 import { CalendarEventsList } from '@/components/calendar/calendar-events-list';
 import { ManualJoinButton } from '@/components/meeting/manual-join-button';
+import { DailyTaskManager } from '@/components/task/daily-task-manager';
 import { auth } from '@/auth';
 import { db } from '@/db';
 import { tasks } from '@/db/schema';
@@ -24,6 +25,8 @@ export default async function CalendarPage() {
             title: t.title,
             dueDate: t.dueDate!, // Drizzle returns Date object
             completed: t.status === 'completed' || t.status === 'approved',
+            priority: t.priority as 'low' | 'medium' | 'high' | undefined,
+            projectId: t.projectId || undefined,
         }));
 
     const candidates = await getTaskCandidates();
@@ -43,8 +46,9 @@ export default async function CalendarPage() {
                 <div className="lg:col-span-2">
                     <Calendar tasks={formattedTasks} />
                 </div>
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 space-y-6">
                     <CalendarEventsList />
+                    <DailyTaskManager />
                 </div>
             </div>
 

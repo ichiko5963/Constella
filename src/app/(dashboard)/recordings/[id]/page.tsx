@@ -88,6 +88,7 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
                             noteId={note.id}
                             title="Meeting Minutes" 
                             content={note.formattedMinutes}
+                            shareToken={note.shareToken}
                         />
                     ) : (
                         <Card className="glass border-white/10 h-full flex flex-col items-center justify-center text-center p-8 bg-black/20 border-dashed">

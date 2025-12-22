@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { NoteViewer } from './note-viewer';
 import { NoteEditor } from './note-editor';
+import { ShareButton } from './share-button';
 import { Button } from '@/components/ui/button';
 import { Edit2 } from 'lucide-react';
 
@@ -10,9 +11,10 @@ interface NoteViewerWithEditorProps {
     noteId: number;
     title: string;
     content: string;
+    shareToken?: string | null;
 }
 
-export function NoteViewerWithEditor({ noteId, title, content }: NoteViewerWithEditorProps) {
+export function NoteViewerWithEditor({ noteId, title, content, shareToken }: NoteViewerWithEditorProps) {
     const [isEditing, setIsEditing] = useState(false);
 
     if (isEditing) {
@@ -30,7 +32,8 @@ export function NoteViewerWithEditor({ noteId, title, content }: NoteViewerWithE
 
     return (
         <div className="h-full flex flex-col relative group">
-            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                <ShareButton noteId={noteId} shareToken={shareToken || null} />
                 <Button
                     variant="outline"
                     size="sm"

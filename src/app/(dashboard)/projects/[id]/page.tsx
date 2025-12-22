@@ -7,6 +7,7 @@ import { UploadRecordingButton } from './components/upload-recording-button';
 import { DeleteProjectButton } from './components/delete-project-button';
 import { ProjectSettingsDialog } from './components/project-settings-dialog';
 import { RecorderTriggerCard } from '@/components/recording/recorder-trigger-card';
+import { FolderTree } from '@/components/file/folder-tree';
 import Link from 'next/link';
 import { PlayCircle, FileText } from 'lucide-react';
 
@@ -40,12 +41,21 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 </div>
             </div>
 
-            {/* Recorder Section */}
-            <div className="w-full">
-                <RecorderTriggerCard projectId={projectId} />
-            </div>
+            {/* Main Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                {/* Left: Folder Tree */}
+                <div className="lg:col-span-1">
+                    <FolderTree projectId={projectId} />
+                </div>
 
-            <div className="space-y-4">
+                {/* Right: Recordings */}
+                <div className="lg:col-span-3 space-y-6">
+                    {/* Recorder Section */}
+                    <div className="w-full">
+                        <RecorderTriggerCard projectId={projectId} />
+                    </div>
+
+                    <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                     <PlayCircle className="text-primary w-5 h-5" />
                     Recordings
@@ -91,6 +101,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                             Recordings will appear here after processing.
                         </div>
                     )}
+                </div>
                 </div>
             </div>
         </div>

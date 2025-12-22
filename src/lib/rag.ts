@@ -25,27 +25,25 @@ export async function searchContext(query: string, userId?: string) {
             
             if (noteIds.length === 0) return [];
             
+            // 最適化: vector_top_kを使用（近似最近傍探索）
             similarChunks = await db.run(sql`
                 SELECT 
                     resourceId, 
                     content, 
-                    vector_distance_cos(embedding, vector(${vectorString})) as distance
+                    vector_top_k(embedding, vector(${vectorString}), 5) as distance
                 FROM embedding
                 WHERE resourceType = 'meeting_note'
                 AND resourceId IN (${sql.join(noteIds.map(id => sql`${id}`), sql`, `)})
-                ORDER BY distance ASC
-                LIMIT 5
             `);
         } else {
+            // 最適化: vector_top_kを使用（近似最近傍探索）
             similarChunks = await db.run(sql`
                 SELECT 
                     resourceId, 
                     content, 
-                    vector_distance_cos(embedding, vector(${vectorString})) as distance
+                    vector_top_k(embedding, vector(${vectorString}), 5) as distance
                 FROM embedding
                 WHERE resourceType = 'meeting_note'
-                ORDER BY distance ASC
-                LIMIT 5
             `);
         }
 

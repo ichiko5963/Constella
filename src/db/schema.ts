@@ -358,6 +358,11 @@ export const calendarEvents = sqliteTable("calendar_event", {
     meetingLink: text("meetingLink"), // Zoom, Google Meet, Teams link
     location: text("location"),
     attendees: text("attendees"), // JSON array
+    autoJoinEnabled: integer("autoJoinEnabled", { mode: "boolean" }).default(false), // 自動参加有効
+    autoRecordEnabled: integer("autoRecordEnabled", { mode: "boolean" }).default(false), // 自動録音有効
+    recordingId: integer("recordingId").references(() => recordings.id, { onDelete: 'set null' }), // 関連録音
+    joinStatus: text("joinStatus").default('pending'), // pending, joining, joined, failed, completed
+    joinedAt: integer("joinedAt", { mode: "timestamp" }), // 参加時刻
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
 });

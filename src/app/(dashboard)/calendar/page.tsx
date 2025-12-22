@@ -1,4 +1,5 @@
 import { Calendar } from '@/components/calendar/calendar';
+import { CalendarEventsList } from '@/components/calendar/calendar-events-list';
 import { auth } from '@/auth';
 import { db } from '@/db';
 import { tasks } from '@/db/schema';
@@ -36,8 +37,16 @@ export default async function CalendarPage() {
                 </div>
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="lg:col-span-2">
+                    <Calendar tasks={formattedTasks} />
+                </div>
+                <div className="lg:col-span-1">
+                    <CalendarEventsList />
+                </div>
+            </div>
+
             <TaskApprovalList candidates={candidates} />
-            <Calendar tasks={formattedTasks} />
         </div>
     );
 }

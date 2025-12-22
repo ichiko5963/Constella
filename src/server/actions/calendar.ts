@@ -115,3 +115,44 @@ export async function disconnectCalendar(integrationId: number) {
         return { success: false, error: 'Failed to disconnect calendar' };
     }
 }
+
+export async function getCalendarEvents() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, error: 'Unauthorized' };
+    }
+
+    try {
+        const events = await db.query.calendarEvents.findMany({
+            where: eq(calendarEvents.userId, session.user.id),
+            orderBy: (events, { asc }) => [asc(events.startTime)],
+        });
+
+        return {
+            success: true,
+            events: events.map(event => ({
+                id: event.id,
+                userId: event.userId,
+                integrationId: event.integrationId,
+                externalId: event.externalId,
+                title: event.title,
+                description: event.description,
+                startTime: event.startTime,
+                endTime: event.endTime,
+                meetingLink: event.meetingLink,
+                location: event.location,
+                attendees: event.attendees,
+                autoJoinEnabled: event.autoJoinEnabled,
+                autoRecordEnabled: event.autoRecordEnabled,
+                recordingId: event.recordingId,
+                joinStatus: event.joinStatus,
+                joinedAt: event.joinedAt,
+                createdAt: event.createdAt,
+                updatedAt: event.updatedAt,
+            })),
+        };
+    } catch (error) {
+        console.error('Failed to get calendar events:', error);
+        return { success: false, error: 'Failed to retrieve events' };
+    }
+}

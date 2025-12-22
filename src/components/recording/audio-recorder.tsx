@@ -11,6 +11,7 @@ import { AuroraVisualizer } from './aurora-visualizer';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRecording } from '@/lib/recording-context';
+import { normalizeAudioFormat } from '@/lib/audio-converter';
 
 export function AudioRecorder({ projectId }: { projectId?: number }) {
     const { isImmersiveOpen, closeImmersive, activeProjectId } = useRecording();
@@ -20,6 +21,8 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
     const [elapsedTime, setElapsedTime] = useState(0);
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isConverting, setIsConverting] = useState(false);
+    const [conversionProgress, setConversionProgress] = useState(0);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
@@ -61,14 +64,36 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                 if (e.data.size > 0) chunksRef.current.push(e.data);
             };
 
-            mediaRecorderRef.current.onstop = () => {
-                const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-                setAudioBlob(blob);
-                // Stop audio context streams to save resources, but keep visualizer if we want post-viz?
-                // Usually better to stop mic stream.
+            mediaRecorderRef.current.onstop = async () => {
+                const originalBlob = new Blob(chunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
+                
+                // Stop audio context streams to save resources
                 if (stream) stream.getTracks().forEach(track => track.stop());
                 if (audioContextRef.current) audioContextRef.current.close();
                 setAnalyser(null);
+
+                // Safari問題対応: 音声フォーマットを正規化
+                try {
+                    setIsConverting(true);
+                    setConversionProgress(0);
+                    
+                    const normalizedBlob = await normalizeAudioFormat(
+                        originalBlob,
+                        'wav',
+                        (progress) => setConversionProgress(progress)
+                    );
+                    
+                    setAudioBlob(normalizedBlob);
+                    toast.success('音声フォーマットを正規化しました');
+                } catch (error) {
+                    console.error('Audio conversion failed:', error);
+                    // 変換に失敗した場合は元のBlobを使用
+                    setAudioBlob(originalBlob);
+                    toast.warning('音声フォーマットの変換に失敗しました。元の形式でアップロードします。');
+                } finally {
+                    setIsConverting(false);
+                    setConversionProgress(0);
+                }
             };
 
             mediaRecorderRef.current.start();
@@ -229,7 +254,23 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                             </div>
                         )}
 
-                        {audioBlob && (
+                        {isConverting && (
+                            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+                                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                                <div className="text-center space-y-2">
+                                    <p className="text-white/80 text-sm tracking-widest uppercase">音声フォーマットを変換中...</p>
+                                    <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-primary transition-all duration-300"
+                                            style={{ width: `${conversionProgress * 100}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-white/40 text-xs">{(conversionProgress * 100).toFixed(0)}%</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {audioBlob && !isConverting && (
                             <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-300">
                                 <div className="flex gap-6">
                                     <Button

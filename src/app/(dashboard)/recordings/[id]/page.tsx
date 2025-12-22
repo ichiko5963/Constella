@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { ArrowLeft, CheckSquare } from 'lucide-react';
-import { NoteViewer } from '@/components/note/note-viewer';
+import { NoteViewerWithEditor } from '@/components/note/note-viewer-with-editor';
 import { TaskReviewer } from '@/components/task/task-reviewer';
 import { RecordingDetailClient } from '@/components/recording/recording-detail-client';
 
@@ -83,7 +83,11 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
                 {/* Right Column: AI Note View (8 cols) */}
                 <div className="lg:col-span-8 h-full overflow-hidden">
                     {note?.formattedMinutes ? (
-                        <NoteViewer title="Meeting Minutes" content={note.formattedMinutes} />
+                        <NoteViewerWithEditor 
+                            noteId={note.id}
+                            title="Meeting Minutes" 
+                            content={note.formattedMinutes}
+                        />
                     ) : (
                         <Card className="glass border-white/10 h-full flex flex-col items-center justify-center text-center p-8 bg-black/20 border-dashed">
                             <CheckSquare className="w-16 h-16 text-gray-600 mb-4" />

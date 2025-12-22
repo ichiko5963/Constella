@@ -63,18 +63,109 @@ export async function syncCalendar(integrationId: number) {
             return { success: false, error: 'Integration not found' };
         }
 
-        // TODO: 実際のカレンダー同期ロジックを実装
-        // ここでは、lastSyncAtを更新するだけ
-        await db.update(calendarIntegrations)
-            .set({
-                lastSyncAt: new Date(),
-                updatedAt: new Date(),
-            })
-            .where(eq(calendarIntegrations.id, integrationId));
+        // Google Calendar APIからイベントを取得
+        if (integration.provider === 'google' && integration.accessToken) {
+            try {
+                // トークンの有効期限をチェック
+                let accessToken = integration.accessToken;
+                if (integration.expiresAt && new Date() >= integration.expiresAt) {
+                    // トークンをリフレッシュ
+                    if (integration.refreshToken) {
+                        const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({
+                                client_id: process.env.GOOGLE_CLIENT_ID!,
+                                client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+                                refresh_token: integration.refreshToken,
+                                grant_type: 'refresh_token',
+                            }),
+                        });
+                        const refreshData = await refreshResponse.json();
+                        if (refreshResponse.ok) {
+                            accessToken = refreshData.access_token;
+                            await db.update(calendarIntegrations)
+                                .set({
+                                    accessToken: refreshData.access_token,
+                                    expiresAt: refreshData.expires_in
+                                        ? new Date(Date.now() + refreshData.expires_in * 1000)
+                                        : null,
+                                })
+                                .where(eq(calendarIntegrations.id, integrationId));
+                        }
+                    }
+                }
 
-        revalidatePath('/settings');
-        revalidatePath('/calendar');
-        return { success: true, eventsCount: 0 };
+                // カレンダーイベントを取得
+                const now = new Date();
+                const oneMonthLater = new Date(now);
+                oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+
+                const eventsResponse = await fetch(
+                    `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
+                    `timeMin=${now.toISOString()}&timeMax=${oneMonthLater.toISOString()}&singleEvents=true&orderBy=startTime`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    }
+                );
+
+                if (eventsResponse.ok) {
+                    const eventsData = await eventsResponse.json();
+                    const events = eventsData.items || [];
+
+                    // 既存のイベントを削除（この統合のもの）
+                    await db.delete(calendarEvents)
+                        .where(eq(calendarEvents.integrationId, integrationId));
+
+                    // 新しいイベントを保存
+                    let savedCount = 0;
+                    for (const event of events) {
+                        if (event.start && event.end) {
+                            const meetingLink = event.hangoutLink || 
+                                              event.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video')?.uri ||
+                                              event.location?.match(/https?:\/\/[^\s]+/)?.[0] ||
+                                              null;
+
+                            await db.insert(calendarEvents).values({
+                                userId: session.user.id,
+                                integrationId: integrationId,
+                                externalId: event.id,
+                                title: event.summary || 'Untitled Event',
+                                description: event.description || null,
+                                startTime: new Date(event.start.dateTime || event.start.date),
+                                endTime: new Date(event.end.dateTime || event.end.date),
+                                meetingLink: meetingLink,
+                                location: event.location || null,
+                                attendees: event.attendees ? JSON.stringify(event.attendees.map((a: any) => ({ email: a.email, displayName: a.displayName }))) : null,
+                            });
+                            savedCount++;
+                        }
+                    }
+
+                    await db.update(calendarIntegrations)
+                        .set({
+                            lastSyncAt: new Date(),
+                            updatedAt: new Date(),
+                        })
+                        .where(eq(calendarIntegrations.id, integrationId));
+
+                    revalidatePath('/settings');
+                    revalidatePath('/calendar');
+                    return { success: true, eventsCount: savedCount };
+                } else {
+                    console.error('Failed to fetch calendar events:', await eventsResponse.text());
+                    return { success: false, error: 'Failed to fetch calendar events' };
+                }
+            } catch (error) {
+                console.error('Failed to sync calendar:', error);
+                return { success: false, error: 'Failed to sync calendar' };
+            }
+        }
+
+        // Microsoft Outlookの実装は将来追加
+        return { success: false, error: 'Provider not supported yet' };
     } catch (error) {
         console.error('Failed to sync calendar:', error);
         return { success: false, error: 'Failed to sync calendar' };

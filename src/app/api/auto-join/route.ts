@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUpcomingAutoJoinEvents, detectMeetingType } from '@/lib/calendar/meeting-joiner';
+import { getUpcomingAutoJoinEvents } from '@/lib/calendar/meeting-joiner';
+import { detectMeetingType } from '@/lib/calendar/meeting-detector';
 import { updateEventJoinStatus } from '@/server/actions/auto-join';
 import { createRecordingUploadUrl, updateRecordingStatus } from '@/server/actions/recording';
 

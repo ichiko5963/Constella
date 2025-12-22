@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Bot, Video, Loader2 } from 'lucide-react';
 import { toggleAutoJoin } from '@/server/actions/auto-join';
 import { toast } from 'sonner';
-import { detectMeetingType } from '@/lib/calendar/meeting-joiner';
+import { detectMeetingType } from '@/lib/calendar/meeting-detector';
 
 interface AutoJoinButtonProps {
     eventId: number;

@@ -10,6 +10,7 @@ import { calendarEvents, recordings } from '@/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { createRecordingUploadUrl, updateRecordingStatus } from '@/server/actions/recording';
 import { processRecording } from '@/server/actions/process-audio';
+import { detectMeetingType } from './meeting-detector';
 
 export interface AutoJoinConfig {
     eventId: number;
@@ -19,20 +20,6 @@ export interface AutoJoinConfig {
     endTime: Date;
     userId: string;
     projectId?: number;
-}
-
-/**
- * 会議リンクのタイプを判定
- */
-export function detectMeetingType(url: string): 'google-meet' | 'zoom' | 'teams' | 'unknown' {
-    if (url.includes('meet.google.com')) {
-        return 'google-meet';
-    } else if (url.includes('zoom.us') || url.includes('zoom.com')) {
-        return 'zoom';
-    } else if (url.includes('teams.microsoft.com')) {
-        return 'teams';
-    }
-    return 'unknown';
 }
 
 /**

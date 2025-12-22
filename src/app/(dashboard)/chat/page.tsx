@@ -30,7 +30,20 @@ export default function ChatPage() {
     ];
 
     const handleQuickQuestion = (question: string) => {
-        setInput(question);
+        // setInputが利用可能な場合はそれを使用
+        if (setInput && typeof setInput === 'function') {
+            setInput(question);
+        } else if (handleInputChange && inputRef.current) {
+            // handleInputChangeを使用して入力値を設定
+            const syntheticEvent = {
+                target: { value: question },
+                currentTarget: { value: question },
+            } as React.ChangeEvent<HTMLInputElement>;
+            handleInputChange(syntheticEvent);
+        } else if (inputRef.current) {
+            // フォールバック: inputRefを直接操作
+            inputRef.current.value = question;
+        }
         // Wait for state update before focusing so caret lands at end
         setTimeout(() => {
             if (inputRef.current) {
@@ -151,14 +164,14 @@ export default function ChatPage() {
                     <form onSubmit={handleSubmit} className="flex w-full gap-3 relative">
                         <Input
                             ref={inputRef}
-                            value={input}
+                            value={input ?? ''}
                             onChange={handleInputChange}
                             placeholder="質問を入力してください..."
                             className="flex-1 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-14 pl-6 rounded-2xl backdrop-blur-xl transition-all"
                         />
                         <Button
                             type="submit"
-                            disabled={isLoading || !input.trim()}
+                            disabled={isLoading || !(input || '').trim()}
                             className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/90 text-black shadow-[0_0_15px_rgba(0,212,170,0.3)] hover:shadow-[0_0_25px_rgba(0,212,170,0.5)] transition-all duration-300 flex items-center justify-center p-0"
                         >
                             <Send className="h-5 w-5 ml-0.5" />

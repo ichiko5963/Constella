@@ -26,7 +26,18 @@ export async function getUserSettings() {
                 backgroundTheme: 'default' as BackgroundTheme,
             },
         };
-    } catch (error) {
+    } catch (error: any) {
+        // テーブルが存在しない場合やその他のエラーの場合、デフォルト設定を返す
+        if (error?.message?.includes('no such table') || error?.code === 'SQLITE_UNKNOWN') {
+            console.warn('User settings table does not exist yet, returning defaults');
+            return {
+                success: true,
+                settings: {
+                    userId: session.user.id,
+                    backgroundTheme: 'default' as BackgroundTheme,
+                },
+            };
+        }
         console.error('Failed to get user settings:', error);
         return { success: false, error: 'Failed to retrieve settings' };
     }
@@ -54,7 +65,12 @@ export async function updateBackgroundTheme(theme: BackgroundTheme) {
 
         revalidatePath('/settings');
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
+        // テーブルが存在しない場合、エラーをログに記録するが、アプリケーションは続行
+        if (error?.message?.includes('no such table') || error?.code === 'SQLITE_UNKNOWN') {
+            console.warn('User settings table does not exist yet, theme update skipped');
+            return { success: false, error: 'Settings table not available. Please run database migrations.' };
+        }
         console.error('Failed to update background theme:', error);
         return { success: false, error: 'Failed to update theme' };
     }

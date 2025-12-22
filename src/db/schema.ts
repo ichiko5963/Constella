@@ -349,8 +349,8 @@ export const calendarIntegrations = sqliteTable("calendar_integration", {
 export const calendarEvents = sqliteTable("calendar_event", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     userId: text("userId").notNull().references(() => users.id),
-    integrationId: integer("integrationId").notNull().references(() => calendarIntegrations.id, { onDelete: 'cascade' }),
-    externalId: text("externalId").notNull(), // Google Calendar event ID
+    integrationId: integer("integrationId").references(() => calendarIntegrations.id, { onDelete: 'cascade' }), // null = 手動追加
+    externalId: text("externalId"), // Google Calendar event ID (null = 手動追加)
     title: text("title").notNull(),
     description: text("description"),
     startTime: integer("startTime", { mode: "timestamp" }).notNull(),
@@ -358,6 +358,7 @@ export const calendarEvents = sqliteTable("calendar_event", {
     meetingLink: text("meetingLink"), // Zoom, Google Meet, Teams link
     location: text("location"),
     attendees: text("attendees"), // JSON array
+    projectId: integer("projectId").references(() => projects.id), // 関連プロジェクト
     autoJoinEnabled: integer("autoJoinEnabled", { mode: "boolean" }).default(false), // 自動参加有効
     autoRecordEnabled: integer("autoRecordEnabled", { mode: "boolean" }).default(false), // 自動録音有効
     recordingId: integer("recordingId").references(() => recordings.id, { onDelete: 'set null' }), // 関連録音

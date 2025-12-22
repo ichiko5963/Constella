@@ -4,9 +4,10 @@ import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { ArrowLeft, Play, FileText, CheckSquare, Clock } from 'lucide-react';
+import { ArrowLeft, CheckSquare } from 'lucide-react';
 import { NoteViewer } from '@/components/note/note-viewer';
 import { TaskReviewer } from '@/components/task/task-reviewer';
+import { RecordingDetailClient } from '@/components/recording/recording-detail-client';
 
 export default async function RecordingDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -72,40 +73,12 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-250px)]">
 
                 {/* Left Column: Audio & Transcript (4 cols) */}
-                <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-hidden">
-                    {/* Audio Player Card */}
-                    <Card className="glass border-white/10 shrink-0">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg flex items-center gap-2 text-white">
-                                <Play className="h-4 w-4 text-primary" /> Audio Player
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <audio controls className="w-full invert hue-rotate-180 opacity-90" src={recording.audioUrl}>
-                                Your browser does not support the audio element.
-                            </audio>
-                        </CardContent>
-                    </Card>
-
-                    {/* Transcript Card */}
-                    <Card className="glass border-white/10 flex-1 flex flex-col overflow-hidden">
-                        <CardHeader className="pb-4 border-b border-white/5">
-                            <CardTitle className="text-lg flex items-center gap-2 text-white">
-                                <FileText className="h-4 w-4 text-primary" /> Transcript
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 overflow-y-auto p-4 text-sm text-gray-300 leading-relaxed space-y-4">
-                            {recording.transcription ? (
-                                <p className="whitespace-pre-wrap">{recording.transcription}</p>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
-                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                    <p>{recording.status === 'processing' ? 'Transcribing audio...' : 'Waiting for audio...'}</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
+                <RecordingDetailClient
+                    recordingId={recordingId}
+                    audioUrl={recording.audioUrl || ''}
+                    hasTranscription={!!recording.transcription}
+                    status={recording.status || 'uploading'}
+                />
 
                 {/* Right Column: AI Note View (8 cols) */}
                 <div className="lg:col-span-8 h-full overflow-hidden">

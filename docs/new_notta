@@ -1,0 +1,163 @@
+Actory（アクトリー）技術仕様策定および成立性検証レポート：Next.js 15、React 19、Tursoを用いた次世代AI議事録プラットフォームの構築
+1. エグゼクティブサマリー
+1.1 背景と目的
+本レポートは、AI駆動型の会議議事録・生産性プラットフォーム「Actory（アクトリー）」の構築において、Next.js 15、React 19、Turso（LibSQL）を中心とした技術スタックの採用妥当性を検証し、市場のベンチマークであるNottaと同等以上のUI/UXを実現するためのアーキテクチャを定義することを目的としています。特に、最新のWeb標準技術であるReact Server Components（RSC）やServer Actions、そしてエッジネイティブなデータベース技術が、高負荷な音声処理やリアルタイムコラボレーションを伴うアプリケーションにおいて、パフォーマンスと開発効率の両立をいかに達成するかを詳細に分析します。
+1.2 技術的判定の概要
+検証の結果、提案された技術スタック（Next.js 15, React 19, Turso）は、Actoryの要件を満たすための極めて高い潜在能力を持つと判断されますが、同時に「Bleeding Edge（最先端技術）」特有の実装リスクを伴います。
+Next.js 15とReact 19の組み合わせは、従来のクライアントサイドレンダリング（CSR）偏重のアーキテクチャから脱却し、サーバー側での高度なデータ処理とクライアント側の滑らかなインタラクションを融合させるための最適な基盤を提供します。特にReact 19の<Activity>コンポーネントやOptimistic UIのプリミティブは、Nottaに見られるような即応性の高い編集体験の実装コストを大幅に低減します 1。
+データベース層におけるTursoの採用は、従来のPostgreSQL + Vector DB（Pinecone等）という二重管理の複雑性を排除し、SQLite互換の単一データストア内でリレーショナルデータとベクトル埋め込み（Embeddings）を統合管理できる点で、開発速度とコスト効率に革命的な利点をもたらします 3。
+しかしながら、音声処理パイプライン、特に長時間の録音データの分割処理と話者分離（Diarization）における一貫性の維持は、Web技術単体では解決困難な課題を含んでおり、外部AIエンジンの選定や専用のマイクロサービスの設計が不可欠です。本レポートでは、これらの課題に対する具体的な技術解を提示します。
+2. 技術スタック成立性検証：Next.js 15 & React 19
+Actoryの中核となるフロントエンドおよびアプリケーションロジック層において、Next.js 15とReact 19の採用は、パフォーマンス最適化と開発体験の向上において重要な意味を持ちます。
+2.1 React 19：生産性ツールにおけるUXの革新
+React 19は単なるバージョンアップではなく、非同期処理の状態管理とUIの楽観的更新（Optimistic Updates）に対するアプローチを根本から変えるものです。議事録編集画面のような、ユーザーの操作に対して即座にフィードバックが求められるインターフェースにおいて、以下の機能が重要な役割を果たします。
+2.1.1 ActionsとuseTransitionによる非同期フローの簡素化
+従来のReact開発では、フォーム送信やデータ更新の際、isPendingフラグやエラー状態を手動で管理する必要がありました。React 19のActionsとuseTransitionフックは、この複雑さを排除します 5。
+Actoryにおいて、例えばユーザーが「要約の再生成」ボタンをクリックした際、バックエンドでのLLM処理が完了するのを待つ間、UIは自動的に保留状態（Pending state）を検知し、適切なローディング表示や既存コンテンツの透過度変更などを行います。これにより、開発者は「データ取得」と「表示」のロジックを分離しつつ、ユーザーの体感速度を損なわないインターフェースを構築できます。
+2.1.2 useOptimisticによるNotta級の編集体験
+Nottaの強みの一つは、テキストエディタのような軽快な操作感です。Actoryでこれを再現するには、サーバーとの通信ラグをユーザーに感じさせてはなりません。React 19のuseOptimisticフックは、サーバーからのレスポンスを待たずに、UI上のデータを一時的（楽観的）に更新することを可能にします 5。
+具体的には、ユーザーが議事録の誤字を修正した瞬間、バックグラウンドでTursoへの更新リクエスト（Server ActionまたはtRPC mutation）が送信されますが、画面上では即座に修正後のテキストが反映されます。万が一、ネットワークエラー等で更新が失敗した場合、Reactは自動的に状態をロールバックし、ユーザーに通知します。この一連のフローがフレームワークレベルでサポートされることで、複雑な状態管理ライブラリ（ReduxやRecoil等）への依存度を下げ、コードの保守性を高めることができます。
+2.2 Next.js 15のキャッシュ戦略とデータ鮮度
+Next.js 15では、fetchリクエストのデフォルト動作が「キャッシュなし（no-store）」に変更されました 6。これはActoryのようなリアルタイム性の高いアプリケーションにとって歓迎すべき変更です。
+議事録データは会議の進行とともに刻一刻と変化し、また機密性が極めて高いため、誤って古いキャッシュデータが表示されることは許容されません。従来のNext.jsでは、強力すぎるキャッシュ機構が逆にデータの整合性を保つ上での足かせとなるケースがありましたが、バージョン15の仕様変更により、デフォルトで常に最新のデータを取得する安全な設計が可能となります。必要な箇所（例えば、ヘルプページや料金プラン表など）にのみ明示的にキャッシュを設定することで、パフォーマンスと整合性のバランスを適切に制御できます。
+2.3 tRPCとNext.js 15 App Routerの統合リスクと解決策
+ActoryのAPI層としてtRPCを採用することは、フロントエンドとバックエンド間の型安全性を担保する上で極めて有効ですが、Next.js 15環境下では重大な互換性の問題が報告されています。
+2.3.1 req.socket エラーの技術的背景と回避策
+調査によると、Next.js 15のApp Router環境でtRPCを使用しようとした際、TypeError: req.socket.once is not a function というランタイムエラーが発生する事例が多発しています 7。この問題の本質は、Next.jsのApp RouterがWeb Standardに基づいた Request / Response オブジェクトを使用するのに対し、従来のtRPCアダプターや一部のNode.jsライブラリが、Node.js固有の IncomingMessage（req.socketなどの低レイヤーAPIを持つ）を期待していることに起因します。
+特にVercelやNetlifyなどのサーバーレス環境（Edge Runtimeを含む）では、この差異が顕著になります。このリスクを回避し、Actoryで安定してtRPCを稼働させるためには、以下のアーキテクチャ上の制約を遵守する必要があります。
+Fetch Adapterの強制利用: 従来のNode HTTPアダプターではなく、@trpc/server/adapters/fetch から提供される fetchRequestHandler を使用してAPIハンドラーを実装する必要があります 8。
+コンテキスト生成の厳格化: createContext 関数内において、req オブジェクトのプロパティ（ヘッダー等）へのアクセスは、Node.jsの流儀ではなく、Web Standardの Headers APIを通じて行うようにコードを統一しなければなりません。
+2.3.2 Server ActionsとtRPCのハイブリッド戦略
+Next.js 15のServer Actionsは強力ですが、Actoryのような複雑なアプリケーションですべてを代替するには至っていません。特に、React Queryと統合されたtRPCが提供する「インフィニットスクロール（無限読み込み）」や「バックグラウンドでのデータ再検証」の機能は、長時間の議事録を表示・管理する上で不可欠です 9。
+したがって、Actoryでは以下のハイブリッド戦略を採用します。
+データの取得（Read）: tRPCを使用。複雑なフィルタリング、ページネーション、リアルタイム更新（Subscriptions）を型安全に処理します。
+データの更新（Write/Mutation）: Server Actionsを使用。フォーム送信や単純なステータス変更において、クライアントサイドのJavaScriptバンドルサイズを削減し、プログレッシブエンハンスメントを実現します。
+3. データベースアーキテクチャ：Tursoとベクトル検索の統合
+Actoryの差別化要因となる「AIチャット（RAG）」機能を低コストかつ高性能に実現するため、Turso（LibSQL）の採用は戦略的な鍵となります。
+3.1 データベースとしてのLibSQLとマルチテナント設計
+TursoはSQLiteのフォークであるLibSQLをベースにしており、軽量かつ高速なファイルベースのデータベースという特性を持ちます 3。これは、Actoryにおいて「企業ごと」あるいは「プロジェクトごと」に物理的にデータベースファイルを分離するマルチテナントアーキテクチャを容易に実現できることを意味します。
+各クライアントのデータを個別のLibSQLデータベースとして管理することで、AI学習データへの意図しない混入リスクを物理レベルで遮断できるほか、特定の企業のデータをエッジロケーション（ユーザーに近いサーバー）に配置することで、読み込みレイテンシを極小化できます。
+3.2 ネイティブベクトル検索の実装詳細
+従来のスタックでは、リレーショナルデータはPostgreSQL、ベクトルデータはPineconeなどの専用DBに保存する必要があり、データの同期ズレ（Consistency drift）が課題でした。TursoはF32_BLOB型によるベクトルデータのネイティブ保存をサポートしており、SQLクエリ一つでメタデータフィルタリングと類似度検索を同時に行えます 4。
+3.2.1 スキーマ設計とDrizzle ORMの活用
+Actoryのデータベーススキーマは、Drizzle ORMを用いて以下のように定義されます。DrizzleはSQLiteのカスタム型をサポートしており、ベクトルデータを型安全に取り扱うことが可能です 11。
+テーブル名
+役割
+主要カラム構成
+meetings
+会議メタデータ
+id, user_id, audio_url, status, created_at
+transcripts
+議事録テキスト
+id, meeting_id, speaker_label, content, start_time, end_time
+embeddings
+ベクトルデータ
+id, transcript_id, vector (F32_BLOB), chunk_text
+
+3.2.2 検索パフォーマンスとインデックス戦略
+Actoryにおいて「過去の会議から『予算』に関する発言を検索する」といった機能を実現する場合、単純なコサイン類似度計算（vector_distance_cos）では、全行スキャンが発生し、データ量が増加するにつれてパフォーマンスが線形に悪化します 12。
+数百万規模のベクトルデータを扱う将来を見越し、ActoryではDiskANNアルゴリズムに基づいたベクトルインデックス（libsql_vector_idx）を作成し、近似最近傍探索（ANN）を行う vector_top_k 関数を利用する必要があります 12。これにより、精度をわずかに犠牲にしつつ、検索速度を桁違いに高速化し、大規模なアーカイブに対してもミリ秒単位の応答速度を維持します。
+4. UI/UX構造分析：Nottaの解析とActoryへの適用
+Nottaが市場で支持される理由は、単なる文字起こしツールではなく、「音声とテキストが完全に同期したプレイヤー」としての体験を提供している点にあります。ActoryはこのUXをReact 19の技術で再現・発展させる必要があります。
+4.1 3ペイン構造とレンダリング戦略
+効率的な閲覧と編集を支える画面構成は、以下の3つのペインで構成されます。
+ナビゲーション（左）: フォルダ階層、タグリスト。これは頻繁に変更されないため、Next.jsのServer Components（RSC）として実装し、初期ロード時にサーバー側でレンダリングを完了させます。
+メインステージ（中央）: 議事録エディタと音声プレイヤー。ここは高度なインタラクションが必要なため、Client Componentとして実装します。
+インテリジェンスレール（右）: AI要約、アクションアイテム、チャットボット。これらは生成に時間がかかるため、Suspense を用いたストリーミングレンダリング（Streaming SSR）を行い、AIが生成したテキストから順次表示されるようにします 14。
+4.2 音声とテキストの同期エンジン（カラオケ効果）
+Nottaの核心的な機能である、再生位置に応じたテキストのハイライト表示は、技術的に高度な実装を要求されます。
+データ構造: 議事録データは単なる文字列ではなく、単語ごとのタイムスタンプを持つ構造化データ（JSON）として管理する必要があります。
+仮想化（Virtualization）: 1時間の会議では数万単語が含まれます。これら全てをDOM要素（<span>タグ等）としてレンダリングすると、ブラウザのメモリを圧迫し、ハイライト移動時に深刻な描画ラグが発生します。tanstack-virtual などのライブラリを用い、現在画面に表示されている部分（Viewport）のみをレンダリングする制御が不可欠です。
+同期ロジック: requestAnimationFrame ループを使用し、オーディオプレイヤーの currentTime を監視します。Reactのステート更新（useState）はフレーム落ちの原因となるため、ハイライトのスタイル適用はRefを通じた直接的なDOM操作、あるいはCSS変数の更新によって行うことで、60fpsの滑らかな追従を実現します。
+4.3 キャンバスAPIを用いた波形レンダリング
+長時間の音声ファイルの波形表示は、ブラウザのメインスレッドをブロックする重い処理になりがちです。Actoryでは以下の最適化を行います。
+ピークデータの事前生成: クライアントサイドで全音声を解析するのは非効率です。サーバーサイド（音声処理パイプライン）で音声のエンコード時に、振幅のピークデータ（Peak Data）を抽出して軽量なJSON配列として保存しておきます。
+OffscreenCanvasの活用: フロントエンドではこのJSONを受け取り、Canvas APIを用いて波形を描画します。Reactコンポーネントのレンダリングサイクルから分離するため、可能な限り OffscreenCanvas と Web Worker を利用し、UIスレッドに負荷をかけずに描画処理を行います 15。
+5. 音声処理パイプラインと技術的リスク
+Actoryにとって最大の技術的障壁は、Webアプリケーション層ではなく、音声データの取り込みからテキスト化に至るバックエンドの処理パイプラインにあります。
+5.1 ブラウザ間の音声フォーマット互換性問題（Safari問題）
+ユーザーがブラウザから直接録音を行う際、ブラウザごとに生成される音声データの形式が異なるという「Safari問題」が存在します。Chromeは audio/webm;codecs=opus を標準としますが、iOS Safariは audio/mp4 や独自の設定を要求する場合があります 17。
+これらが混在したままサーバーにアップロードされると、後段の処理（Whisper等）でエラーが発生します。
+解決策: クライアントサイドで FFmpeg.wasm を実行し、録音終了直後にブラウザ内で音声を統一フォーマット（例: WAVまたはMP3）に変換してからアップロードする処理を実装します 19。これにより、サーバーサイドでのトランスコード負荷を分散し、Safariユーザーの録音データ破損リスクを回避します。
+5.2 長時間録音の分割と話者分離の整合性（Diarization Consistency）
+OpenAI Whisper APIには25MBのファイルサイズ制限があります 21。長時間の会議データを処理するにはファイルを分割（チャンク化）する必要がありますが、ここに重大なリスクが潜んでいます。
+5.2.1 「話者ラベルの不連続性」問題
+ファイルを「0-10分」「10-20分」と分割してそれぞれ話者分離（Diarization）にかけると、1つ目のファイルでは「話者A＝田中氏」と認識された人物が、2つ目のファイルでは「話者B」あるいは「話者C」としてラベル付けされる可能性があります 22。これにより、議事録全体を通した「誰が何を言ったか」の一貫性が失われます。
+5.2.2 高度な解決策：ベクトルクラスタリングによる再統合
+この問題を解決するためには、以下の多段階処理パイプラインが必要です。
+ローカル分離: 各チャンクごとに話者分離を行い、暫定的な話者ラベル（Local Speaker ID）を付与する。
+音声指紋（Embedding）抽出: 各チャンクで検出された話者の音声セグメントから、声の特徴を表すベクトル（Embedding）を抽出する（Pyannote.audio等を利用）。
+グローバルクラスタリング: 会議全体の全チャンクから抽出された話者ベクトルを収集し、クラスタリングアルゴリズム（K-MeansやDBSCAN）を実行して、同一人物と思われるベクトルを統合する。
+ラベルの書き換え: ローカルIDをグローバルなクラスタID（Global Speaker ID）にマッピングし直し、最終的な議事録を生成する。
+実装判断: このパイプラインを自前で構築・運用することは、初期フェーズのスタートアップにとって過大なエンジニアリングコストとなります。したがって、ActoryのMVP（Minimum Viable Product）フェーズにおいては、長時間の音声ファイルを分割せずに処理できる、あるいは内部でこの一貫性処理を行ってくれる Deepgram Nova-2 や AssemblyAI といった専用APIを利用することを強く推奨します 23。これにより、開発リソースを差別化要因であるUIやRAG機能に集中させることができます。
+6. リアルタイムコラボレーションと状態同期
+Actoryは、録音中の会議に対して複数人が同時にメモを取ったり、タグ付けを行ったりするコラボレーション機能を備えます。
+6.1 WebSockets vs Server-Sent Events (SSE)
+Nottaのようなリアルタイム文字起こし表示だけであれば、サーバーからクライアントへの一方通行通信であるSSEが適しています 25。しかし、Actoryは「共同編集」を要件とするため、双方向通信が可能な WebSockets が必須となります。
+Next.js（特にVercel等のサーバーレス環境）はWebSocketの長時間接続の維持に不向きです。そのため、WebSocketサーバーはNext.jsのメインアプリケーションとは切り離し、Cloudflare Workers（PartyKitなど） や専用のNode.js/Fastifyサーバーとして構築するアーキテクチャを採用します。
+6.2 CRDTs（Conflict-free Replicated Data Types）の導入
+複数ユーザーが同時に議事録を編集する際の競合（コンフリクト）を解決するため、Yjs などのCRDTライブラリを導入します 27。エディタライブラリとしては、Yjsとの親和性が高くReact製アプリで実績のある Tiptap または Slate.js を採用します。
+各クライアントの編集操作はYjsによって差分データ（Update）としてWebSocket経由でブロードキャストされ、他ユーザーの画面にリアルタイムで反映されます。同時に、データの永続化のために一定間隔（またはセッション終了時）でTursoデータベースにドキュメントの状態（State Vector）を保存します。
+7. 実装リスクの総括と緩和策
+Actoryの開発における主要なリスクと、それに対する緩和策を以下にまとめます。
+リスク領域
+具体的なリスク内容
+重要度
+推奨される緩和策
+Next.js 15
+tRPC利用時の req.socket エラーによるサーバークラッシュ
+高
+fetch アダプターの利用を徹底し、Node.js固有APIへの依存を排除する。
+音声処理
+チャンク分割による話者IDの不整合（AさんがBさんに入れ替わる）
+最高
+自前分割を避け、Deepgram等の長時間対応APIを利用するか、音声ベクトルによるグローバルクラスタリングを実装する。
+DB性能
+データ増加に伴うベクトル検索（RAG）のレイテンシ増大
+中
+全件検索（Cosine Distance）ではなく、インデックスを用いた近似検索（vector_top_k）を実装する。
+ブラウザ
+Safari等での録音データ形式の差異による処理失敗
+高
+FFmpeg.wasmを導入し、クライアントサイドでWAV/MP3への正規化を行ってからアップロードする。
+UX
+長時間議事録の描画によるブラウザのフリーズ
+中
+tanstack-virtual 等を用いた仮想スクロールを導入し、DOMノード数を一定に保つ。
+コスト
+ベクトルデータ増大によるストレージコスト
+低
+Tursoの圧縮技術と、無音区間を除外した効率的な埋め込み戦略を採用する。
+
+8. 結論
+本検証の結果、Next.js 15、React 19、Tursoを用いたActoryの構築は、技術的に十分成立し、かつ市場の競合製品に対してパフォーマンスと開発速度の面でアドバンテージを得られる可能性が高いと結論付けられます。
+特に、React 19の新しいプリミティブによるUI構築の効率化と、Tursoによるベクトル検索の統合は、開発チームの認知負荷を下げ、機能開発に集中できる環境を提供します。一方で、音声処理パイプラインに関しては、Web技術の枠を超えた深いドメイン知識と複雑な実装が必要となるため、初期段階では外部の専門SaaS（Deepgram等）を積極的に活用し、コアとなる体験価値（UXとRAGによる洞察）の創出にリソースを集中させる戦略が最も合理的です。
+Actoryは、これらの「巨人の肩」に乗ることで、Nottaに匹敵、あるいは特定領域で凌駕するプロダクト品質を短期間で実現できるポテンシャルを有しています。
+引用文献
+React 19.2 Just Dropped: What Actually Matters (My 3-Week Production Test), 12月 22, 2025にアクセス、 https://dev.to/elvissautet/react-192-just-dropped-what-actually-matters-my-3-week-production-test-5387
+React 19.2: What Actually Matters (My 3-Week Production Test) - Reddit, 12月 22, 2025にアクセス、 https://www.reddit.com/r/react/comments/1oesxdq/react_192_what_actually_matters_my_3week/
+libSQL - Turso docs, 12月 22, 2025にアクセス、 https://docs.turso.tech/libsql
+AI & Embeddings - Turso docs, 12月 22, 2025にアクセス、 https://docs.turso.tech/features/ai-and-embeddings
+React v19, 12月 22, 2025にアクセス、 https://react.dev/blog/2024/12/05/react-19
+Next.js 15, 12月 22, 2025にアクセス、 https://nextjs.org/blog/next-15
+trpc doesn't work after migrating to next 15, 12月 22, 2025にアクセス、 https://discord-questions.trpc.io/m/1322151673690325003
+TRPC Handle TRPCError - next.js - Stack Overflow, 12月 22, 2025にアクセス、 https://stackoverflow.com/questions/77333318/trpc-handle-trpcerror
+tRPC vs Server Actions : r/nextjs - Reddit, 12月 22, 2025にアクセス、 https://www.reddit.com/r/nextjs/comments/1etpoup/trpc_vs_server_actions/
+SQLite Retrieval Augmented Generation and Vector Search - Turso, 12月 22, 2025にアクセス、 https://turso.tech/blog/sqlite-retrieval-augmented-generation-and-vector-search
+Drizzle + Turso, 12月 22, 2025にアクセス、 https://docs.turso.tech/sdk/ts/orm/drizzle
+Turso brings Native Vector Search to SQLite, 12月 22, 2025にアクセス、 https://turso.tech/blog/turso-brings-native-vector-search-to-sqlite
+Native Vector Search for SQLite - Turso, 12月 22, 2025にアクセス、 https://turso.tech/vector
+Understanding React Streaming - Medium, 12月 22, 2025にアクセス、 https://medium.com/@ignatovich.dm/understanding-react-streaming-e82c397ed26a
+Part 1: Building a Real-Time Audio Visualizer with Web Audio API and Canvas | by Senthil Kumaran Chinnathambi | IceApple Tech Talks | Medium, 12月 22, 2025にアクセス、 https://medium.com/iceapple-tech-talks/web-audio-api-part-1-playing-filtering-and-visualizing-sound-147254dd6379
+Render canvas faster than 60 times per second? - Stack Overflow, 12月 22, 2025にアクセス、 https://stackoverflow.com/questions/50622345/render-canvas-faster-than-60-times-per-second
+MediaRecorder: mimeType property - Web APIs | MDN, 12月 22, 2025にアクセス、 https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/mimeType
+How to Implement MediaRecorder API Audio Recording and Transcription with iPhone Safari Support | Build with Matija, 12月 22, 2025にアクセス、 https://www.buildwithmatija.com/blog/iphone-safari-mediarecorder-audio-recording-transcription
+Separating Audio from Video with WebAssembly - Emil's Blog, 12月 22, 2025にアクセス、 https://old.onl/blog/audio-extraction-wasm/
+Unleashing FFmpeg Power in the Browser: A Guide to WebAssembly Video Processing | by Pardeep Kashyap | Medium, 12月 22, 2025にアクセス、 https://medium.com/@pardeepkashyap650/unleashing-ffmpeg-power-in-the-browser-a-guide-to-webassembly-video-processing-ec00297aa6ef
+Speech to text | OpenAI API, 12月 22, 2025にアクセス、 https://platform.openai.com/docs/guides/speech-to-text
+Best Practices for Maintaining Speaker Identity Across Chunks with gpt-4o-transcribe-diarize? - OpenAI Developer Community, 12月 22, 2025にアクセス、 https://community.openai.com/t/best-practices-for-maintaining-speaker-identity-across-chunks-with-gpt-4o-transcribe-diarize/1364126
+Whisper vs Deepgram - Modal, 12月 22, 2025にアクセス、 https://modal.com/blog/whisper-vs-deepgram
+Whisper vs Deepgram 2025: Which Speech API Fits Your Stack?, 12月 22, 2025にアクセス、 https://deepgram.com/learn/whisper-vs-deepgram
+WebSockets vs Server-Sent Events: Key differences and which to use in 2024 - Ably, 12月 22, 2025にアクセス、 https://ably.com/blog/websockets-vs-sse
+Why I Switched from WebSockets to Server-Sent Events (SSE) for Real-Time Communication "i will not promote" : r/SaaS - Reddit, 12月 22, 2025にアクセス、 https://www.reddit.com/r/SaaS/comments/1iszlul/why_i_switched_from_websockets_to_serversent/
+A Collaborative Editor - Yjs Docs, 12月 22, 2025にアクセス、 https://docs.yjs.dev/getting-started/a-collaborative-editor

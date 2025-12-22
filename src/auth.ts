@@ -20,51 +20,47 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return !!auth
         },
         signIn: async ({ user, account, profile }) => {
-            if (!user.email) {
+            if (!user?.email) {
                 return false;
             }
 
             try {
-                // Googleプロバイダーの場合、profile.subがユーザーID
                 const userId = (profile as any)?.sub || account?.providerAccountId || user.id;
-                
+
                 if (!userId) {
                     console.error('No user ID found');
                     return false;
                 }
 
-                // ユーザーが存在するか確認（emailで検索）
                 const existingUser = await db.query.users.findFirst({
                     where: eq(users.email, user.email),
                 });
+                const now = new Date();
 
-                // ユーザーが存在しない場合は作成
                 if (!existingUser) {
                     await db.insert(users).values({
                         id: userId,
                         name: user.name || user.email.split('@')[0],
                         email: user.email,
-                        emailVerified: 1, // true
+                        emailVerified: true,
                         image: user.image || null,
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
+                        createdAt: now,
+                        updatedAt: now,
                     });
                 } else if (existingUser.id !== userId) {
-                    // IDが異なる場合は更新（既存ユーザーのIDを保持）
                     await db.update(users)
                         .set({
                             name: user.name || existingUser.name,
                             image: user.image || existingUser.image,
-                            updatedAt: new Date(),
+                            updatedAt: now,
                         })
                         .where(eq(users.id, existingUser.id));
                 } else {
-                    // 既存ユーザーの情報を更新
                     await db.update(users)
                         .set({
                             name: user.name || existingUser.name,
                             image: user.image || existingUser.image,
-                            updatedAt: new Date(),
+                            updatedAt: now,
                         })
                         .where(eq(users.id, userId));
                 }

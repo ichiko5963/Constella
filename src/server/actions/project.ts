@@ -25,21 +25,24 @@ export async function createProject(formData: FormData) {
     }
 
     try {
-        // ユーザーがデータベースに存在するか確認
         const existingUser = await db.query.users.findFirst({
             where: eq(users.id, session.user.id),
         });
+        const now = new Date();
 
-        // ユーザーが存在しない場合は作成（フォールバック）
         if (!existingUser) {
+            const fallbackName = session.user.name
+                || session.user.email?.split('@')[0]
+                || 'User';
+
             await db.insert(users).values({
                 id: session.user.id,
-                name: session.user.name || session.user.email?.split('@')[0] || 'User',
+                name: fallbackName,
                 email: session.user.email || '',
-                emailVerified: 1,
+                emailVerified: true,
                 image: session.user.image || null,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: now,
+                updatedAt: now,
             });
         }
 

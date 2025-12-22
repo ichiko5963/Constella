@@ -28,7 +28,7 @@ export function GlobalRecorderManager() {
                         className="fixed bottom-8 right-8 z-50"
                     >
                         <Button
-                            onClick={openImmersive}
+                            onClick={() => openImmersive()}
                             size="lg"
                             className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-emerald-400 hover:from-primary/90 hover:to-emerald-400/90 text-black shadow-[0_0_20px_rgba(0,212,170,0.4)] hover:shadow-[0_0_35px_rgba(0,212,170,0.6)] transition-all duration-300 hover:scale-110 flex items-center justify-center p-0"
                         >

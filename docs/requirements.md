@@ -854,6 +854,56 @@ AIチャットメッセージを管理するテーブル。
 - getChatMessagesByConversation関数でメッセージ取得
 - sourcesカラムで参照ナレッジを保存
 
+### 6.8 Nottaベンチマーク機能ギャップ（Cursor lines 954-1095）
+
+Nottaの主要機能（`docs/cursor_.md` 954行目以降の `$主な機能` セクション）をActory視点で再整理し、実装状況と今後の方針を明記する。今後はこの一覧を基準に要件とタスクを更新する。
+
+#### 6.8.1 音声認識・文字起こし
+
+| 機能 | 現状 | 実装メモ |
+|------|------|----------|
+| リアルタイム文字起こし | 未実装 | WebRTC/MediaStreamを`/api/realtime-transcription` WebSocketにストリーミングし、OpenAI RealtimeまたはDeepgram APIへプロキシ。部分文字起こしをIndexedDBに蓄積し、UIへDiff配信する。 |
+| 話者識別（ダイアライゼーション） | 未実装 | `pyannote.audio` または AssemblyAI Speaker Diarization APIを利用して録音チャンクごとにspeakerタグを付与。`recordingSegments`テーブルを追加しUIで色分け表示する。 |
+| ブックマーク/ハイライト | スキーマのみ（UI未実装） | `bookmarks`/`highlights`テーブルを活用し、Recorder UI／Transcript UIに「★」「ハイライト」ボタンを追加。タイムスタンプとテキスト範囲を保存し、サイドパネルで一覧化する。 |
+| 録音アップ（Notta Memo相当） | 部分実装（Webブラウザ録音/アップロードは対応） | モバイルPWA対応と専用エンドポイント`POST /api/recordings/mobile`を追加。Notta Memo互換デバイスには事前署名URLを払い出し、直接アップロードを許可する。 |
+
+#### 6.8.2 AI要約・分析
+
+| 機能 | 現状 | 実装メモ |
+|------|------|----------|
+| AI要約テンプレート | 基本的な一括要約のみ | `summaryTemplates`テーブルとUIを追加し、LLMプロンプトをテンプレート化。録音完了時にテンプレを選択して複数フォーマットの要約を生成する。 |
+| カスタムAIプロンプト | 未実装 | Enterprise設定に`customPrompts`テーブルを接続し、LLM呼び出し時にユーザー独自プロンプトをチェーンに挿入できるようにする。 |
+| AIノート→マインドマップ | 未実装 | Transcript構造をJSONで抽出し、フロントで`react-flow`や`elkjs`を用いてマインドマップ描画。PNG/SVGエクスポートにも対応する。 |
+| 週間レポート | 未実装 | Edge Cronで直近7日間の会議データを集計し、`weekly_reports`に保存。Charts.js + PDFエクスポートで可視化する。 |
+| AIチャット | 実装済（RAG） | 追加対応としてマルチ録音検索範囲やJira/メール草案などの自動アクションテンプレートを`@/server/actions/chat`に拡張する。 |
+
+#### 6.8.3 会議参加・スケジューリング
+
+| 機能 | 現状 | 実装メモ |
+|------|------|----------|
+| カレンダー同期 | UIのみ（データ連携なし） | Google/Outlook OAuth連携を追加し、`calendarIntegrations`/`calendarEvents`テーブルに実データを保存。Webhookで会議リンク取得→Recorderへ連携。 |
+| 手動参加（URL経由） | 未実装 | 「Record online meeting」モーダルを追加し、会議URLを保存。Botワーカー（例: Cloud Run）にジョブ投入してリアルタイム文字起こしを開始。 |
+| 自動参加ワークフロー | 未実装 | カレンダーイベントとBotジョブを紐付け、Workerで定刻にブラウザレスJoin（Puppeteer + Zoom/Meet SDK）を実行。開始/終了で録音処理を自動化。 |
+| ミーティングスケジューラー | 未実装 | Cal.comライクなスロットUIをNext.jsで構築。Google Calendar APIで空き時間判定→予約ページを生成し、参加者双方のカレンダーに反映する。 |
+
+#### 6.8.4 編集・共有・検索
+
+| 機能 | 現状 | 実装メモ |
+|------|------|----------|
+| 編集と注釈 (@メンション) | 未実装 | TiptapベースのTranscriptエディタを導入。コメント/メンションは`comments`テーブルに保存し、リアルタイム更新用にPusher/SSEを使用。 |
+| 検索・スニペット | 部分実装（RAGのみ） | Transcript内の任意範囲をスニペット化してタグ付け。`smart-search`パネルでフィルタと音声ジャンプを実装。 |
+| フォルダー管理と共有 | スキーマのみ（UI未実装） | `files.parentFileId`を利用してツリーUIを実装。共有リンク生成API＋Slack/Notion/CRM Webhook送信を組み込む。 |
+| エクスポート (TXT/PDF/SRT/DOCX) | 実装済 | 追加要望としてマインドマップPNGや週次レポートPDFも`/server/actions/export.ts`に拡張する。 |
+
+#### 6.8.5 その他
+
+| 機能 | 現状 | 実装メモ |
+|------|------|----------|
+| インテグレーション | 未実装 | Slack/Notion/HubSpot/Salesforce用OAuth + Webhook設定UIを`/settings/integrations`に追加し、議事録完了時の自動送信を実現。 |
+| クロスデバイス同期 | 未実装 | PWA + React Nativeで録音/トランスクリプトを同期。Supabase Storage/Tursoを活用し、オフライン時はIndexedDBに保存→再同期。 |
+| データセキュリティ | 未実装 | ISO27001/SOC2向けに`audit_logs`を実装、S3 SSE-KMSやRow-Level Encryptionを設定。ポリシー文書とDPAを整備。 |
+| オンボーディング/UX強化 | 部分実装 | 初回ログイン時のオンボーディングツアー、セットアップチェックリスト、モバイル最適化タスクをUI側に追加する。 |
+
 #### 6.7.4 ナレッジ参照トグル
 
 **機能概要**: AIの回答で参照したナレッジを表示するトグル機能。
@@ -2696,4 +2746,3 @@ CREATE TABLE chat_messages (
 **最終更新日:** 2024年12月21日
 **作成者:** Manus AI
 **バージョン:** 1.3.0
-

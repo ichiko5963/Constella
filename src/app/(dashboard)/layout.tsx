@@ -1,8 +1,6 @@
 import { auth } from '@/auth';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { LayoutDashboard, Folder, Mic, Calendar } from 'lucide-react';
-import { GlobalRecorderManager } from '@/components/recording/global-recorder-manager';
+import { LayoutDashboard, Folder, Mic, Calendar, MessageSquare, Settings } from 'lucide-react';
 import { NavLink } from '@/components/navigation/nav-link';
 import { Logo } from '@/components/navigation/logo';
 
@@ -24,7 +22,7 @@ export default async function DashboardLayout({
                 <div className="p-6">
                     <div className="flex items-center gap-3">
                         <Logo className="w-10 h-10" />
-                        <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Actory</h1>
+                        <h1 className="text-2xl font-bold text-white">Actory</h1>
                     </div>
                 </div>
 
@@ -44,6 +42,14 @@ export default async function DashboardLayout({
                     <NavLink href="/calendar" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
                         <Calendar className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
                         カレンダー
+                    </NavLink>
+                    <NavLink href="/chat" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
+                        <MessageSquare className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
+                        AIチャット
+                    </NavLink>
+                    <NavLink href="/settings" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
+                        <Settings className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
+                        設定
                     </NavLink>
                 </nav>
 
@@ -67,8 +73,6 @@ export default async function DashboardLayout({
                     {children}
                 </div>
             </main>
-
-            <GlobalRecorderManager />
         </div>
     );
 }

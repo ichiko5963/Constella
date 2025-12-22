@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { recordings, meetingNotes, taskCandidates } from '@/db/schema';
+import { recordings, meetingNotes, taskCandidates, transcriptSegments } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { openai } from '@/lib/openai';
 import { updateRecordingStatus } from './recording';
@@ -57,7 +57,7 @@ export async function processRecording(recordingId: number) {
         // @ts-expect-error pipeline signature mismatch with web streams
         await pipeline(response.body, fileStream);
 
-        // 3. Call Whisper
+        // 3. Call Whisper with verbose_json to get word-level timestamps
         const transcription = await openai.audio.transcriptions.create({
             file: fs.createReadStream(tempFilePath),
             model: 'whisper-1',
@@ -75,6 +75,43 @@ export async function processRecording(recordingId: number) {
                 status: 'processing'
             })
             .where(eq(recordings.id, recordingId));
+
+        // 3.5. Extract and save word-level timestamps
+        // Whisper APIのverbose_json形式では、wordsプロパティが存在する場合と、segmentsプロパティ内にwordsが存在する場合がある
+        let words: any[] = [];
+        
+        if ((transcription as any).words && Array.isArray((transcription as any).words)) {
+            words = (transcription as any).words;
+        } else if ((transcription as any).segments && Array.isArray((transcription as any).segments)) {
+            // segmentsから単語を抽出
+            words = (transcription as any).segments.flatMap((segment: any) => 
+                (segment.words || []).map((word: any) => ({
+                    ...word,
+                    word: word.word || word.text || '',
+                }))
+            );
+        }
+
+        if (words.length > 0) {
+            const segments = words.map((word: any, index: number) => ({
+                recordingId: recordingId,
+                word: word.word || word.text || '',
+                start: Math.round((word.start || 0) * 1000), // Convert seconds to milliseconds
+                end: Math.round((word.end || word.start || 0) * 1000),
+                speaker: word.speaker || null,
+                wordIndex: index,
+            }));
+
+            // 既存のセグメントを削除（再処理の場合）
+            await db.delete(transcriptSegments).where(eq(transcriptSegments.recordingId, recordingId));
+            
+            // 新しいセグメントを挿入（チャンクごとに分割して挿入、SQLiteの制限を考慮）
+            const chunkSize = 500; // 一度に挿入する最大数
+            for (let i = 0; i < segments.length; i += chunkSize) {
+                const chunk = segments.slice(i, i + chunkSize);
+                await db.insert(transcriptSegments).values(chunk);
+            }
+        }
 
         // 4. Summarize and Extract Info (GPT-4)
         const prompt = `

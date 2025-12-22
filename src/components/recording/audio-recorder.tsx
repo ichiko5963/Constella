@@ -176,18 +176,18 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             if (isRecording) {
-                                // Prompt or just cancel/stop? User asked for cancel functionality.
-                                // Let's stop and save draft state, but close window?
-                                // Or just close. Let's stop recording if active.
                                 stopRecording();
                             }
                             closeImmersive();
                         }}
-                        className="rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-md border border-white/5 w-12 h-12"
+                        className="rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-md border border-white/5 w-12 h-12 cursor-pointer z-50"
+                        type="button"
                     >
-                        <X className="w-6 h-6" />
+                        <X className="w-6 h-6 pointer-events-none" />
                     </Button>
                 </div>
 
@@ -204,8 +204,8 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                     {/* Actions */}
                     <div className="flex items-center gap-6">
                         {!isRecording && !audioBlob && (
-                            <Button onClick={startRecording} className="start-btn h-24 px-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 backdrop-blur-md text-white tracking-[0.2em] uppercase transition-all duration-500 hover:scale-105 hover:border-primary/50 hover:shadow-[0_0_40px_rgba(0,212,170,0.3)] text-lg font-light">
-                                Initialize System
+                            <Button onClick={startRecording} className="start-btn h-24 px-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 backdrop-blur-md text-white tracking-[0.2em] uppercase transition-all duration-500 hover:scale-105 hover:border-primary/50 hover:shadow-[0_0_40px_rgba(200,162,200,0.3)] text-lg font-light">
+                                録音をする
                             </Button>
                         )}
 

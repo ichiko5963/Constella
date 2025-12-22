@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/db';
 import { recordings, projects } from '@/db/schema';
-import { desc, eq, limit } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { RecorderTriggerCard } from '@/components/recording/recorder-trigger-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mic, Clock, Calendar, ArrowRight, PlayCircle, FileText } from 'lucide-react';
@@ -12,18 +12,18 @@ export default async function DashboardPage() {
     const session = await auth();
     if (!session?.user?.id) return null;
 
-    const recentRecordings = await db.query.recordings.findMany({
+    const allRecordings = await db.query.recordings.findMany({
         where: eq(recordings.userId, session.user.id),
         orderBy: desc(recordings.createdAt),
-        limit: 3,
         with: { project: true }
     });
+    const recentRecordings = allRecordings.slice(0, 3);
 
-    const recentProjects = await db.query.projects.findMany({
+    const allProjects = await db.query.projects.findMany({
         where: eq(projects.userId, session.user.id),
         orderBy: desc(projects.updatedAt),
-        limit: 3,
     });
+    const recentProjects = allProjects.slice(0, 3);
 
     return (
         <div className="space-y-12 max-w-7xl mx-auto">

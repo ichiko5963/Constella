@@ -8,6 +8,20 @@
       "when": 1766365660670,
       "tag": "0000_first_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1766392351975,
+      "tag": "0001_careless_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1766392528359,
+      "tag": "0002_loud_warhawk",
+      "breakpoints": true
     }
   ]
 }

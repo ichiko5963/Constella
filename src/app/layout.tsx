@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { RecordingProvider } from "@/lib/recording-context";
 import { OpeningProvider } from "@/components/opening/opening-provider";
+import { ThemeProvider } from "@/components/settings/theme-provider";
+import { GlobalRecorderManager } from "@/components/recording/global-recorder-manager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,8 +39,11 @@ export default function RootLayout({
       >
         <OpeningProvider>
           <RecordingProvider>
-            {children}
-            <Toaster />
+            <ThemeProvider>
+              {children}
+              <GlobalRecorderManager />
+              <Toaster />
+            </ThemeProvider>
           </RecordingProvider>
         </OpeningProvider>
       </body>

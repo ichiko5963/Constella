@@ -90,6 +90,18 @@ export const recordings = sqliteTable("recording", {
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
 });
 
+export const transcriptSegments = sqliteTable("transcript_segment", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    recordingId: integer("recordingId").notNull().references(() => recordings.id, { onDelete: 'cascade' }),
+    noteId: integer("noteId").references(() => meetingNotes.id, { onDelete: 'set null' }),
+    word: text("word").notNull(),
+    start: integer("start").notNull(), // 開始時間（ミリ秒）
+    end: integer("end").notNull(), // 終了時間（ミリ秒）
+    speaker: text("speaker"), // 話者ラベル（将来実装）
+    wordIndex: integer("wordIndex").notNull(), // 単語の順序
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+});
+
 export const meetingNotes = sqliteTable("meeting_note", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     userId: text("userId").notNull().references(() => users.id),
@@ -113,6 +125,26 @@ export const meetingNotes = sqliteTable("meeting_note", {
     shareToken: text("shareToken"),
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const highlights = sqliteTable("highlight", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    noteId: integer("noteId").notNull().references(() => meetingNotes.id, { onDelete: 'cascade' }),
+    userId: text("userId").notNull().references(() => users.id),
+    start: integer("start").notNull(),
+    end: integer("end").notNull(),
+    color: text("color").default('yellow'),
+    note: text("note"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+});
+
+export const bookmarks = sqliteTable("bookmark", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    recordingId: integer("recordingId").notNull().references(() => recordings.id, { onDelete: 'cascade' }),
+    userId: text("userId").notNull().references(() => users.id),
+    timestamp: integer("timestamp").notNull(),
+    note: text("note"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
 });
 
 export const tasks = sqliteTable("task", {
@@ -243,6 +275,18 @@ export const recordingsRelations = relations(recordings, ({ one, many }) => ({
     }),
     meetingNotes: many(meetingNotes),
     taskCandidates: many(taskCandidates),
+    transcriptSegments: many(transcriptSegments),
+}));
+
+export const transcriptSegmentsRelations = relations(transcriptSegments, ({ one }) => ({
+    recording: one(recordings, {
+        fields: [transcriptSegments.recordingId],
+        references: [recordings.id],
+    }),
+    note: one(meetingNotes, {
+        fields: [transcriptSegments.noteId],
+        references: [meetingNotes.id],
+    }),
 }));
 
 export const meetingNotesRelations = relations(meetingNotes, ({ one }) => ({
@@ -267,5 +311,72 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     user: one(users, {
         fields: [subscriptions.userId],
         references: [users.id],
+    }),
+}));
+
+// --- User Settings ---
+
+export const userSettings = sqliteTable("user_setting", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id).unique(),
+    backgroundTheme: text("backgroundTheme").default('default'), // default, white, gradient-cool, gradient-warm
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+    user: one(users, {
+        fields: [userSettings.userId],
+        references: [users.id],
+    }),
+}));
+
+// --- Calendar Integrations ---
+
+export const calendarIntegrations = sqliteTable("calendar_integration", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    provider: text("provider").notNull(), // 'google', 'microsoft'
+    accessToken: text("accessToken"),
+    refreshToken: text("refreshToken"),
+    expiresAt: integer("expiresAt", { mode: "timestamp" }),
+    enabled: integer("enabled", { mode: "boolean" }).default(true),
+    lastSyncAt: integer("lastSyncAt", { mode: "timestamp" }),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const calendarEvents = sqliteTable("calendar_event", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    integrationId: integer("integrationId").notNull().references(() => calendarIntegrations.id, { onDelete: 'cascade' }),
+    externalId: text("externalId").notNull(), // Google Calendar event ID
+    title: text("title").notNull(),
+    description: text("description"),
+    startTime: integer("startTime", { mode: "timestamp" }).notNull(),
+    endTime: integer("endTime", { mode: "timestamp" }).notNull(),
+    meetingLink: text("meetingLink"), // Zoom, Google Meet, Teams link
+    location: text("location"),
+    attendees: text("attendees"), // JSON array
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const calendarIntegrationsRelations = relations(calendarIntegrations, ({ one, many }) => ({
+    user: one(users, {
+        fields: [calendarIntegrations.userId],
+        references: [users.id],
+    }),
+    events: many(calendarEvents),
+}));
+
+export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
+    user: one(users, {
+        fields: [calendarEvents.userId],
+        references: [users.id],
+    }),
+    integration: one(calendarIntegrations, {
+        fields: [calendarEvents.integrationId],
+        references: [calendarIntegrations.id],
     }),
 }));

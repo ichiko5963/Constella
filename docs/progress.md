@@ -68,7 +68,7 @@
 - [x] AIチャット — RAG chat MVP live; extend with Jira/email action blueprints.
 
 ### 7.3 会議参加・スケジューリング
-- [ ] カレンダー同期 — OAuth + webhooks for Google/Outlook, hydrate `calendarEvents`.
+- [x] カレンダー同期 — OAuth + webhooks for Google/Outlook, hydrate `calendarEvents`.
 - [x] 手動参加（会議URL貼付） — Modal to queue Bot worker joins on demand.
 - [x] 自動参加 — Scheduler that books Bot jobs via Zoom/Meet/Teams SDKs.
 - [x] ミーティングスケジューラー — Cal.com style booking page integrated with Google Calendar.

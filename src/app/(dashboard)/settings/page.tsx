@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { CalendarSync } from '@/components/settings/calendar-sync';
 import { BackgroundThemeSelector } from '@/components/settings/background-theme-selector';
+import { CustomPromptManager } from '@/components/settings/custom-prompt-manager';
 import { Settings } from 'lucide-react';
 
 export default async function SettingsPage() {
@@ -27,6 +28,9 @@ export default async function SettingsPage() {
                 
                 {/* カレンダー連携 */}
                 <CalendarSync />
+
+                {/* カスタムAIプロンプト */}
+                <CustomPromptManager />
             </div>
         </div>
     );

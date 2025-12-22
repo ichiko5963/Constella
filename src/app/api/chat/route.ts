@@ -3,6 +3,7 @@ import { streamText } from 'ai';
 import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import { searchContext, getRecentContext } from '@/lib/rag';
+import { getDefaultPrompt } from '@/server/actions/custom-prompt';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -51,8 +52,14 @@ export async function POST(req: Request) {
         }
     }
 
-    const systemPrompt = `あなたはActory AIです。プロジェクトと会議議事録を管理するための有用なアシスタントです。
-  ユーザーの会議議事録とプロジェクトのコンテキストにアクセスできます。
+    // カスタムプロンプトを取得（デフォルトプロンプトまたはシステムデフォルト）
+    const promptResult = await getDefaultPrompt();
+    const basePrompt = promptResult.success && promptResult.prompt 
+        ? promptResult.prompt 
+        : `あなたはActory AIです。プロジェクトと会議議事録を管理するための有用なアシスタントです。
+ユーザーの会議議事録とプロジェクトのコンテキストにアクセスできます。`;
+
+    const systemPrompt = `${basePrompt}
   
   コンテキスト情報:
   ${context || '関連するコンテキストが見つかりませんでした。'}

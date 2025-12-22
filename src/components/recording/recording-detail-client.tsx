@@ -5,27 +5,50 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
 import { AudioPlayerWithBookmarks } from './audio-player-with-bookmarks';
 import { VirtualizedTranscript } from '@/components/transcript/virtualized-transcript';
+import { SnippetManager } from '@/components/snippet/snippet-manager';
 
 interface RecordingDetailClientProps {
     recordingId: number;
     audioUrl: string;
     hasTranscription: boolean;
     status: string;
+    noteId?: number | null;
 }
 
 export function RecordingDetailClient({ 
     recordingId, 
     audioUrl, 
     hasTranscription,
-    status 
+    status,
+    noteId
 }: RecordingDetailClientProps) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [audioRefReady, setAudioRefReady] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
 
     const handleAudioRefReady = (ref: React.RefObject<HTMLAudioElement>) => {
         if (ref.current) {
             audioRef.current = ref.current;
             setAudioRefReady(true);
+        }
+    };
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const updateTime = () => setCurrentTime(audio.currentTime);
+        audio.addEventListener('timeupdate', updateTime);
+        return () => audio.removeEventListener('timeupdate', updateTime);
+    }, [audioRefReady]);
+
+    const handleJumpToTime = (time: number) => {
+        const audio = audioRef.current;
+        if (audio) {
+            audio.currentTime = time;
+            audio.play().catch(() => {
+                // ignore play errors (user gesture requirement)
+            });
         }
     };
 
@@ -59,6 +82,17 @@ export function RecordingDetailClient({
                     )}
                 </CardContent>
             </Card>
+
+            {/* Snippet Manager */}
+            {noteId && (
+                <div className="shrink-0 max-h-[400px] overflow-hidden">
+                    <SnippetManager 
+                        noteId={noteId}
+                        currentTime={currentTime}
+                        onJumpToTime={handleJumpToTime}
+                    />
+                </div>
+            )}
         </div>
     );
 }

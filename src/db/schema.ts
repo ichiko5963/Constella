@@ -385,3 +385,74 @@ export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
         references: [calendarIntegrations.id],
     }),
 }));
+
+// --- Custom AI Prompts ---
+
+export const customPrompts = sqliteTable("custom_prompt", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    name: text("name").notNull(),
+    prompt: text("prompt").notNull(),
+    variables: text("variables"), // JSON object with variable definitions
+    isDefault: integer("isDefault", { mode: "boolean" }).default(false),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const customPromptsRelations = relations(customPrompts, ({ one }) => ({
+    user: one(users, {
+        fields: [customPrompts.userId],
+        references: [users.id],
+    }),
+}));
+
+// --- Snippets ---
+
+export const snippets = sqliteTable("snippet", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    noteId: integer("noteId").references(() => meetingNotes.id, { onDelete: 'set null' }),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    tags: text("tags"), // JSON array
+    startTime: integer("startTime"), // For audio snippets
+    endTime: integer("endTime"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const snippetsRelations = relations(snippets, ({ one }) => ({
+    user: one(users, {
+        fields: [snippets.userId],
+        references: [users.id],
+    }),
+    note: one(meetingNotes, {
+        fields: [snippets.noteId],
+        references: [meetingNotes.id],
+    }),
+}));
+
+// --- Comments ---
+
+export const comments = sqliteTable("comment", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    noteId: integer("noteId").notNull().references(() => meetingNotes.id, { onDelete: 'cascade' }),
+    userId: text("userId").notNull().references(() => users.id),
+    content: text("content").notNull(),
+    mentions: text("mentions"), // JSON array of user IDs
+    highlightStart: integer("highlightStart"),
+    highlightEnd: integer("highlightEnd"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+    user: one(users, {
+        fields: [comments.userId],
+        references: [users.id],
+    }),
+    note: one(meetingNotes, {
+        fields: [comments.noteId],
+        references: [meetingNotes.id],
+    }),
+}));

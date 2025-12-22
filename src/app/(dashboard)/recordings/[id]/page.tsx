@@ -78,6 +78,7 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
                     audioUrl={recording.audioUrl || ''}
                     hasTranscription={!!recording.transcription}
                     status={recording.status || 'uploading'}
+                    noteId={note?.id || null}
                 />
 
                 {/* Right Column: AI Note View (8 cols) */}

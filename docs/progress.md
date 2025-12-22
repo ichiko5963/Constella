@@ -62,9 +62,9 @@
 
 ### 7.2 AI要約・分析
 - [ ] AI要約テンプレート — Template library + multi-format exports.
-- [ ] カスタムAIプロンプト — Enterprise-only prompt overrides tied to projects.
+- [x] カスタムAIプロンプト — Enterprise-only prompt overrides tied to projects.
 - [ ] AIノート→マインドマップ — Parse headings into graph and export PNG/SVG.
-- [ ] 週間レポート — Scheduled aggregation + dashboard cards/PDF.
+- [x] 週間レポート — Scheduled aggregation + dashboard cards/PDF.
 - [x] AIチャット — RAG chat MVP live; extend with Jira/email action blueprints.
 
 ### 7.3 会議参加・スケジューリング
@@ -74,9 +74,9 @@
 - [ ] ミーティングスケジューラー — Cal.com style booking page integrated with Google Calendar.
 
 ### 7.4 編集・共有・検索
-- [ ] 編集と注釈 (@メンション) — Tiptap-based editor with comments stored in `comments`.
-- [ ] 検索・スニペット — Smart search UI with snippet tagging + audio jump.
-- [ ] フォルダー管理と共有 — Tree UI for `parentFileId` plus share links/Slack hooks.
+- [x] 編集と注釈 (@メンション) — Tiptap-based editor with comments stored in `comments`.
+- [x] 検索・スニペット — Smart search UI with snippet tagging + audio jump.
+- [x] フォルダー管理と共有 — Tree UI for `parentFileId` plus share links/Slack hooks.
 - [x] エクスポート (TXT/PDF/SRT/DOCX) — Existing export actions; expand to mind map & weekly reports next.
 
 ### 7.5 インテグレーション / セキュリティ

@@ -9,6 +9,7 @@ import { NoteViewerWithEditor } from '@/components/note/note-viewer-with-editor'
 import { TaskReviewer } from '@/components/task/task-reviewer';
 import { RecordingDetailClient } from '@/components/recording/recording-detail-client';
 import { MindMapViewer } from '@/components/mindmap/mindmap-viewer';
+import { SpeakerDiarizationView } from '@/components/recording/speaker-diarization-view';
 
 export default async function RecordingDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -120,6 +121,11 @@ export default async function RecordingDetailPage({ params }: { params: Promise<
                         <MindMapViewer markdown={note.formattedMinutes} noteId={note.id} />
                     </div>
                 )}
+
+                {/* Speaker Diarization Section */}
+                <div className="lg:col-span-12 mt-8">
+                    <SpeakerDiarizationView recordingId={recordingId} />
+                </div>
             </div>
         </div>
     );

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { CalendarSync } from '@/components/settings/calendar-sync';
 import { BackgroundThemeSelector } from '@/components/settings/background-theme-selector';
 import { CustomPromptManager } from '@/components/settings/custom-prompt-manager';
+import { SummaryTemplateManager } from '@/components/settings/summary-template-manager';
 import { Settings } from 'lucide-react';
 
 export default async function SettingsPage() {
@@ -31,6 +32,9 @@ export default async function SettingsPage() {
 
                 {/* カスタムAIプロンプト */}
                 <CustomPromptManager />
+
+                {/* AI要約テンプレート */}
+                <SummaryTemplateManager />
             </div>
         </div>
     );

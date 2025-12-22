@@ -1,5 +1,6 @@
 import { Calendar } from '@/components/calendar/calendar';
 import { CalendarEventsList } from '@/components/calendar/calendar-events-list';
+import { ManualJoinButton } from '@/components/meeting/manual-join-button';
 import { auth } from '@/auth';
 import { db } from '@/db';
 import { tasks } from '@/db/schema';
@@ -35,6 +36,7 @@ export default async function CalendarPage() {
                     <h1 className="text-3xl font-bold text-white mb-2">カレンダー</h1>
                     <p className="text-gray-400">スケジュールとタスクを管理</p>
                 </div>
+                <ManualJoinButton />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

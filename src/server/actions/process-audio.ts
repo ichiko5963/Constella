@@ -114,7 +114,17 @@ export async function processRecording(recordingId: number) {
         }
 
         // 4. Summarize and Extract Info (GPT-4)
-        const prompt = `
+        // 要約テンプレートを取得
+        const { getDefaultSummaryTemplate } = await import('./summary-template');
+        const templateResult = await getDefaultSummaryTemplate();
+        
+        let prompt = '';
+        if (templateResult.success && templateResult.template) {
+            // テンプレートの変数を置換
+            prompt = templateResult.template.prompt.replace(/\{\{transcription\}\}/g, transcription.text);
+        } else {
+            // フォールバック: デフォルトプロンプト
+            prompt = `
     以下の会議の文字起こしから、プロフェッショナルな議事録を作成してください。
     
     JSON形式で出力してください。フォーマット:
@@ -130,6 +140,7 @@ export async function processRecording(recordingId: number) {
     文字起こし:
     ${transcription.text}
     `;
+        }
 
         const completion = await openai.chat.completions.create({
             model: 'gpt-4-turbo-preview',

@@ -481,3 +481,25 @@ export const weeklyReportsRelations = relations(weeklyReports, ({ one }) => ({
         references: [users.id],
     }),
 }));
+
+// --- Summary Templates ---
+
+export const summaryTemplates = sqliteTable("summary_template", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").references(() => users.id), // null = システムデフォルト
+    name: text("name").notNull(),
+    description: text("description"),
+    prompt: text("prompt").notNull(), // LLMプロンプトテンプレート
+    outputFormat: text("outputFormat").default('markdown'), // markdown, json, plain
+    variables: text("variables"), // JSON array of variable names
+    isDefault: integer("isDefault", { mode: "boolean" }).default(false),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const summaryTemplatesRelations = relations(summaryTemplates, ({ one }) => ({
+    user: one(users, {
+        fields: [summaryTemplates.userId],
+        references: [users.id],
+    }),
+}));

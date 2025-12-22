@@ -18,6 +18,27 @@ export default function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // handleInputChangeが存在しない場合のフォールバック
+    const handleChange = handleInputChange || ((e: React.ChangeEvent<HTMLInputElement>) => {
+        if (setInput && typeof setInput === 'function') {
+            setInput(e.target.value);
+        }
+    });
+
+    // 送信ハンドラー（handleSubmitが存在しない場合のフォールバック）
+    const onSubmit = handleSubmit || ((e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const message = formData.get('message') as string;
+        if (message && message.trim() && setInput) {
+            // カスタム送信処理（必要に応じて実装）
+            console.log('Submitting message:', message);
+        }
+    });
+
+    // 入力値が有効かチェック
+    const isValidInput = input && typeof input === 'string' && input.trim().length > 0;
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -161,18 +182,28 @@ export default function ChatPage() {
                 </CardContent>
 
                 <CardFooter className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
-                    <form onSubmit={handleSubmit} className="flex w-full gap-3 relative">
+                    <form onSubmit={onSubmit} className="flex w-full gap-3 relative">
                         <Input
                             ref={inputRef}
+                            name="message"
                             value={input ?? ''}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
+                            onKeyDown={(e) => {
+                                // Enterキーで送信（Shift+Enterは改行）
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    if (isValidInput && !isLoading && handleSubmit) {
+                                        handleSubmit(e as any);
+                                    }
+                                }
+                            }}
                             placeholder="質問を入力してください..."
                             className="flex-1 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-14 pl-6 rounded-2xl backdrop-blur-xl transition-all"
                         />
                         <Button
                             type="submit"
-                            disabled={isLoading || !(input || '').trim()}
-                            className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/90 text-black shadow-[0_0_15px_rgba(0,212,170,0.3)] hover:shadow-[0_0_25px_rgba(0,212,170,0.5)] transition-all duration-300 flex items-center justify-center p-0"
+                            disabled={isLoading || !isValidInput}
+                            className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/90 text-black shadow-[0_0_15px_rgba(0,212,170,0.3)] hover:shadow-[0_0_25px_rgba(0,212,170,0.5)] transition-all duration-300 flex items-center justify-center p-0 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Send className="h-5 w-5 ml-0.5" />
                         </Button>

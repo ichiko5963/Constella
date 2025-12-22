@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const s3Client = new S3Client({
@@ -28,5 +28,20 @@ export async function getPresignedUploadUrl(
     } catch (error) {
         console.error('Error creating presigned URL:', error);
         throw new Error('Failed to create upload URL');
+    }
+}
+
+export async function getPresignedDownloadUrl(key: string, expiresIn = 3600) {
+    const command = new GetObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key,
+    });
+
+    try {
+        const url = await getSignedUrl(s3Client, command, { expiresIn });
+        return url;
+    } catch (error) {
+        console.error('Error creating download URL:', error);
+        throw new Error('Failed to create download URL');
     }
 }

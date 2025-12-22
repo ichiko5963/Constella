@@ -1,103 +1,56 @@
-'use client';
+import { signIn } from "@/auth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
 
-import { useState } from 'react';
-import { authClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
-
-export default function LoginPage() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isRegistering, setIsRegistering] = useState(false);
-    const router = useRouter();
-
-    const handleAuth = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (isRegistering) {
-            await authClient.signUp.email({
-                email,
-                password,
-                name: email.split('@')[0], // Simple placeholder
-            }, {
-                onSuccess: () => {
-                    router.push('/dashboard');
-                },
-                onError: (ctx) => {
-                    alert(ctx.error.message);
-                }
-            });
-        } else {
-            await authClient.signIn.email({
-                email,
-                password,
-            }, {
-                onSuccess: () => {
-                    router.push('/dashboard');
-                },
-                onError: (ctx) => {
-                    alert(ctx.error.message);
-                }
-            });
-        }
-    };
+export default async function LoginPage() {
+    const session = await auth();
+    if (session) {
+        redirect('/dashboard');
+    }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
-            <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
-                <div className="text-center">
-                    <h2 className="text-3xl font-extrabold text-gray-900">Actory Management</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        {isRegistering ? 'Create your account' : 'Sign in to your account'}
-                    </p>
-                </div>
-                <form className="mt-8 space-y-6" onSubmit={handleAuth}>
-                    <div className="space-y-4 rounded-md shadow-sm">
-                        <div>
-                            <label htmlFor="email-address" className="sr-only">Email address</label>
-                            <input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 pl-3"
-                                placeholder="Email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="sr-only">Password</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="relative block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 pl-3"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                    </div>
+        <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+            {/* Animated Background Elements */}
+            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px] animate-pulse-glow pointer-events-none" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-[120px] animate-pulse-glow pointer-events-none" style={{ animationDelay: '1.5s' }} />
 
-                    <div>
-                        <button
-                            type="submit"
-                            className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            <div className="relative z-10 w-full max-w-md">
+                <Card className="glass border-white/5 shadow-2xl backdrop-blur-xl">
+                    <CardHeader className="space-y-2 text-center pb-8 pt-10">
+                        <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
+                            <span className="text-3xl font-bold text-white">A</span>
+                        </div>
+                        <CardTitle className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                            Welcome Back
+                        </CardTitle>
+                        <CardDescription className="text-gray-400 text-base">
+                            Sign in to continue to Actory
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pb-10 px-8">
+                        <form
+                            action={async () => {
+                                "use server"
+                                await signIn("google", { redirectTo: "/dashboard" })
+                            }}
+                            className="w-full"
                         >
-                            {isRegistering ? 'Sign up' : 'Sign in'}
-                        </button>
-                    </div>
-                </form>
-                <div className="text-center">
-                    <button
-                        onClick={() => setIsRegistering(!isRegistering)}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                    >
-                        {isRegistering ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-                    </button>
-                </div>
+                            <Button variant="outline" className="w-full h-12 text-base font-medium border-white/10 hover:bg-white/5 hover:text-white transition-all duration-300 group z-50 relative overscroll-auto">
+                                <svg className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                                    <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                                </svg>
+                                Continue with Google
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <p className="text-center text-sm text-gray-500 mt-8">
+                    By clicking continue, you agree to our <a href="#" className="underline hover:text-primary transition-colors">Terms of Service</a> and <a href="#" className="underline hover:text-primary transition-colors">Privacy Policy</a>.
+                </p>
             </div>
         </div>
     );

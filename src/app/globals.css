@@ -1,26 +1,224 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Brand Colors */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* UI Colors */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
+/* 
+  Actory Premium Dark Theme 
+  Concept: Jet Black x Inorganic x Minimalist
+  Primary: Cyan (#00D4AA)
+  Background: Deep Gradient
+*/
+
+:root {
+  /* Default to Dark Mode values for "Jet Black" aesthetic */
+  --background: #0a0f0f;
+  /* Deep dark teal/black */
+  --foreground: #ededed;
+
+  --card: #131b1b;
+  /* Slightly lighter than bg */
+  --card-foreground: #ededed;
+
+  --popover: #131b1b;
+  --popover-foreground: #ededed;
+
+  --primary: #00D4AA;
+  /* Cyan */
+  --primary-foreground: #000000;
+
+  --secondary: #0D7377;
+  /* Teal */
+  --secondary-foreground: #ffffff;
+
+  --muted: #1f2e2e;
+  --muted-foreground: #889999;
+
+  --accent: #10B981;
+  /* Emerald */
+  --accent-foreground: #ffffff;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #1f2e2e;
+  --input: #1f2e2e;
+  --ring: #00D4AA;
+
+  --radius: 0.75rem;
+  /* Rounder, modern look */
+
+  /* Custom Gradients */
+  --bg-gradient-start: #0a0f0f;
+  --bg-gradient-end: #1a2f2f;
+}
+
+/* Force Dark Mode (optional, seeing requirement is specific) */
+@media (prefers-color-scheme: light) {
+
+  /* Keeping the same dark aesthetic even in light mode for strict brand adherence */
   :root {
-    --background: #0a0a0a;
+    --background: #0a0f0f;
     --foreground: #ededed;
+    --card: #131b1b;
+    --card-foreground: #ededed;
+    --popover: #131b1b;
+    --popover-foreground: #ededed;
+    --primary: #00D4AA;
+    --primary-foreground: #000000;
+    --secondary: #0D7377;
+    --secondary-foreground: #ffffff;
+    --muted: #1f2e2e;
+    --muted-foreground: #889999;
+    --accent: #10B981;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #1f2e2e;
+    --input: #1f2e2e;
+    --ring: #00D4AA;
   }
 }
 
 body {
-  background: var(--background);
+  @apply bg-[#020205] text-white;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
+    /* Purple Glow */
+    radial-gradient(circle at 80% 20%, rgba(192, 38, 211, 0.12) 0%, transparent 50%),
+    /* Magenta Glow */
+    radial-gradient(circle at 50% 70%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    /* Blue Glow */
+    radial-gradient(circle at 10% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+    /* Cyan Glow */
+    radial-gradient(circle at 90% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+    /* Pink Glow */
+    radial-gradient(circle at 50% 0%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+    /* Primary Cyan Glow */
+    linear-gradient(to bottom, #020205 0%, #050510 100%);
+  /* Deep Dark Base */
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(19, 27, 27, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(88, 28, 135, 0.1) 0%,
+    rgba(192, 38, 211, 0.05) 25%,
+    rgba(59, 130, 246, 0.05) 50%,
+    rgba(6, 182, 212, 0.05) 75%,
+    rgba(236, 72, 153, 0.1) 100%
+  );
+  border-radius: inherit;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.glass-hover:hover {
+  background: rgba(19, 27, 27, 0.6);
+  border-color: rgba(0, 212, 170, 0.2);
+}
+
+.glass-hover:hover::before {
+  opacity: 0.7;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(0, 212, 170, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite;
 }

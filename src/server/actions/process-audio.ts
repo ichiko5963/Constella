@@ -1,11 +1,13 @@
 'use server';
 
 import { db } from '@/db';
-import { recordings, meetingNotes } from '@/db/schema';
+import { recordings, meetingNotes, taskCandidates } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { openai } from '@/lib/openai';
 import { updateRecordingStatus } from './recording';
-import { auth } from '@/lib/auth';
+import { indexMeetingNote } from './rag';
+import { getPresignedDownloadUrl } from '@/lib/storage';
+import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import fs from 'fs';
 import path from 'path';
@@ -19,11 +21,9 @@ import { pipeline } from 'stream/promises';
 // For now, let's implement a basic version that might hit timeouts on Vercel but works locally.
 
 export async function processRecording(recordingId: number) {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    const session = await auth();
 
-    if (!session) {
+    if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
     }
 
@@ -37,11 +37,14 @@ export async function processRecording(recordingId: number) {
 
         await updateRecordingStatus(recordingId, 'transcribing');
 
-        // 2. Transcribe (Mocking download for now, assuming we handle file differently or use a URL-based transcription service?)
+        // 2. Transcribe
         // OpenAI Whisper API requires a ReadStream. We need to fetch the file from S3 (via URL) and stream it.
 
+        // Generate signed URL for reading
+        const signedUrl = await getPresignedDownloadUrl(recording.audioKey);
+
         // Fetch audio file
-        const response = await fetch(recording.audioUrl);
+        const response = await fetch(signedUrl);
         if (!response.ok) throw new Error('Failed to fetch audio file');
 
         // Save to temp file needed for OpenAI SDK? 
@@ -101,22 +104,43 @@ export async function processRecording(recordingId: number) {
 
         // 5. Create Meeting Note
         // Check if meeting note already exists? For now assume new.
-        await db.insert(meetingNotes).values({
+        const [note] = await db.insert(meetingNotes).values({
             userId: session.user.id,
-            fileId: recording.fileId!, // Assuming fileId exists or we need to handle it
-            projectId: recording.projectId!, // Assuming projectId exists
+            fileId: recording.fileId!,
+            projectId: recording.projectId!,
             recordingId: recordingId,
-            title: '自動生成議事録', // Should extract from content
+            title: '自動生成議事録',
             summary: result.summary,
             keyPoints: JSON.stringify(result.keyPoints),
             decisions: JSON.stringify(result.decisions),
             actionItems: JSON.stringify(result.actionItems),
             rawTranscription: transcription.text,
             formattedMinutes: `## 要約\n${result.summary}\n\n## 決定事項\n${result.decisions.join('\n- ')}`,
-        });
+        }).returning();
+
+        // 5.5 Index for RAG
+        // We use rawTranscription or summary? Let's use rawTranscription for full context search
+        if (note && transcription.text) {
+            await indexMeetingNote(note.id, transcription.text).catch(e => console.error('Indexing failed:', e));
+        }
+
+        // 6. Create Task Candidates
+        const candidates = result.actionItems.map((item: any) => ({
+            userId: session!.user!.id!,
+            recordingId: recordingId,
+            suggestedProjectId: recording.projectId,
+            suggestedFileId: recording.fileId,
+            title: item.title || 'New Task',
+            description: item.description || '',
+            suggestedPriority: 'medium', // Default
+            isApproved: null, // Pending
+        }));
+
+        if (candidates.length > 0) {
+            await db.insert(taskCandidates).values(candidates);
+        }
 
         await updateRecordingStatus(recordingId, 'completed');
-
         return { success: true };
 
     } catch (error) {

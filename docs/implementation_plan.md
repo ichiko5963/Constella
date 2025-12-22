@@ -101,3 +101,17 @@ This document outlines the technical implementation steps for Actory, based on t
 - [ ] Deploy to Vercel (or similar).
 - [ ] Configure Environment Variables.
 - [ ] Verify Production functionality.
+
+## Verification Plan for Recording Upload & Processing
+
+### Automated Verification
+- None (requires S3/OpenAI mocks which are not set up).
+
+### Manual Verification (Browser Tool)
+1.  **Login**: Access `/login` and sign in (or sign up).
+2.  **Create Project**: Create a new project "Test Project".
+3.  **Upload**: Use "Upload Recording" button to upload a small sample audio file (need to locate one or create one).
+4.  **Verify**:
+    - Check if toast appears "Upload successful".
+    - Check if "Processing" status is shown.
+    - Wait for completion (this might fail if OpenAI keys are missing).

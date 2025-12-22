@@ -1,70 +1,137 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, X } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { createProject } from '@/server/actions/project';
-import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
-// Simplified "Dialog" for MVP speed - just a conditional render or standard Dialog if I installed radix primitive.
-// Since I haven't installed Dialog primitive yet, I'll make a simple inline form toggle or custom modal.
-// Let's go with a custom modal to keep it clean.
+const PROJECT_COLORS = [
+    { name: 'Blue', value: '#007AFF' },
+    { name: 'Purple', value: '#5856D6' },
+    { name: 'Green', value: '#34C759' },
+    { name: 'Orange', value: '#FF9500' },
+    { name: 'Red', value: '#FF3B30' },
+    { name: 'Teal', value: '#30B0C7' },
+];
 
 export function CreateProjectDialog() {
-    const [isOpen, setIsOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
+    const [color, setColor] = useState(PROJECT_COLORS[0].value);
+    const formRef = useRef<HTMLFormElement>(null);
 
-    async function onSubmit(formData: FormData) {
+    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
         setIsLoading(true);
-        const res = await createProject(formData);
-        setIsLoading(false);
 
-        if (res.success) {
-            setIsOpen(false);
-            // router.refresh() is handled by revalidatePath in server action usually, but sometimes client refresh needed for immediate feedback if utilizing client cache aggressively.
-        } else {
-            alert(res.error);
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        formData.set('color', color);
+
+        try {
+            const res = await createProject(formData);
+            setIsLoading(false);
+
+            if (res.success) {
+                // フォームをリセット（参照を使用）
+                if (formRef.current) {
+                    formRef.current.reset();
+                }
+                setColor(PROJECT_COLORS[0].value);
+                setOpen(false);
+                toast.success('プロジェクトを作成しました');
+                // ページをリロードしてプロジェクト一覧を更新
+                window.location.reload();
+            } else {
+                toast.error(res.error || 'プロジェクトの作成に失敗しました');
+            }
+        } catch (error) {
+            setIsLoading(false);
+            console.error('Error creating project:', error);
+            toast.error('プロジェクトの作成中にエラーが発生しました');
         }
     }
 
     return (
-        <>
-            <Button onClick={() => setIsOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> New Project
-            </Button>
-
-            {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Create Project</h2>
-                            <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-gray-700">
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        <form action={onSubmit} className="space-y-4">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Project Name</label>
-                                <Input name="name" id="name" placeholder="Acme Corp Meeting" required className="mt-1" />
-                            </div>
-                            <div>
-                                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                                <Input name="description" id="description" placeholder="Optional description" className="mt-1" />
-                            </div>
-
-                            <div className="flex justify-end gap-2 mt-6">
-                                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-                                <Button type="submit" disabled={isLoading}>
-                                    {isLoading ? 'Creating...' : 'Create'}
-                                </Button>
-                            </div>
-                        </form>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <Plus className="mr-2 h-4 w-4" /> New Project
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-black/90 border-white/10 text-white">
+                <DialogHeader>
+                    <DialogTitle>Create Project</DialogTitle>
+                    <DialogDescription>
+                        Create a new workspace for your recordings and tasks.
+                    </DialogDescription>
+                </DialogHeader>
+                <form ref={formRef} onSubmit={onSubmit} className="space-y-4 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">Project Name</Label>
+                        <Input
+                            name="name"
+                            id="name"
+                            placeholder="Acme Corp Meeting"
+                            required
+                            className="bg-white/5 border-white/10 text-white"
+                        />
                     </div>
-                </div>
-            )}
-        </>
+                    <div className="grid gap-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Input
+                            name="description"
+                            id="description"
+                            placeholder="Optional description"
+                            className="bg-white/5 border-white/10 text-white"
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label>Color Code</Label>
+                        <Select value={color} onValueChange={setColor}>
+                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                <SelectValue placeholder="Select color" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {PROJECT_COLORS.map((c) => (
+                                    <SelectItem key={c.value} value={c.value}>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.value }} />
+                                            {c.name}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="submit" disabled={isLoading} className="bg-primary text-black hover:bg-primary/90 w-full">
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Create Project
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }

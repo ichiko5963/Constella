@@ -18,15 +18,15 @@
 - [x] Define `Chat` schema (Conversations & Messages)
 
 ## 3. Backend Logic (Server Actions / API)
-- [x] **Auth**: Login / Signup / Logout
+- [x] **Auth**: Login / Signup / Logout (Email + Google)
 - [x] **Recording**: Upload Audio to Storage
 - [x] **Recording**: Save Metadata to DB
 - [x] **Audio Processing**: Split large files (>25MB)
 - [x] **Transcription**: OpenAI Whisper API integration
 - [x] **AI Processing**: Generate Summaries, Decisions, Tasks from Transcript
 - [x] **Project**: Create / Update / Delete / List
-- [ ] **Task**: Create / Update / Delete / List / Approve
-- [ ] **Chat**: RAG (Search Notes) + Chat Response Generation
+- [x] **Task**: Create / Update / Delete / List / Approve
+- [x] **Chat**: RAG (Search Notes) + Chat Response Generation
 
 ## 4. Frontend Implementation
 - [x] **Auth UI**: Login / Signup Pages
@@ -34,8 +34,8 @@
 - [x] **Project UI**: List & Create Modal
 - [x] **Project Detail**: Recording List & Upload Button
 - [x] **Recording Detail**: Audio Player & Transcript View
-- [ ] **Task UI**: Task Board / List & Task Detail
-- [ ] **Chat UI**: Chat Interface
+- [x] **Task UI**: Task Board / List & Task Detail
+- [x] **Chat UI**: Chat Interface
 - [ ] **Calendar**: Monthly View with Task indicators
 - [ ] **Task List**: Daily/Weekly Task Management
 - [ ] **Chat**: AI Assistant Interface

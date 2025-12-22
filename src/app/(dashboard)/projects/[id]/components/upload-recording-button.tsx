@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { createRecordingUploadUrl } from '@/server/actions/recording';
 import { processRecording } from '@/server/actions/process-audio';
 import { useRouter } from 'next/navigation';
@@ -46,15 +48,15 @@ export function UploadRecordingButton({ projectId }: { projectId: number }) {
             // but here we wait to show initial 'processing' state refresh)
             await processRecording(recordingId); // This might timeout if long, but let's trigger it.
 
-            alert('Upload successful! Processing started.');
+            toast.success('Upload successful! Processing started.');
             router.refresh();
 
         } catch (err: unknown) {
             console.error(err);
             if (err instanceof Error) {
-                alert(`Error: ${err.message}`);
+                toast.error(`Error: ${err.message}`);
             } else {
-                alert('An unknown error occurred');
+                toast.error('An unknown error occurred');
             }
         } finally {
             setIsUploading(false);
@@ -74,16 +76,10 @@ export function UploadRecordingButton({ projectId }: { projectId: number }) {
                 disabled={isUploading}
             />
             <label htmlFor="upload-recording">
-                <Button
-                    disabled={isUploading}
-                    className="cursor-pointer"
-                    asChild
-                >
-                    <span>
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        {isUploading ? 'Uploading...' : 'Upload Recording'}
-                    </span>
-                </Button>
+                <div role="button" className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-primary/40 h-10 px-4 py-2 rounded-full cursor-pointer transition-all duration-300 transform active:scale-95">
+                    {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    {isUploading ? 'Uploading...' : 'Upload Recording'}
+                </div>
             </label>
         </div>
     );

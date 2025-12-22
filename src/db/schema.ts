@@ -179,3 +179,93 @@ export const chatMessages = sqliteTable("chat_message", {
     sources: text("sources"), // JSON
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
 });
+
+export const subscriptions = sqliteTable("subscription", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id).unique(),
+    stripeCustomerId: text("stripeCustomerId").unique(),
+    stripeSubscriptionId: text("stripeSubscriptionId").unique(),
+    stripePriceId: text("stripePriceId"),
+    status: text("status").notNull(), // active, past_due, canceled, incomplete
+    currentPeriodEnd: integer("currentPeriodEnd", { mode: "timestamp" }),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+// --- RAG / Vector Search ---
+
+import { customType } from 'drizzle-orm/sqlite-core';
+
+const float32Blob = customType<{ data: number[]; driverData: Buffer }>({
+    dataType() {
+        return "F32_BLOB(1536)"; // OpenAI embedding dimension
+    },
+    toDriver(value: number[]): Buffer {
+        return Buffer.from(new Float32Array(value).buffer);
+    },
+    fromDriver(value: Buffer): number[] {
+        return Array.from(new Float32Array(value.buffer));
+    },
+});
+
+export const embeddings = sqliteTable("embedding", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    resourceId: integer("resourceId").notNull(), // ID of the note/chunk
+    resourceType: text("resourceType").notNull(), // 'meeting_note'
+    content: text("content").notNull(), // The actual text chunk
+    embedding: float32Blob("embedding"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+});
+
+// --- Relations ---
+
+import { relations } from 'drizzle-orm';
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+    user: one(users, {
+        fields: [projects.userId],
+        references: [users.id],
+    }),
+    recordings: many(recordings),
+    files: many(files),
+    meetingNotes: many(meetingNotes),
+    tasks: many(tasks),
+}));
+
+export const recordingsRelations = relations(recordings, ({ one, many }) => ({
+    project: one(projects, {
+        fields: [recordings.projectId],
+        references: [projects.id],
+    }),
+    file: one(files, {
+        fields: [recordings.fileId],
+        references: [files.id],
+    }),
+    meetingNotes: many(meetingNotes),
+    taskCandidates: many(taskCandidates),
+}));
+
+export const meetingNotesRelations = relations(meetingNotes, ({ one }) => ({
+    project: one(projects, {
+        fields: [meetingNotes.projectId],
+        references: [projects.id],
+    }),
+    recording: one(recordings, {
+        fields: [meetingNotes.recordingId],
+        references: [recordings.id],
+    }),
+}));
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+    project: one(projects, {
+        fields: [tasks.projectId],
+        references: [projects.id],
+    }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+    user: one(users, {
+        fields: [subscriptions.userId],
+        references: [users.id],
+    }),
+}));

@@ -1,21 +1,19 @@
 'use server';
 
 import { db } from '@/db';
-import { recordings } from '@/db/schema';
+import { recordings, projects } from '@/db/schema';
 import { getPresignedUploadUrl } from '@/lib/storage';
-import { auth } from '@/lib/auth';
+import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 
-export async function createRecordingUploadUrl(projectId: number, fileType: string = 'audio/webm') {
+export async function createRecordingUploadUrl(projectId?: number, fileType: string = 'audio/webm') {
     // 1. Authenticate user
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    const session = await auth();
 
-    if (!session) {
+    if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
     }
 
@@ -27,17 +25,23 @@ export async function createRecordingUploadUrl(projectId: number, fileType: stri
     try {
         const { url } = await getPresignedUploadUrl(key, fileType);
 
-        // 4. Create DB Entry (Initial status: uploading)
-        // Note: We might want to create the record first to track it, or after upload.
-        // Here we return the URL and let the client upload. 
-        // We can verify upload later or create the record now.
-        // Creating it now allows us to return an ID to the client.
+        // 4. Validate Project IF provided
+        if (projectId) {
+            const project = await db.query.projects.findFirst({
+                where: (p, { and, eq }) => and(
+                    eq(p.id, projectId),
+                    eq(p.userId, session.user!.id!)
+                )
+            });
 
-        // Check if project belongs to user (SKIP for MVP speed, but TODO add check)
+            if (!project) {
+                return { success: false, error: 'Project not found or unauthorized' };
+            }
+        }
 
         const [inserted] = await db.insert(recordings).values({
             userId: session.user.id,
-            projectId: projectId,
+            projectId: projectId || null, // Allow null
             audioKey: key,
             audioUrl: url.split('?')[0], // Base URL without signature
             status: 'uploading',
@@ -51,6 +55,7 @@ export async function createRecordingUploadUrl(projectId: number, fileType: stri
             key
         };
 
+
     } catch (error) {
         console.error('Failed to create upload URL:', error);
         return { success: false, error: 'Failed to generate upload URL' };
@@ -58,11 +63,9 @@ export async function createRecordingUploadUrl(projectId: number, fileType: stri
 }
 
 export async function updateRecordingStatus(recordingId: number, status: 'transcribing' | 'processing' | 'completed' | 'failed') {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    const session = await auth();
 
-    if (!session) {
+    if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
     }
 

@@ -10,9 +10,15 @@ export default async function CalendarPage() {
 
     if (!session?.user?.id) return null;
 
-    const userTasks = await db.query.tasks.findMany({
-        where: eq(tasks.userId, session.user.id),
-    });
+    let userTasks = [];
+    try {
+        userTasks = await db.query.tasks.findMany({
+            where: eq(tasks.userId, session.user.id),
+        });
+    } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+        // エラーが発生しても空配列で続行
+    }
 
     const formattedTasks = userTasks
         .filter(t => t.dueDate) // Filter out tasks without due date for calendar

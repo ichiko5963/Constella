@@ -25,7 +25,7 @@ if (!databaseUrl) {
 }
 
 // データベースURLが設定されている場合のみクライアントを作成
-let db: ReturnType<typeof drizzle>;
+let db: ReturnType<typeof drizzle<typeof schema>>;
 
 if (databaseUrl) {
     const client = createClient({

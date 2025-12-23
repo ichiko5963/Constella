@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, FileAudio, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { createRecordingUploadUrl } from '@/server/actions/recording';
-import { processRecording } from '@/server/actions/process-audio';
+// import { createRecordingUploadUrl } from '@/server/actions/recording'; // サーバー経由アップロードに変更
+// import { processRecording } from '@/server/actions/process-audio'; // サーバー側で処理
 import { useRouter } from 'next/navigation';
 // import { normalizeAudioFormat } from '@/lib/audio-converter'; // 必要に応じて使用
 
@@ -85,42 +85,26 @@ export function RecordingImport({ projectId, onImportComplete }: RecordingImport
                 throw new Error(error || 'アップロードURLの取得に失敗しました。S3の設定を確認してください。');
             }
 
-            setRecordingId(newRecordingId);
+            // 2. サーバー経由でアップロード（CORS問題を回避）
+            const formData = new FormData();
+            formData.append('file', file);
+            if (projectId) {
+                formData.append('projectId', projectId.toString());
+            }
 
-            // 2. S3にアップロード（プログレスバー付き）
-            const xhr = new XMLHttpRequest();
-            
-            await new Promise<void>((resolve, reject) => {
-                xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable) {
-                        const percentComplete = (e.loaded / e.total) * 100;
-                        setUploadProgress(percentComplete);
-                    }
-                });
-
-                xhr.addEventListener('load', () => {
-                    if (xhr.status === 200 || xhr.status === 204) {
-                        resolve();
-                    } else {
-                        console.error('Upload failed with status:', xhr.status, xhr.statusText, xhr.responseText);
-                        reject(new Error(`アップロードに失敗しました (ステータス: ${xhr.status})`));
-                    }
-                });
-
-                xhr.addEventListener('error', () => {
-                    console.error('Upload XHR error:', xhr.status, xhr.statusText, xhr.responseText);
-                    reject(new Error('アップロード中にエラーが発生しました。ネットワーク接続を確認してください。'));
-                });
-
-                xhr.addEventListener('abort', () => {
-                    reject(new Error('アップロードが中断されました'));
-                });
-
-                xhr.open('PUT', url);
-                xhr.setRequestHeader('Content-Type', fileType);
-                // S3へのアップロードでは、追加のヘッダーは不要（presigned URLに含まれている）
-                xhr.send(file);
+            const uploadResponse = await fetch('/api/recordings/upload', {
+                method: 'POST',
+                body: formData,
             });
+
+            if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `アップロードに失敗しました (ステータス: ${uploadResponse.status})`);
+            }
+
+            const result = await uploadResponse.json();
+            const newRecordingId = result.recordingId || newRecordingId;
+            setRecordingId(newRecordingId);
 
             // アップロード完了を確認
             setUploadStatus('transcribing');

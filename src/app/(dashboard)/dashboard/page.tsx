@@ -10,21 +10,22 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
-    const session = await auth();
-    if (!session?.user?.id) return null;
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return null;
 
-    const allRecordings = await db.query.recordings.findMany({
-        where: eq(recordings.userId, session.user.id),
-        orderBy: desc(recordings.createdAt),
-        with: { project: true }
-    });
-    const recentRecordings = allRecordings.slice(0, 3);
+        const allRecordings = await db.query.recordings.findMany({
+            where: eq(recordings.userId, session.user.id),
+            orderBy: desc(recordings.createdAt),
+            with: { project: true }
+        });
+        const recentRecordings = allRecordings.slice(0, 3);
 
-    const allProjects = await db.query.projects.findMany({
-        where: eq(projects.userId, session.user.id),
-        orderBy: desc(projects.updatedAt),
-    });
-    const recentProjects = allProjects.slice(0, 3);
+        const allProjects = await db.query.projects.findMany({
+            where: eq(projects.userId, session.user.id),
+            orderBy: desc(projects.updatedAt),
+        });
+        const recentProjects = allProjects.slice(0, 3);
 
     return (
         <div className="space-y-12 max-w-7xl mx-auto">
@@ -163,4 +164,17 @@ export default async function DashboardPage() {
             </div>
         </div>
     );
+    } catch (error) {
+        console.error('Dashboard page error:', error);
+        return (
+            <div className="space-y-12 max-w-7xl mx-auto">
+                <div className="text-center py-12">
+                    <h1 className="text-2xl font-bold text-white mb-4">エラーが発生しました</h1>
+                    <p className="text-gray-400">
+                        {error instanceof Error ? error.message : '不明なエラーが発生しました'}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 }

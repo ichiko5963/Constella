@@ -72,9 +72,11 @@ export async function POST(req: NextRequest) {
             fileType = mimeTypes[extension || ''] || 'audio/mpeg';
         }
 
-        // S3キーを生成
-        const fileExtension = fileType.split('/')[1] || 'webm';
-        const key = `recordings/${session.user.id}/${nanoid()}.${fileExtension}`;
+        // S3キーを生成（拡張子を取得）
+        const mimeExtension = fileType.split('/')[1] || 'webm';
+        // ファイル名から拡張子を取得（より正確）
+        const fileNameExtension = file.name.split('.').pop()?.toLowerCase() || mimeExtension;
+        const key = `recordings/${session.user.id}/${nanoid()}.${fileNameExtension}`;
 
         // Presigned URLを取得
         const { url: presignedUrl } = await getPresignedUploadUrl(key, fileType);

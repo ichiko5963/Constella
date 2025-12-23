@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         }
 
         // プロジェクトの検証（提供されている場合）
-        if (projectId) {
+        if (projectId && session.user.id) {
             const project = await db.query.projects.findFirst({
                 where: (p, { and, eq }) => and(
                     eq(p.id, projectId),

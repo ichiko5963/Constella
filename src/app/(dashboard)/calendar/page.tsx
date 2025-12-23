@@ -10,7 +10,14 @@ export default async function CalendarPage() {
 
     if (!session?.user?.id) return null;
 
-    let userTasks = [];
+    let userTasks: Array<{
+        id: number;
+        title: string;
+        dueDate: Date | null;
+        status: string | null;
+        priority: string | null;
+        projectId: number | null;
+    }> = [];
     try {
         userTasks = await db.query.tasks.findMany({
             where: eq(tasks.userId, session.user.id),

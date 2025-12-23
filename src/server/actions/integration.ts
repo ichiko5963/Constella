@@ -61,11 +61,13 @@ export async function upsertIntegration(
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         // 既存の統合を確認
         const existing = await db.query.integrations.findFirst({
             where: (integrations, { and, eq }) => and(
-                eq(integrations.userId, session.user.id),
+                eq(integrations.userId, userId),
                 eq(integrations.provider, provider)
             ),
         });

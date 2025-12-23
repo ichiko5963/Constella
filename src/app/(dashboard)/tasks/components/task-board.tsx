@@ -29,12 +29,12 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
     const [activeId, setActiveId] = useState<number | null>(null);
     const router = useRouter();
 
-    // Tasks grouped by status
+    // Tasks grouped by status (completed tasks are hidden from the board)
     const tasksByStatus = useMemo(() => {
         return {
             pending: tasks.filter(t => !t.status || t.status === 'pending'),
-            in_progress: tasks.filter(t => t.status === 'in_progress' || t.status === 'approved'), // Map approved to in_progress if needed, or keep separate
-            completed: tasks.filter(t => t.status === 'completed'),
+            in_progress: tasks.filter(t => t.status === 'in_progress' || t.status === 'approved'),
+            completed: [], // Completed tasks are hidden - they go to "past completed tasks"
         };
     }, [tasks]);
 
@@ -63,7 +63,8 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
 
         let newStatus = '';
 
-        const isOverColumn = COLUMNS.some(col => col.id === overId);
+        // Check if dropped on a column (including 'completed')
+        const isOverColumn = COLUMNS.some(col => col.id === overId) || overId === 'completed';
         if (isOverColumn) {
             newStatus = overId as string;
         } else {
@@ -79,9 +80,14 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
         // Update local state optimistically
         const task = tasks.find(t => t.id === activeId);
         if (task && task.status !== newStatus) {
-            setTasks((prev) =>
-                prev.map(t => t.id === activeId ? { ...t, status: newStatus } : t)
-            );
+            // If moving to completed, remove from board immediately
+            if (newStatus === 'completed') {
+                setTasks((prev) => prev.filter(t => t.id !== activeId));
+            } else {
+                setTasks((prev) =>
+                    prev.map(t => t.id === activeId ? { ...t, status: newStatus } : t)
+                );
+            }
 
             // Call server action
             await updateTaskStatus(activeId as number, newStatus);
@@ -106,32 +112,75 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
             onDragEnd={handleDragEnd}
         >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-x-auto">
-                {COLUMNS.map((col) => {
+                {COLUMNS.filter(col => col.id !== 'completed').map((col) => {
                     const colTasks = tasksByStatus[col.id as keyof typeof tasksByStatus] || [];
 
                     return (
-                        <div key={col.id} className={cn("flex flex-col h-full rounded-lg p-4", col.color)}>
+                        <div 
+                            key={col.id} 
+                            id={col.id}
+                            className={cn(
+                                "flex flex-col h-full rounded-lg p-4 glass border border-white/10",
+                                col.id === 'pending' && "bg-white/5",
+                                col.id === 'in_progress' && "bg-blue-500/10"
+                            )}
+                        >
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-gray-700">{col.title}</h3>
-                                <span className="bg-white px-2 py-0.5 rounded-full text-xs font-medium text-gray-500 shadow-sm">
+                                <h3 className="font-bold text-white text-lg">{col.title}</h3>
+                                <span className="bg-white/10 px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm">
                                     {colTasks.length}
                                 </span>
                             </div>
 
                             <SortableContext
-                                id={col.id} // Important: Column ID acts as container ID for drag check logic
+                                id={col.id}
                                 items={colTasks.map(t => t.id)}
                                 strategy={verticalListSortingStrategy}
                             >
-                                <div className="flex-1 space-y-3 min-h-[100px]">
-                                    {colTasks.map(task => (
-                                        <TaskCard key={task.id} task={task} />
-                                    ))}
+                                <div 
+                                    className="flex-1 space-y-3 min-h-[200px] p-2 rounded-lg"
+                                    style={{ 
+                                        minHeight: '200px',
+                                        background: col.id === 'pending' 
+                                            ? 'rgba(255, 255, 255, 0.02)' 
+                                            : 'rgba(59, 130, 246, 0.05)'
+                                    }}
+                                >
+                                    {colTasks.length === 0 ? (
+                                        <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                                            <p>タスクをドラッグ&ドロップ</p>
+                                        </div>
+                                    ) : (
+                                        colTasks.map(task => (
+                                            <TaskCard key={task.id} task={task} />
+                                        ))
+                                    )}
                                 </div>
                             </SortableContext>
                         </div>
                     );
                 })}
+                
+                {/* Done列 - タスクをここにドロップすると完了として非表示になる */}
+                <div 
+                    id="completed"
+                    data-column-id="completed"
+                    className="flex flex-col h-full rounded-lg p-4 glass border-2 border-dashed border-green-500/30 bg-green-500/10 hover:border-green-500/50 transition-colors"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-white text-lg">Done</h3>
+                        <span className="bg-green-500/20 px-3 py-1 rounded-full text-xs font-medium text-green-300 shadow-sm">
+                            完了
+                        </span>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center min-h-[200px] p-2 rounded-lg bg-green-500/5">
+                        <p className="text-gray-400 text-sm text-center">
+                            <span className="block mb-2">✓</span>
+                            タスクをここにドロップすると<br />
+                            <span className="text-green-400 font-semibold">完了として非表示</span>になります
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <DragOverlay>

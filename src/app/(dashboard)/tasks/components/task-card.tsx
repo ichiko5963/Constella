@@ -43,12 +43,17 @@ export function TaskCard({ task }: TaskCardProps) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
-            <Card className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-white">
+            <Card className="cursor-grab active:cursor-grabbing hover:shadow-lg hover:scale-[1.02] transition-all glass border border-white/10 bg-white/10 hover:bg-white/15">
                 <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between items-start gap-2">
-                        <h4 className="font-semibold text-sm line-clamp-2">{task.title}</h4>
+                        <h4 className="font-semibold text-sm text-white line-clamp-2">{task.title}</h4>
                         <div className="flex flex-col items-end gap-1">
-                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded border uppercase font-bold", priorityColor)}>
+                            <span className={cn(
+                                "text-[10px] px-2 py-0.5 rounded border uppercase font-bold",
+                                task.priority === 'high' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
+                                task.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' :
+                                'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                            )}>
                                 {task.priority || 'medium'}
                             </span>
                             <TaskEditDialog task={task} />
@@ -56,14 +61,14 @@ export function TaskCard({ task }: TaskCardProps) {
                     </div>
 
                     {task.description && (
-                        <p className="text-xs text-gray-500 line-clamp-2">{task.description}</p>
+                        <p className="text-xs text-gray-400 line-clamp-2">{task.description}</p>
                     )}
 
-                    <div className="flex items-center text-xs text-gray-400 pt-2 border-t border-gray-100 mt-2">
+                    <div className="flex items-center text-xs text-gray-500 pt-2 border-t border-white/10 mt-2">
                         {task.dueDate && (
-                            <div className="flex items-center gap-1 mr-3">
+                            <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                                <span>{new Date(task.dueDate).toLocaleDateString('ja-JP')}</span>
                             </div>
                         )}
                     </div>

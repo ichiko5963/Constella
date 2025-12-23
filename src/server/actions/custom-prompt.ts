@@ -26,7 +26,7 @@ export async function getCustomPrompts() {
                 name: p.name,
                 prompt: p.prompt,
                 variables: p.variables ? JSON.parse(p.variables) : null,
-                isDefault: p.isDefault,
+                isDefault: p.isDefault ?? false, // nullの場合はfalseに変換
                 createdAt: p.createdAt,
                 updatedAt: p.updatedAt,
             })),

@@ -16,14 +16,14 @@ export interface TranscriptSegment {
 
 export class TranscriptSyncEngine {
     private animationFrameId: number | null = null;
-    private audioRef: React.RefObject<HTMLAudioElement>;
+    private audioRef: React.RefObject<HTMLAudioElement | null>;
     private segments: TranscriptSegment[];
     private highlightedIndex: number = -1;
     private onHighlightChange?: (index: number) => void;
     private isRunning: boolean = false;
 
     constructor(
-        audioRef: React.RefObject<HTMLAudioElement>,
+        audioRef: React.RefObject<HTMLAudioElement | null>,
         segments: TranscriptSegment[],
         onHighlightChange?: (index: number) => void
     ) {

@@ -118,12 +118,14 @@ export async function disableIntegration(integrationId: number): Promise<{ succe
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const existing = await db.query.integrations.findFirst({
             where: eq(integrations.id, integrationId),
         });
 
-        if (!existing || existing.userId !== session.user.id) {
+        if (!existing || existing.userId !== userId) {
             return { success: false, error: 'Integration not found or unauthorized' };
         }
 
@@ -152,12 +154,14 @@ export async function deleteIntegration(integrationId: number): Promise<{ succes
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const existing = await db.query.integrations.findFirst({
             where: eq(integrations.id, integrationId),
         });
 
-        if (!existing || existing.userId !== session.user.id) {
+        if (!existing || existing.userId !== userId) {
             return { success: false, error: 'Integration not found or unauthorized' };
         }
 
@@ -181,6 +185,8 @@ export async function notifyIntegrations(noteId: number): Promise<{ success: boo
     if (!session?.user?.id) {
         return { success: false, error: 'Unauthorized' };
     }
+
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
 
     try {
         // 有効な統合を取得

@@ -45,12 +45,14 @@ export function TaskCard({ task }: TaskCardProps) {
         <div 
             ref={setNodeRef} 
             style={style} 
-            {...attributes} 
-            {...listeners} 
-            className="touch-none cursor-grab active:cursor-grabbing"
+            {...attributes}
+            className="touch-none"
         >
-            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all glass border border-white/10 bg-white/10 hover:bg-white/15">
-                <CardContent className="p-4 space-y-2">
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all glass border border-white/10 bg-white/10 hover:bg-white/15 cursor-grab active:cursor-grabbing">
+                <CardContent 
+                    className="p-4 space-y-2"
+                    {...listeners}
+                >
                     <div className="flex justify-between items-start gap-2">
                         <h4 className="font-semibold text-sm text-white line-clamp-2">{task.title}</h4>
                         <div className="flex flex-col items-end gap-1">
@@ -62,7 +64,9 @@ export function TaskCard({ task }: TaskCardProps) {
                             )}>
                                 {task.priority || 'medium'}
                             </span>
-                            <TaskEditDialog task={task} />
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <TaskEditDialog task={task} />
+                            </div>
                         </div>
                     </div>
 

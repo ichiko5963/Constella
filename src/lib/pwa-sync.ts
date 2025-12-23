@@ -57,7 +57,7 @@ export async function getUnsyncedItems(): Promise<SyncItem[]> {
     const index = store.index('synced');
 
     return new Promise((resolve, reject) => {
-        const request = index.getAll(false);
+        const request = index.getAll(null); // nullを渡す（falseの代わり）
         request.onsuccess = () => resolve(request.result || []);
         request.onerror = () => reject(request.error);
     });

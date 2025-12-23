@@ -7,7 +7,7 @@ import { CheckSquare, Clock, Calendar, Filter } from 'lucide-react';
 import { format, isToday, isTomorrow, isYesterday, startOfDay, endOfDay } from 'date-fns';
 import { ja } from 'date-fns/locale/ja';
 import { getTasks } from '@/server/actions/task';
-import { updateTask } from '@/server/actions/task';
+import { updateTaskStatus } from '@/server/actions/task';
 import { toast } from 'sonner';
 
 interface DailyTaskManagerProps {
@@ -60,7 +60,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
         startTransition(async () => {
             try {
                 const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-                const result = await updateTask(taskId, { status: newStatus });
+                const result = await updateTaskStatus(taskId, newStatus);
                 if (result.success) {
                     toast.success(`タスクを${newStatus === 'completed' ? '完了' : '未完了'}に変更しました`);
                     loadAllTasks();

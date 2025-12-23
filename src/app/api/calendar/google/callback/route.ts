@@ -26,7 +26,14 @@ export async function GET(request: NextRequest) {
 
     try {
         // アクセストークンを取得
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/api/calendar/google/callback`;
+        // リダイレクトURIはconnectルートと同じものを使用する必要がある
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        const redirectUri = `${baseUrl}/api/calendar/google/callback`;
+        
+        // デバッグ用: リダイレクトURIをログに出力（本番環境では削除推奨）
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Google OAuth callback redirect URI:', redirectUri);
+        }
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             headers: {

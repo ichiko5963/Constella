@@ -42,8 +42,14 @@ export function TaskCard({ task }: TaskCardProps) {
                 'bg-blue-100 text-blue-700 border-blue-200';
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
-            <Card className="cursor-grab active:cursor-grabbing hover:shadow-lg hover:scale-[1.02] transition-all glass border border-white/10 bg-white/10 hover:bg-white/15">
+        <div 
+            ref={setNodeRef} 
+            style={style} 
+            {...attributes} 
+            {...listeners} 
+            className="touch-none cursor-grab active:cursor-grabbing"
+        >
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all glass border border-white/10 bg-white/10 hover:bg-white/15">
                 <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between items-start gap-2">
                         <h4 className="font-semibold text-sm text-white line-clamp-2">{task.title}</h4>

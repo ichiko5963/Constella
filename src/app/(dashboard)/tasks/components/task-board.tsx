@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent, DragOverEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { TaskCard } from './task-card';
+import { DroppableColumn } from './droppable-column';
 import { updateTaskStatus } from '@/server/actions/task';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -39,7 +41,11 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
     }, [tasks]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // 8px移動したらドラッグ開始
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -55,12 +61,12 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
         const activeId = active.id;
         const overId = over?.id;
 
-        if (!overId) return;
+        if (!overId) {
+            setActiveId(null);
+            return;
+        }
 
         // Determine target column status
-        // If overId is a column ID (e.g., 'pending'), then we dropped on the column/empty space
-        // If overId is a task ID, we find that task and its column
-
         let newStatus = '';
 
         // Check if dropped on a column (including 'completed')
@@ -72,10 +78,21 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
             const overTask = tasks.find(t => t.id === overId);
             if (overTask) {
                 newStatus = overTask.status || 'pending';
+            } else {
+                // If we can't find the task, try to get status from active task's data
+                const activeTask = tasks.find(t => t.id === activeId);
+                if (activeTask) {
+                    // Stay in same column if we can't determine target
+                    setActiveId(null);
+                    return;
+                }
             }
         }
 
-        if (!newStatus) return;
+        if (!newStatus) {
+            setActiveId(null);
+            return;
+        }
 
         // Update local state optimistically
         const task = tasks.find(t => t.id === activeId);
@@ -90,8 +107,20 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
             }
 
             // Call server action
-            await updateTaskStatus(activeId as number, newStatus);
-            router.refresh(); // Sync with server consistency
+            try {
+                await updateTaskStatus(activeId as number, newStatus);
+                router.refresh(); // Sync with server consistency
+            } catch (error) {
+                console.error('Failed to update task status:', error);
+                // Revert optimistic update on error
+                setTasks((prev) => {
+                    const reverted = prev.map(t => t.id === activeId ? { ...t, status: task.status } : t);
+                    if (newStatus === 'completed') {
+                        reverted.push(task);
+                    }
+                    return reverted;
+                });
+            }
         }
 
         setActiveId(null);
@@ -116,71 +145,41 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                     const colTasks = tasksByStatus[col.id as keyof typeof tasksByStatus] || [];
 
                     return (
-                        <div 
-                            key={col.id} 
+                        <DroppableColumn
+                            key={col.id}
                             id={col.id}
+                            title={col.title}
+                            count={colTasks.length}
+                            isEmpty={colTasks.length === 0}
+                            taskIds={colTasks.map(t => t.id)}
                             className={cn(
-                                "flex flex-col h-full rounded-lg p-4 glass border border-white/10",
-                                col.id === 'pending' && "bg-white/5",
-                                col.id === 'in_progress' && "bg-blue-500/10"
+                                col.id === 'pending' && "bg-white/5 border-white/10",
+                                col.id === 'in_progress' && "bg-blue-500/10 border-white/10"
                             )}
                         >
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-white text-lg">{col.title}</h3>
-                                <span className="bg-white/10 px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm">
-                                    {colTasks.length}
-                                </span>
-                            </div>
-
-                            <SortableContext
-                                id={col.id}
-                                items={colTasks.map(t => t.id)}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                <div 
-                                    className="flex-1 space-y-3 min-h-[200px] p-2 rounded-lg"
-                                    style={{ 
-                                        minHeight: '200px',
-                                        background: col.id === 'pending' 
-                                            ? 'rgba(255, 255, 255, 0.02)' 
-                                            : 'rgba(59, 130, 246, 0.05)'
-                                    }}
-                                >
-                                    {colTasks.length === 0 ? (
-                                        <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                                            <p>タスクをドラッグ&ドロップ</p>
-                                        </div>
-                                    ) : (
-                                        colTasks.map(task => (
-                                            <TaskCard key={task.id} task={task} />
-                                        ))
-                                    )}
-                                </div>
-                            </SortableContext>
-                        </div>
+                            {colTasks.map(task => (
+                                <TaskCard key={task.id} task={task} />
+                            ))}
+                        </DroppableColumn>
                     );
                 })}
                 
                 {/* Done列 - タスクをここにドロップすると完了として非表示になる */}
-                <div 
+                <DroppableColumn
                     id="completed"
-                    data-column-id="completed"
-                    className="flex flex-col h-full rounded-lg p-4 glass border-2 border-dashed border-green-500/30 bg-green-500/10 hover:border-green-500/50 transition-colors"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-bold text-white text-lg">Done</h3>
-                        <span className="bg-green-500/20 px-3 py-1 rounded-full text-xs font-medium text-green-300 shadow-sm">
-                            完了
-                        </span>
-                    </div>
-                    <div className="flex-1 flex items-center justify-center min-h-[200px] p-2 rounded-lg bg-green-500/5">
-                        <p className="text-gray-400 text-sm text-center">
-                            <span className="block mb-2">✓</span>
+                    title="Done"
+                    count={0}
+                    isEmpty={true}
+                    taskIds={[]}
+                    emptyMessage={
+                        <div>
+                            <span className="block mb-2 text-2xl">✓</span>
                             タスクをここにドロップすると<br />
                             <span className="text-green-400 font-semibold">完了として非表示</span>になります
-                        </p>
-                    </div>
-                </div>
+                        </div>
+                    }
+                    className="border-2 border-dashed border-green-500/30 bg-green-500/10 hover:border-green-500/50"
+                />
             </div>
 
             <DragOverlay>

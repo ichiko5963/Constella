@@ -33,7 +33,7 @@ export async function getCalendarIntegrations() {
                 id: i.id,
                 userId: i.userId,
                 provider: i.provider as 'google' | 'microsoft' | 'zoom',
-                enabled: i.enabled,
+                enabled: i.enabled ?? false, // nullの場合はfalseに変換
                 lastSyncAt: i.lastSyncAt,
                 createdAt: i.createdAt,
                 updatedAt: i.updatedAt,

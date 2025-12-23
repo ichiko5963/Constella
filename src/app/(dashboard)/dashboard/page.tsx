@@ -36,8 +36,18 @@ export default async function DashboardPage() {
             );
         }
 
-        let allRecordings = [];
-        let allProjects = [];
+        let allRecordings: Array<{
+            id: number;
+            transcription: string | null;
+            status: string | null;
+            createdAt: Date;
+            project: { name: string } | null;
+        }> = [];
+        let allProjects: Array<{
+            id: number;
+            name: string;
+            description: string | null;
+        }> = [];
 
         try {
             allRecordings = await db.query.recordings.findMany({

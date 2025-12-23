@@ -9,7 +9,6 @@ import { ja } from 'date-fns/locale/ja';
 import { getTasks } from '@/server/actions/task';
 import { updateTask } from '@/server/actions/task';
 import { toast } from 'sonner';
-// TaskCardコンポーネントをインポート（存在しない場合は簡易版を作成）
 
 interface DailyTaskManagerProps {
     selectedDate?: Date;
@@ -58,7 +57,6 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
             return dueDate >= dayStart && dueDate <= dayEnd;
         });
     }, [allTasks, normalizedDate]);
-
 
     const handleToggleComplete = async (taskId: number, currentStatus: string) => {
         startTransition(async () => {
@@ -316,4 +314,3 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
         </Card>
     );
 }
-

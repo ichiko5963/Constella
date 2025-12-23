@@ -10,7 +10,7 @@ import { WaveformVisualizer } from './waveform-visualizer';
 interface AudioPlayerWithBookmarksProps {
     recordingId: number;
     audioUrl: string;
-    onAudioRefReady?: (audioRef: React.RefObject<HTMLAudioElement>) => void;
+    onAudioRefReady?: (audioRef: React.RefObject<HTMLAudioElement | null>) => void;
 }
 
 export function AudioPlayerWithBookmarks({ recordingId, audioUrl, onAudioRefReady }: AudioPlayerWithBookmarksProps) {

@@ -160,15 +160,156 @@ body.theme-white {
   @apply bg-white text-gray-900;
   background-image: none;
   background-attachment: fixed;
+  color: #1f2937;
 }
 
+/* 白背景テーマ時のテキスト色の調整 */
+body.theme-white * {
+  color: inherit;
+}
+
+body.theme-white .text-white,
+body.theme-white h1.text-white,
+body.theme-white h2.text-white,
+body.theme-white h3.text-white,
+body.theme-white h4.text-white,
+body.theme-white p.text-white,
+body.theme-white span.text-white,
+body.theme-white div.text-white {
+  color: #1f2937 !important;
+}
+
+body.theme-white .text-gray-400,
+body.theme-white .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+body.theme-white .text-gray-300 {
+  color: #9ca3af !important;
+}
+
+/* 白背景テーマ時のカードとコンポーネント */
 body.theme-white .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 body.theme-white .glass::before {
-  opacity: 0.03;
+  opacity: 0.02;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.02) 0%,
+    rgba(0, 0, 0, 0.01) 25%,
+    rgba(0, 0, 0, 0.01) 50%,
+    rgba(0, 0, 0, 0.01) 75%,
+    rgba(0, 0, 0, 0.02) 100%
+  );
+}
+
+body.theme-white .glass-hover:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* 白背景テーマ時のボーダー */
+body.theme-white .border-white\/10,
+body.theme-white .border-white\/5,
+body.theme-white .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 白背景テーマ時の背景色 */
+body.theme-white .bg-black\/40,
+body.theme-white .bg-black\/5,
+body.theme-white .bg-white\/5,
+body.theme-white .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+body.theme-white .bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.theme-white .bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 白背景テーマ時の入力フィールド */
+body.theme-white input,
+body.theme-white textarea,
+body.theme-white select {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  color: #1f2937 !important;
+}
+
+body.theme-white input::placeholder,
+body.theme-white textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* 白背景テーマ時のボタン */
+body.theme-white button:not(.bg-primary):not(.bg-accent) {
+  color: #1f2937 !important;
+}
+
+body.theme-white button.bg-primary,
+body.theme-white button.bg-accent {
+  color: #ffffff !important;
+}
+
+/* 白背景テーマ時のスクロールバー */
+body.theme-white ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+body.theme-white ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 白背景テーマ時のノイズオーバーレイを非表示 */
+body.theme-white::before {
+  display: none;
+}
+
+/* 白背景テーマ時のアイコンとSVG */
+body.theme-white svg:not([fill="none"]) {
+  color: #1f2937;
+}
+
+body.theme-white .text-primary {
+  color: var(--primary) !important;
+}
+
+body.theme-white .text-accent {
+  color: var(--accent) !important;
+}
+
+/* 白背景テーマ時のリンク */
+body.theme-white a {
+  color: #2563eb;
+}
+
+body.theme-white a:hover {
+  color: #1d4ed8;
+}
+
+/* 白背景テーマ時の選択された要素 */
+body.theme-white .bg-primary\/10 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.theme-white .border-primary {
+  border-color: var(--primary) !important;
+}
+
+/* 白背景テーマ時のシャドウ */
+body.theme-white .shadow-lg,
+body.theme-white .shadow-xl,
+body.theme-white .shadow-2xl {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
 body.theme-gradient-cool {

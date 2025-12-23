@@ -11,7 +11,21 @@ import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
     try {
-        const session = await auth();
+        let session;
+        try {
+            session = await auth();
+        } catch (error) {
+            console.error('Auth error in dashboard page:', error);
+            return (
+                <div className="space-y-12 max-w-7xl mx-auto">
+                    <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-white mb-4">認証エラーが発生しました</h1>
+                        <p className="text-gray-400">データベース接続を確認してください</p>
+                    </div>
+                </div>
+            );
+        }
+        
         if (!session?.user?.id) {
             return (
                 <div className="space-y-12 max-w-7xl mx-auto">

@@ -6,7 +6,15 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 export default async function LoginPage() {
-    const session = await auth();
+    let session;
+    try {
+        session = await auth();
+    } catch (error) {
+        console.error('Auth error in login page:', error);
+        // 認証エラーが発生してもログインページは表示する
+        session = null;
+    }
+    
     if (session) {
         redirect('/dashboard');
     }

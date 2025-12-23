@@ -9,12 +9,27 @@ export default async function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
+    let session;
     try {
-        const session = await auth();
+        session = await auth();
+    } catch (error) {
+        console.error('Auth error in dashboard layout:', error);
+        // 認証エラーが発生した場合は、エラーページを表示するのではなく、ログインページにリダイレクト
+        // ただし、リダイレクトループを避けるため、エラーメッセージを表示
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-black text-white">
+                <div className="text-center space-y-4">
+                    <h1 className="text-2xl font-bold">認証エラーが発生しました</h1>
+                    <p className="text-gray-400">データベース接続を確認してください</p>
+                    <a href="/login" className="text-primary hover:underline">ログインページに戻る</a>
+                </div>
+            </div>
+        );
+    }
 
-        if (!session) {
-            redirect('/login');
-        }
+    if (!session) {
+        redirect('/login');
+    }
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -80,9 +95,4 @@ export default async function DashboardLayout({
             </main>
         </div>
     );
-    } catch (error) {
-        console.error('Dashboard layout error:', error);
-        // エラーが発生した場合はログインページにリダイレクト
-        redirect('/login');
-    }
 }

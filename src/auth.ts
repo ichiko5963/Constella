@@ -32,22 +32,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return false;
                 }
 
-                const existingUser = await db.query.users.findFirst({
-                    where: eq(users.email, user.email),
-                });
-                const now = new Date();
-
-                if (!existingUser) {
-                    await db.insert(users).values({
-                        id: userId,
-                        name: user.name || user.email.split('@')[0],
-                        email: user.email,
-                        emailVerified: true,
-                        image: user.image || null,
-                        createdAt: now,
-                        updatedAt: now,
+                try {
+                    const existingUser = await db.query.users.findFirst({
+                        where: eq(users.email, user.email),
                     });
-                } else if (existingUser.id !== userId) {
+                    const now = new Date();
+
+                    if (!existingUser) {
+                        await db.insert(users).values({
+                            id: userId,
+                            name: user.name || user.email.split('@')[0],
+                            email: user.email,
+                            emailVerified: true,
+                            image: user.image || null,
+                            createdAt: now,
+                            updatedAt: now,
+                        });
+                    } else if (existingUser.id !== userId) {
                     await db.update(users)
                         .set({
                             name: user.name || existingUser.name,

@@ -1,6 +1,7 @@
 'use server';
 
-import { auth, headers } from 'next/headers';
+import { auth } from '@/auth';
+import { headers } from 'next/headers';
 import { db } from '@/db';
 import { auditLogs } from '@/db/schema';
 

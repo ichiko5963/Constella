@@ -28,13 +28,26 @@ type Task = {
     projectId?: number;
 };
 
-export function Calendar({ tasks = [] }: { tasks?: Task[] }) {
+interface CalendarProps {
+    tasks?: Task[];
+    selectedDate?: Date;
+    onDateSelect?: (date: Date) => void;
+}
+
+export function Calendar({ tasks = [], selectedDate: externalSelectedDate, onDateSelect }: CalendarProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [internalSelectedDate, setInternalSelectedDate] = useState(new Date());
+    const selectedDate = externalSelectedDate ?? internalSelectedDate;
 
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-    const onDateClick = (day: Date) => setSelectedDate(day);
+    const onDateClick = (day: Date) => {
+        if (onDateSelect) {
+            onDateSelect(day);
+        } else {
+            setInternalSelectedDate(day);
+        }
+    };
 
     const renderHeader = () => {
         return (

@@ -22,7 +22,7 @@ export function WaveformVisualizer({
     const [peaks, setPeaks] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [duration, setDuration] = useState(0);
-    const animationFrameRef = useRef<number>();
+    const animationFrameRef = useRef<number | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);

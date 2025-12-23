@@ -101,6 +101,8 @@ export async function createBookingRequest(data: BookingRequest): Promise<{ succ
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const endTime = new Date(data.selectedSlot);
         endTime.setMinutes(endTime.getMinutes() + data.duration);

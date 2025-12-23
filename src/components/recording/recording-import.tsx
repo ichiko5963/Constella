@@ -99,41 +99,51 @@ export function RecordingImport({ projectId, onImportComplete }: RecordingImport
                 });
 
                 xhr.addEventListener('load', () => {
-                    if (xhr.status === 200) {
+                    if (xhr.status === 200 || xhr.status === 204) {
                         resolve();
                     } else {
-                        reject(new Error('アップロードに失敗しました'));
+                        console.error('Upload failed with status:', xhr.status, xhr.statusText, xhr.responseText);
+                        reject(new Error(`アップロードに失敗しました (ステータス: ${xhr.status})`));
                     }
                 });
 
                 xhr.addEventListener('error', () => {
-                    reject(new Error('アップロード中にエラーが発生しました'));
+                    console.error('Upload XHR error:', xhr.status, xhr.statusText, xhr.responseText);
+                    reject(new Error('アップロード中にエラーが発生しました。ネットワーク接続を確認してください。'));
+                });
+
+                xhr.addEventListener('abort', () => {
+                    reject(new Error('アップロードが中断されました'));
                 });
 
                 xhr.open('PUT', url);
-                xhr.setRequestHeader('Content-Type', file.type || 'audio/mpeg');
+                xhr.setRequestHeader('Content-Type', fileType);
+                // S3へのアップロードでは、追加のヘッダーは不要（presigned URLに含まれている）
                 xhr.send(file);
             });
 
+            // アップロード完了を確認
             setUploadStatus('transcribing');
             setUploadProgress(100);
+            toast.success('アップロード完了。文字起こしを開始します...');
 
             // 3. 文字起こしと議事録生成を開始（非同期）
-            toast.success('アップロード完了。文字起こしを開始します...');
-            
             // バックグラウンドで処理（タイムアウトを避けるため）
-            processRecording(newRecordingId).then(() => {
-                setUploadStatus('completed');
-                toast.success('文字起こしと議事録生成が完了しました！');
-                router.refresh();
-                if (onImportComplete) {
-                    onImportComplete(newRecordingId);
-                }
-            }).catch((error) => {
-                console.error('Processing failed:', error);
-                setUploadStatus('error');
-                toast.error('処理中にエラーが発生しました: ' + (error instanceof Error ? error.message : 'Unknown error'));
-            });
+            // 少し待ってから処理を開始（S3への反映を待つ）
+            setTimeout(() => {
+                processRecording(newRecordingId).then(() => {
+                    setUploadStatus('completed');
+                    toast.success('文字起こしと議事録生成が完了しました！');
+                    router.refresh();
+                    if (onImportComplete) {
+                        onImportComplete(newRecordingId);
+                    }
+                }).catch((error) => {
+                    console.error('Processing failed:', error);
+                    setUploadStatus('error');
+                    toast.error('処理中にエラーが発生しました: ' + (error instanceof Error ? error.message : 'Unknown error'));
+                });
+            }, 1000); // 1秒待ってから処理を開始
 
         } catch (error) {
             console.error('Upload failed:', error);

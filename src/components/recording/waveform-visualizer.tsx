@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface WaveformVisualizerProps {
-    audioRef: React.RefObject<HTMLAudioElement>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
     audioUrl: string;
     className?: string;
     height?: number;

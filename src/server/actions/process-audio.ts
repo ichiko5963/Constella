@@ -174,7 +174,16 @@ export async function processRecording(recordingId: number, skipAuth?: boolean) 
         // 5. Create Meeting Note
         // Check if meeting note already exists? For now assume new.
         // ユーザーIDを取得（認証スキップ時は録音から取得）
-        const userId = skipAuth ? recording.userId : session!.user!.id!;
+        let userId: string;
+        if (skipAuth) {
+            userId = recording.userId;
+        } else {
+            const session = await auth();
+            if (!session?.user?.id) {
+                return { success: false, error: 'Unauthorized' };
+            }
+            userId = session.user.id;
+        }
         
         // プロジェクトIDを自動判定（カレンダーイベントから取得、またはAIで判定）
         let projectId = recording.projectId || null;

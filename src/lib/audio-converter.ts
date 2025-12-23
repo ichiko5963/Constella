@@ -96,9 +96,17 @@ export async function normalizeAudioFormat(
 
         // Blobに変換
         const mimeType = targetFormat === 'wav' ? 'audio/wav' : 'audio/mpeg';
-        // FileDataをBlobPartに変換（Uint8ArrayをArrayBufferに変換）
-        const buffer = data.buffer instanceof ArrayBuffer ? data.buffer : new Uint8Array(data).buffer;
-        return new Blob([buffer], { type: mimeType });
+        // FileDataをBlobPartに変換
+        if (typeof data === 'string') {
+            // 文字列の場合はそのまま使用
+            return new Blob([data], { type: mimeType });
+        } else if (data instanceof Uint8Array) {
+            // Uint8Arrayの場合はArrayBufferに変換
+            return new Blob([data.buffer], { type: mimeType });
+        } else {
+            // その他の場合はそのまま使用
+            return new Blob([data as BlobPart], { type: mimeType });
+        }
 
     } catch (error) {
         console.error('Audio conversion failed:', error);

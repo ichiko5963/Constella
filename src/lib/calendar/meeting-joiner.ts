@@ -85,6 +85,36 @@ export async function updateJoinStatus(
 }
 
 /**
+ * 会議終了後のイベントを取得（録音処理が必要なイベント）
+ */
+export async function getCompletedAutoJoinEvents(): Promise<Array<{
+    id: number;
+    recordingId: number | null;
+    endTime: Date;
+}>> {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // 1時間前まで
+
+    const events = await db.query.calendarEvents.findMany({
+        where: and(
+            eq(calendarEvents.autoJoinEnabled, true),
+            eq(calendarEvents.autoRecordEnabled, true),
+            eq(calendarEvents.joinStatus, 'joined'),
+            lte(calendarEvents.endTime, now), // 会議が終了している
+            gte(calendarEvents.endTime, oneHourAgo) // 1時間以内に終了した会議
+        ),
+    });
+
+    return events
+        .filter(event => event.recordingId)
+        .map(event => ({
+            id: event.id,
+            recordingId: event.recordingId!,
+            endTime: event.endTime,
+        }));
+}
+
+/**
  * イベントの自動参加設定を更新
  */
 export async function updateAutoJoinSettings(

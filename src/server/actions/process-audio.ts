@@ -20,11 +20,13 @@ import { pipeline } from 'stream/promises';
 // Ideally, this should be a background job (Inngest, Trigger.dev) or a standalone Route Handler with longer timeout.
 // For now, let's implement a basic version that might hit timeouts on Vercel but works locally.
 
-export async function processRecording(recordingId: number) {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-        return { success: false, error: 'Unauthorized' };
+export async function processRecording(recordingId: number, skipAuth?: boolean) {
+    // 予約URLから予約された会議の自動処理の場合は認証をスキップ
+    if (!skipAuth) {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return { success: false, error: 'Unauthorized' };
+        }
     }
 
     try {
@@ -35,7 +37,7 @@ export async function processRecording(recordingId: number) {
 
         if (!recording) return { success: false, error: 'Recording not found' };
 
-        await updateRecordingStatus(recordingId, 'transcribing');
+        await updateRecordingStatus(recordingId, 'transcribing', skipAuth);
 
         // 2. Transcribe
         // OpenAI Whisper API requires a ReadStream. We need to fetch the file from S3 (via URL) and stream it.
@@ -152,10 +154,13 @@ export async function processRecording(recordingId: number) {
 
         // 5. Create Meeting Note
         // Check if meeting note already exists? For now assume new.
+        // ユーザーIDを取得（認証スキップ時は録音から取得）
+        const userId = skipAuth ? recording.userId : session!.user!.id!;
+        
         const [note] = await db.insert(meetingNotes).values({
-            userId: session.user.id,
-            fileId: recording.fileId!,
-            projectId: recording.projectId!,
+            userId: userId,
+            fileId: recording.fileId || null,
+            projectId: recording.projectId || null,
             recordingId: recordingId,
             title: '自動生成議事録',
             summary: result.summary,
@@ -180,10 +185,10 @@ export async function processRecording(recordingId: number) {
 
         // 6. Create Task Candidates
         const candidates = result.actionItems.map((item: any) => ({
-            userId: session!.user!.id!,
+            userId: userId,
             recordingId: recordingId,
-            suggestedProjectId: recording.projectId,
-            suggestedFileId: recording.fileId,
+            suggestedProjectId: recording.projectId || null,
+            suggestedFileId: recording.fileId || null,
             title: item.title || 'New Task',
             description: item.description || '',
             suggestedPriority: 'medium', // Default
@@ -194,12 +199,12 @@ export async function processRecording(recordingId: number) {
             await db.insert(taskCandidates).values(candidates);
         }
 
-        await updateRecordingStatus(recordingId, 'completed');
+        await updateRecordingStatus(recordingId, 'completed', skipAuth);
         return { success: true };
 
     } catch (error) {
         console.error('Processing failed:', error);
-        await updateRecordingStatus(recordingId, 'failed');
+        await updateRecordingStatus(recordingId, 'failed', skipAuth);
         return { success: false, error: 'Processing failed' };
     }
 }

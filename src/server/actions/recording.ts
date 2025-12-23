@@ -69,11 +69,13 @@ export async function createRecordingUploadUrl(projectId?: number, fileType: str
     }
 }
 
-export async function updateRecordingStatus(recordingId: number, status: 'transcribing' | 'processing' | 'completed' | 'failed') {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-        return { success: false, error: 'Unauthorized' };
+export async function updateRecordingStatus(recordingId: number, status: 'transcribing' | 'processing' | 'completed' | 'failed', skipAuth?: boolean) {
+    // 予約URLから予約された会議の自動処理の場合は認証をスキップ
+    if (!skipAuth) {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return { success: false, error: 'Unauthorized' };
+        }
     }
 
     try {

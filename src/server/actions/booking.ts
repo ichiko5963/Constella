@@ -49,8 +49,8 @@ export async function createBookingSetting(input: CreateBookingSettingInput = {}
             availableDays: input.availableDays ? JSON.stringify(input.availableDays) : JSON.stringify([1, 2, 3, 4, 5]), // 月-金
             timezone: input.timezone || 'Asia/Tokyo',
             autoGenerateMeetLink: input.autoGenerateMeetLink !== false,
-            autoJoinActory: input.autoJoinActory !== false,
-            autoRecord: input.autoRecord || false,
+            autoJoinActory: input.autoJoinActory !== false, // デフォルトでtrue（予約URLから予約された会議には自動参加）
+            autoRecord: input.autoRecord !== false, // デフォルトでtrue（自動録音も有効）
             enabled: true,
         }).returning();
 
@@ -398,8 +398,8 @@ export async function createBooking(
             endTime: endTime,
             meetingLink: meetLink,
             attendees: JSON.stringify([{ name: attendeeName, email: attendeeEmail }]),
-            autoJoinEnabled: setting.autoJoinActory || false,
-            autoRecordEnabled: setting.autoRecord || false,
+            autoJoinEnabled: true, // 予約URLから予約された会議には必ずActory Botが自動参加
+            autoRecordEnabled: true, // 予約URLから予約された会議は必ず自動録音
             joinStatus: 'pending',
         }).returning();
 

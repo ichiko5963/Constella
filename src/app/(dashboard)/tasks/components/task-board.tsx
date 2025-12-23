@@ -198,7 +198,9 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                     gradient="from-green-500/20 via-green-400/15 to-green-500/20"
                     borderColor="border-green-400/30"
                     textColor="text-green-200"
-                />
+                >
+                    {/* Done列にはタスクは表示されない */}
+                </DroppableColumn>
             </div>
 
             <DragOverlay>

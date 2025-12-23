@@ -23,11 +23,20 @@ export async function getPresignedUploadUrl(
     });
 
     try {
+        // S3設定の確認
+        if (!process.env.S3_BUCKET_NAME) {
+            throw new Error('S3_BUCKET_NAME environment variable is not set');
+        }
+        if (!process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY) {
+            throw new Error('S3 credentials are not set');
+        }
+
         const url = await getSignedUrl(s3Client, command, { expiresIn });
         return { url, key };
     } catch (error) {
         console.error('Error creating presigned URL:', error);
-        throw new Error('Failed to create upload URL');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new Error(`Failed to create upload URL: ${errorMessage}`);
     }
 }
 

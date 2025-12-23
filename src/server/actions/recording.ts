@@ -24,6 +24,12 @@ export async function createRecordingUploadUrl(projectId?: number, fileType: str
 
     // 3. Get Presigned URL
     try {
+        // S3設定の確認
+        if (!process.env.S3_BUCKET_NAME) {
+            console.error('S3_BUCKET_NAME is not set');
+            return { success: false, error: 'S3ストレージが設定されていません。環境変数を確認してください。' };
+        }
+
         const { url } = await getPresignedUploadUrl(key, fileType);
 
         // 4. Validate Project IF provided
@@ -65,7 +71,11 @@ export async function createRecordingUploadUrl(projectId?: number, fileType: str
 
     } catch (error) {
         console.error('Failed to create upload URL:', error);
-        return { success: false, error: 'Failed to generate upload URL' };
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return { 
+            success: false, 
+            error: `アップロードURLの生成に失敗しました: ${errorMessage}` 
+        };
     }
 }
 

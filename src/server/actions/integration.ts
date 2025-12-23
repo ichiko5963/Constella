@@ -29,7 +29,7 @@ export async function getIntegrations() {
                 id: i.id,
                 provider: i.provider as IntegrationProvider,
                 enabled: i.enabled || false,
-                webhookUrl: i.webhookUrl,
+                webhookUrl: i.webhookUrl ?? undefined, // nullをundefinedに変換
                 settings: i.settings ? JSON.parse(i.settings) : {},
                 lastSyncAt: i.lastSyncAt,
                 createdAt: i.createdAt,

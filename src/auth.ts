@@ -49,21 +49,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                             updatedAt: now,
                         });
                     } else if (existingUser.id !== userId) {
-                    await db.update(users)
-                        .set({
-                            name: user.name || existingUser.name,
-                            image: user.image || existingUser.image,
-                            updatedAt: now,
-                        })
-                        .where(eq(users.id, existingUser.id));
-                } else {
-                    await db.update(users)
-                        .set({
-                            name: user.name || existingUser.name,
-                            image: user.image || existingUser.image,
-                            updatedAt: now,
-                        })
-                        .where(eq(users.id, userId));
+                        await db.update(users)
+                            .set({
+                                name: user.name || existingUser.name,
+                                image: user.image || existingUser.image,
+                                updatedAt: now,
+                            })
+                            .where(eq(users.id, existingUser.id));
+                    } else {
+                        await db.update(users)
+                            .set({
+                                name: user.name || existingUser.name,
+                                image: user.image || existingUser.image,
+                                updatedAt: now,
+                            })
+                            .where(eq(users.id, userId));
+                    }
+                } catch (dbError) {
+                    console.error('Database error during sign in:', dbError);
+                    // データベースエラーが発生しても、認証は成功させる（ユーザーは既にGoogleで認証済み）
+                    // ただし、ユーザー情報の保存に失敗したことをログに記録
+                    return true;
                 }
 
                 return true;

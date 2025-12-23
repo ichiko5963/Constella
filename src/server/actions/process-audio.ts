@@ -157,10 +157,58 @@ export async function processRecording(recordingId: number, skipAuth?: boolean) 
         // ユーザーIDを取得（認証スキップ時は録音から取得）
         const userId = skipAuth ? recording.userId : session!.user!.id!;
         
+        // プロジェクトIDを自動判定（カレンダーイベントから取得、またはAIで判定）
+        let projectId = recording.projectId || null;
+        
+        // カレンダーイベントからプロジェクトIDを取得
+        if (!projectId && recordingId) {
+            const calendarEvent = await db.query.calendarEvents.findFirst({
+                where: (events, { eq }) => eq(events.recordingId, recordingId),
+            });
+            if (calendarEvent?.projectId) {
+                projectId = calendarEvent.projectId;
+            }
+        }
+        
+        // プロジェクトIDがまだない場合、AIで判定
+        if (!projectId) {
+            try {
+                const { getProjects } = await import('./project');
+                const projects = await getProjects();
+                if (projects && projects.length > 0) {
+                    // 議事録の内容から適切なプロジェクトを判定
+                    const projectPrompt = `
+以下の議事録の内容から、最も適切なプロジェクトを選択してください。
+プロジェクト一覧:
+${projects.map((p: any) => `- ID: ${p.id}, 名前: ${p.name}, 説明: ${p.description || ''}`).join('\n')}
+
+議事録の要約:
+${result.summary}
+
+JSON形式で返答してください:
+{
+  "projectId": プロジェクトID（該当なしの場合はnull）
+}
+`;
+                    const projectCompletion = await openai.chat.completions.create({
+                        model: 'gpt-4-turbo-preview',
+                        messages: [{ role: 'user', content: projectPrompt }],
+                        response_format: { type: 'json_object' },
+                    });
+                    const projectResult = JSON.parse(projectCompletion.choices[0].message.content || '{}');
+                    if (projectResult.projectId) {
+                        projectId = projectResult.projectId;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to auto-assign project:', error);
+            }
+        }
+        
         const [note] = await db.insert(meetingNotes).values({
             userId: userId,
             fileId: recording.fileId || null,
-            projectId: recording.projectId || null,
+            projectId: projectId,
             recordingId: recordingId,
             title: '自動生成議事録',
             summary: result.summary,

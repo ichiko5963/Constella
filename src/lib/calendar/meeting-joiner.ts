@@ -55,7 +55,7 @@ export async function getUpcomingAutoJoinEvents(): Promise<Array<{
             startTime: event.startTime,
             endTime: event.endTime,
             title: event.title,
-            projectId: null, // TODO: プロジェクトIDを関連付け
+            projectId: event.projectId || null,
         }));
 }
 

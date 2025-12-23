@@ -17,26 +17,33 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error');
 
     if (error) {
-        return NextResponse.redirect(new URL('/settings?error=calendar_auth_failed', request.url));
+        return NextResponse.redirect(new URL('/calendar?error=zoom_auth_failed', request.url));
     }
 
     if (!code) {
-        return NextResponse.redirect(new URL('/settings?error=no_code', request.url));
+        return NextResponse.redirect(new URL('/calendar?error=no_code', request.url));
     }
 
     try {
         // アクセストークンを取得
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/api/calendar/google/callback`;
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin}/api/calendar/zoom/callback`;
+        const clientId = process.env.ZOOM_CLIENT_ID;
+        const clientSecret = process.env.ZOOM_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret) {
+            return NextResponse.redirect(new URL('/calendar?error=zoom_not_configured', request.url));
+        }
+
+        // Basic認証でトークンを取得
+        const tokenResponse = await fetch('https://zoom.us/oauth/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
             },
             body: new URLSearchParams({
-                client_id: process.env.GOOGLE_CLIENT_ID!,
-                client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-                code: code,
                 grant_type: 'authorization_code',
+                code: code,
                 redirect_uri: redirectUri,
             }),
         });
@@ -45,7 +52,7 @@ export async function GET(request: NextRequest) {
 
         if (!tokenResponse.ok) {
             console.error('Token exchange failed:', tokenData);
-            return NextResponse.redirect(new URL('/settings?error=token_exchange_failed', request.url));
+            return NextResponse.redirect(new URL('/calendar?error=token_exchange_failed', request.url));
         }
 
         // カレンダー統合を保存または更新
@@ -53,10 +60,11 @@ export async function GET(request: NextRequest) {
         if (!userId) {
             return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
         }
+
         const existing = await db.query.calendarIntegrations.findFirst({
             where: (integrations, { and, eq }) => and(
                 eq(integrations.userId, userId),
-                eq(integrations.provider, 'google')
+                eq(integrations.provider, 'zoom')
             ),
         });
 
@@ -77,7 +85,7 @@ export async function GET(request: NextRequest) {
         } else {
             await db.insert(calendarIntegrations).values({
                 userId: session.user.id,
-                provider: 'google',
+                provider: 'zoom',
                 accessToken: tokenData.access_token,
                 refreshToken: tokenData.refresh_token || null,
                 expiresAt: expiresAt,
@@ -90,7 +98,7 @@ export async function GET(request: NextRequest) {
         const integration = await db.query.calendarIntegrations.findFirst({
             where: (integrations, { and, eq }) => and(
                 eq(integrations.userId, userId),
-                eq(integrations.provider, 'google')
+                eq(integrations.provider, 'zoom')
             ),
         });
         if (integration) {
@@ -98,10 +106,9 @@ export async function GET(request: NextRequest) {
             syncCalendar(integration.id).catch(e => console.error('Auto-sync failed:', e));
         }
 
-        return NextResponse.redirect(new URL('/calendar?success=google_calendar_connected', request.url));
+        return NextResponse.redirect(new URL('/calendar?success=zoom_connected', request.url));
     } catch (error) {
-        console.error('Failed to handle Google Calendar callback:', error);
-        return NextResponse.redirect(new URL('/settings?error=callback_failed', request.url));
+        console.error('Failed to handle Zoom callback:', error);
+        return NextResponse.redirect(new URL('/calendar?error=callback_failed', request.url));
     }
 }
-

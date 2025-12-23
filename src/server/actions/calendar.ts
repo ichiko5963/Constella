@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 export type CalendarIntegration = {
     id: number;
     userId: string;
-    provider: 'google' | 'microsoft';
+    provider: 'google' | 'microsoft' | 'zoom';
     enabled: boolean;
     lastSyncAt: Date | null;
     createdAt: Date;
@@ -32,7 +32,7 @@ export async function getCalendarIntegrations() {
             integrations: integrations.map(i => ({
                 id: i.id,
                 userId: i.userId,
-                provider: i.provider as 'google' | 'microsoft',
+                provider: i.provider as 'google' | 'microsoft' | 'zoom',
                 enabled: i.enabled,
                 lastSyncAt: i.lastSyncAt,
                 createdAt: i.createdAt,
@@ -128,6 +128,9 @@ export async function syncCalendar(integrationId: number) {
                                               event.location?.match(/https?:\/\/[^\s]+/)?.[0] ||
                                               null;
 
+                            // Google Meetリンクがある場合は自動参加・自動録音を有効化
+                            const hasMeetingLink = !!meetingLink;
+                            
                             await db.insert(calendarEvents).values({
                                 userId: session.user.id,
                                 integrationId: integrationId,
@@ -139,6 +142,10 @@ export async function syncCalendar(integrationId: number) {
                                 meetingLink: meetingLink,
                                 location: event.location || null,
                                 attendees: event.attendees ? JSON.stringify(event.attendees.map((a: any) => ({ email: a.email, displayName: a.displayName }))) : null,
+                                // Google Meetリンクがある場合は自動参加・自動録音を有効化
+                                autoJoinEnabled: hasMeetingLink,
+                                autoRecordEnabled: hasMeetingLink,
+                                joinStatus: 'pending',
                             });
                             savedCount++;
                         }
@@ -161,6 +168,120 @@ export async function syncCalendar(integrationId: number) {
             } catch (error) {
                 console.error('Failed to sync calendar:', error);
                 return { success: false, error: 'Failed to sync calendar' };
+            }
+        }
+
+        // Zoom APIから会議を取得
+        if (integration.provider === 'zoom' && integration.accessToken) {
+            try {
+                // トークンの有効期限をチェック
+                let accessToken = integration.accessToken;
+                if (integration.expiresAt && new Date() >= integration.expiresAt) {
+                    // トークンをリフレッシュ
+                    if (integration.refreshToken) {
+                        const clientId = process.env.ZOOM_CLIENT_ID;
+                        const clientSecret = process.env.ZOOM_CLIENT_SECRET;
+                        if (!clientId || !clientSecret) {
+                            return { success: false, error: 'Zoom credentials not configured' };
+                        }
+
+                        const refreshResponse = await fetch('https://zoom.us/oauth/token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+                            },
+                            body: new URLSearchParams({
+                                grant_type: 'refresh_token',
+                                refresh_token: integration.refreshToken,
+                            }),
+                        });
+                        const refreshData = await refreshResponse.json();
+                        if (refreshResponse.ok) {
+                            accessToken = refreshData.access_token;
+                            await db.update(calendarIntegrations)
+                                .set({
+                                    accessToken: refreshData.access_token,
+                                    refreshToken: refreshData.refresh_token || integration.refreshToken,
+                                    expiresAt: refreshData.expires_in
+                                        ? new Date(Date.now() + refreshData.expires_in * 1000)
+                                        : null,
+                                })
+                                .where(eq(calendarIntegrations.id, integrationId));
+                        }
+                    }
+                }
+
+                // Zoom会議を取得（今後の会議）
+                const now = new Date();
+                const oneMonthLater = new Date(now);
+                oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+
+                const meetingsResponse = await fetch(
+                    `https://api.zoom.us/v2/users/me/meetings?type=upcoming&page_size=100`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    }
+                );
+
+                if (meetingsResponse.ok) {
+                    const meetingsData = await meetingsResponse.json();
+                    const meetings = meetingsData.meetings || [];
+
+                    // 既存のイベントを削除（この統合のもの）
+                    await db.delete(calendarEvents)
+                        .where(eq(calendarEvents.integrationId, integrationId));
+
+                    // 新しい会議を保存
+                    let savedCount = 0;
+                    for (const meeting of meetings) {
+                        if (meeting.start_time) {
+                            const startTime = new Date(meeting.start_time);
+                            const duration = meeting.duration || 60; // デフォルト60分
+                            const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+
+                            // Zoom会議リンクを生成
+                            const meetingLink = meeting.join_url || `https://zoom.us/j/${meeting.id}`;
+
+                            await db.insert(calendarEvents).values({
+                                userId: session.user.id,
+                                integrationId: integrationId,
+                                externalId: meeting.id.toString(),
+                                title: meeting.topic || 'Untitled Meeting',
+                                description: meeting.agenda || null,
+                                startTime: startTime,
+                                endTime: endTime,
+                                meetingLink: meetingLink,
+                                location: null,
+                                attendees: null, // Zoom APIでは参加者情報は取得できない
+                                // Zoom会議は自動参加・自動録音を有効化
+                                autoJoinEnabled: true,
+                                autoRecordEnabled: true,
+                                joinStatus: 'pending',
+                            });
+                            savedCount++;
+                        }
+                    }
+
+                    await db.update(calendarIntegrations)
+                        .set({
+                            lastSyncAt: new Date(),
+                            updatedAt: new Date(),
+                        })
+                        .where(eq(calendarIntegrations.id, integrationId));
+
+                    revalidatePath('/settings');
+                    revalidatePath('/calendar');
+                    return { success: true, eventsCount: savedCount };
+                } else {
+                    console.error('Failed to fetch Zoom meetings:', await meetingsResponse.text());
+                    return { success: false, error: 'Failed to fetch Zoom meetings' };
+                }
+            } catch (error) {
+                console.error('Failed to sync Zoom calendar:', error);
+                return { success: false, error: 'Failed to sync Zoom calendar' };
             }
         }
 

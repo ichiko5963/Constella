@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Video, Clock, MapPin, Users } from 'lucide-react';
 import { getCalendarEvents } from '@/server/actions/calendar';
 import { AutoJoinButton } from './auto-join-button';
+import { Button } from '@/components/ui/button';
 
 export function CalendarEventsList() {
     const [events, setEvents] = useState<any[]>([]);
@@ -131,7 +132,88 @@ export function CalendarEventsList() {
                     </div>
                 )}
             </CardContent>
+            {/* カレンダー連携ボタン */}
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+                <CalendarIntegrationButtons />
+            </div>
         </Card>
+    );
+}
+
+// カレンダー連携ボタンコンポーネント
+function CalendarIntegrationButtons() {
+    const [integrations, setIntegrations] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        loadIntegrations();
+    }, []);
+
+    const loadIntegrations = async () => {
+        try {
+            const { getCalendarIntegrations } = await import('@/server/actions/calendar');
+            const result = await getCalendarIntegrations();
+            if (result.success && result.integrations) {
+                setIntegrations(result.integrations);
+            }
+        } catch (error) {
+            console.error('Failed to load integrations:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleConnectGoogle = () => {
+        window.location.href = '/api/calendar/google/connect';
+    };
+
+    const handleConnectZoom = () => {
+        window.location.href = '/api/calendar/zoom/connect';
+    };
+
+    const googleIntegration = integrations.find(i => i.provider === 'google');
+    const zoomIntegration = integrations.find(i => i.provider === 'zoom');
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-2">
+            {/* Google Calendar連携 */}
+            <Button
+                onClick={handleConnectGoogle}
+                variant={googleIntegration ? "outline" : "default"}
+                size="sm"
+                className={`w-full justify-start ${
+                    googleIntegration 
+                        ? "border-green-500/30 text-green-400 hover:bg-green-500/10" 
+                        : "bg-primary text-black hover:bg-primary/90"
+                }`}
+            >
+                <Calendar className="h-4 w-4 mr-2" />
+                {googleIntegration ? 'Googleカレンダー連携済み' : 'Googleカレンダーと連携'}
+            </Button>
+
+            {/* Zoom連携 */}
+            <Button
+                onClick={handleConnectZoom}
+                variant={zoomIntegration ? "outline" : "default"}
+                size="sm"
+                className={`w-full justify-start ${
+                    zoomIntegration 
+                        ? "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" 
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+            >
+                <Video className="h-4 w-4 mr-2" />
+                {zoomIntegration ? 'Zoom連携済み' : 'Zoomと連携'}
+            </Button>
+        </div>
     );
 }
 

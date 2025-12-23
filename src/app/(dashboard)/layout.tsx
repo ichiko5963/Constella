@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { LayoutDashboard, Folder, Mic, Calendar, MessageSquare, Settings, Clock } from 'lucide-react';
+import { LayoutDashboard, Folder, Mic, Calendar, MessageSquare, Settings, CheckSquare } from 'lucide-react';
 import { NavLink } from '@/components/navigation/nav-link';
 import { Logo } from '@/components/navigation/logo';
 
@@ -43,9 +43,9 @@ export default async function DashboardLayout({
                         <Calendar className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
                         カレンダー
                     </NavLink>
-                    <NavLink href="/scheduler" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <Clock className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        スケジューラー
+                    <NavLink href="/tasks" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
+                        <CheckSquare className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
+                        タスク管理
                     </NavLink>
                     <NavLink href="/chat" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
                         <MessageSquare className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />

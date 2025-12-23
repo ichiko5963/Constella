@@ -12,19 +12,41 @@ import { Button } from '@/components/ui/button';
 export default async function DashboardPage() {
     try {
         const session = await auth();
-        if (!session?.user?.id) return null;
+        if (!session?.user?.id) {
+            return (
+                <div className="space-y-12 max-w-7xl mx-auto">
+                    <div className="text-center py-12">
+                        <p className="text-gray-400">ログインが必要です</p>
+                    </div>
+                </div>
+            );
+        }
 
-        const allRecordings = await db.query.recordings.findMany({
-            where: eq(recordings.userId, session.user.id),
-            orderBy: desc(recordings.createdAt),
-            with: { project: true }
-        });
+        let allRecordings = [];
+        let allProjects = [];
+
+        try {
+            allRecordings = await db.query.recordings.findMany({
+                where: eq(recordings.userId, session.user.id),
+                orderBy: desc(recordings.createdAt),
+                with: { project: true }
+            });
+        } catch (error) {
+            console.error('Failed to fetch recordings:', error);
+            // 録音の取得に失敗しても続行
+        }
+
+        try {
+            allProjects = await db.query.projects.findMany({
+                where: eq(projects.userId, session.user.id),
+                orderBy: desc(projects.updatedAt),
+            });
+        } catch (error) {
+            console.error('Failed to fetch projects:', error);
+            // プロジェクトの取得に失敗しても続行
+        }
+
         const recentRecordings = allRecordings.slice(0, 3);
-
-        const allProjects = await db.query.projects.findMany({
-            where: eq(projects.userId, session.user.id),
-            orderBy: desc(projects.updatedAt),
-        });
         const recentProjects = allProjects.slice(0, 3);
 
     return (

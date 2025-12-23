@@ -3,8 +3,9 @@
 import { auth } from '@/auth';
 import { db } from '@/db';
 import { recordingSegments, transcriptSegments, recordings } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { getPresignedDownloadUrl } from '@/lib/storage';
 
 /**
  * AssemblyAI Speaker Diarization APIを使用して話者識別を実行
@@ -17,9 +18,6 @@ export async function performDiarization(recordingId: number): Promise<{ success
     }
 
     try {
-        // TODO: AssemblyAI APIを使用して話者識別を実行
-        // 現在はプレースホルダー実装
-        
         // 1. 録音ファイルのURLを取得
         const recording = await db.query.recordings.findFirst({
             where: eq(recordings.id, recordingId),
@@ -29,37 +27,74 @@ export async function performDiarization(recordingId: number): Promise<{ success
             return { success: false, error: 'Recording not found or no audio URL' };
         }
 
-        // 2. AssemblyAI APIに送信（実装は後で追加）
-        // const assemblyApiKey = process.env.ASSEMBLYAI_API_KEY;
-        // if (!assemblyApiKey) {
-        //     return { success: false, error: 'AssemblyAI API key not configured' };
-        // }
+        // 2. Deepgram APIを使用して話者識別を実行
+        const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
+        if (!deepgramApiKey) {
+            // Fallback to AssemblyAI if Deepgram is not configured
+            return await performDiarizationWithAssemblyAI(recordingId, recording.audioUrl);
+        }
 
-        // 3. 話者セグメントを保存
-        // 現在はサンプルデータを保存
-        const sampleSegments = [
-            {
-                recordingId,
-                speakerId: 0,
-                speakerLabel: 'Speaker 1',
-                startTime: 0,
-                endTime: 30000,
-                confidence: 0.95,
+        // Deepgram APIを使用
+        const audioUrl = recording.audioUrl;
+        
+        // Deepgram transcription with speaker diarization
+        const response = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&language=ja&punctuate=true&diarize=true&smart_format=true', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${deepgramApiKey}`,
+                'Content-Type': 'application/json',
             },
-            {
-                recordingId,
-                speakerId: 1,
-                speakerLabel: 'Speaker 2',
-                startTime: 30000,
-                endTime: 60000,
-                confidence: 0.92,
-            },
-        ];
+            body: JSON.stringify({
+                url: audioUrl,
+            }),
+        });
 
-        await db.insert(recordingSegments).values(sampleSegments);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Deepgram API error:', errorText);
+            return { success: false, error: 'Failed to call Deepgram API' };
+        }
 
-        // 4. transcriptSegmentsのspeakerIdを更新
-        // これは実際のAPIレスポンスに基づいて更新する必要がある
+        const data = await response.json();
+        const results = data.results;
+        
+        if (!results || !results.channels || results.channels.length === 0) {
+            return { success: false, error: 'No transcription results' };
+        }
+
+        const channel = results.channels[0];
+        const utterances = channel.alternatives[0]?.utterances || [];
+
+        // 既存のセグメントを削除
+        await db.delete(recordingSegments)
+            .where(eq(recordingSegments.recordingId, recordingId));
+
+        // 話者セグメントを保存
+        const segments = utterances.map((utterance: any, index: number) => ({
+            recordingId,
+            speakerId: utterance.speaker || 0,
+            speakerLabel: `Speaker ${(utterance.speaker || 0) + 1}`,
+            startTime: Math.round(utterance.start * 1000), // Convert to milliseconds
+            endTime: Math.round(utterance.end * 1000),
+            confidence: utterance.confidence || null,
+        }));
+
+        if (segments.length > 0) {
+            await db.insert(recordingSegments).values(segments);
+        }
+
+        // transcriptSegmentsのspeakerIdを更新
+        const words = channel.alternatives[0]?.words || [];
+        for (const word of words) {
+            const startMs = Math.round(word.start * 1000);
+            await db.update(transcriptSegments)
+                .set({ 
+                    speakerId: word.speaker || null,
+                    speaker: `Speaker ${(word.speaker || 0) + 1}`,
+                })
+                .where(eq(transcriptSegments.recordingId, recordingId))
+                .where(eq(transcriptSegments.start, startMs));
+        }
 
         revalidatePath(`/recordings/${recordingId}`);
         return { success: true };
@@ -140,3 +175,122 @@ export async function getRecordingSegments(recordingId: number) {
         return { success: false, error: 'Failed to retrieve segments' };
     }
 }
+
+/**
+ * AssemblyAI APIを使用した話者識別（フォールバック）
+ */
+async function performDiarizationWithAssemblyAI(recordingId: number, audioUrl: string): Promise<{ success: boolean; error?: string }> {
+    const assemblyApiKey = process.env.ASSEMBLYAI_API_KEY;
+    if (!assemblyApiKey) {
+        return { success: false, error: 'No diarization API key configured (DEEPGRAM_API_KEY or ASSEMBLYAI_API_KEY)' };
+    }
+
+    try {
+        // 1. Upload audio to AssemblyAI
+        const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
+            method: 'POST',
+            headers: {
+                'authorization': assemblyApiKey,
+            },
+            body: await fetch(audioUrl).then(r => r.blob()),
+        });
+
+        if (!uploadResponse.ok) {
+            return { success: false, error: 'Failed to upload audio to AssemblyAI' };
+        }
+
+        const { upload_url } = await uploadResponse.json();
+
+        // 2. Start transcription with speaker diarization
+        const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+            method: 'POST',
+            headers: {
+                'authorization': assemblyApiKey,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                audio_url: upload_url,
+                speaker_labels: true,
+                language_code: 'ja',
+            }),
+        });
+
+        if (!transcriptResponse.ok) {
+            return { success: false, error: 'Failed to start transcription' };
+        }
+
+        const { id } = await transcriptResponse.json();
+
+        // 3. Poll for completion
+        let transcriptData;
+        let attempts = 0;
+        const maxAttempts = 60; // 5 minutes max
+
+        while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+
+            const statusResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${id}`, {
+                headers: {
+                    'authorization': assemblyApiKey,
+                },
+            });
+
+            transcriptData = await statusResponse.json();
+
+            if (transcriptData.status === 'completed') {
+                break;
+            } else if (transcriptData.status === 'error') {
+                return { success: false, error: transcriptData.error || 'Transcription failed' };
+            }
+
+            attempts++;
+        }
+
+        if (!transcriptData || transcriptData.status !== 'completed') {
+            return { success: false, error: 'Transcription timeout' };
+        }
+
+        // 4. Extract speaker segments
+        const utterances = transcriptData.utterances || [];
+        
+        // 既存のセグメントを削除
+        await db.delete(recordingSegments)
+            .where(eq(recordingSegments.recordingId, recordingId));
+
+        // 話者セグメントを保存
+        const segments = utterances.map((utterance: any) => ({
+            recordingId,
+            speakerId: utterance.speaker || 0,
+            speakerLabel: `Speaker ${(utterance.speaker || 0) + 1}`,
+            startTime: Math.round(utterance.start * 1000), // Convert to milliseconds
+            endTime: Math.round(utterance.end * 1000),
+            confidence: utterance.confidence || null,
+        }));
+
+        if (segments.length > 0) {
+            await db.insert(recordingSegments).values(segments);
+        }
+
+        // 5. Update transcript segments with speaker IDs
+        const words = transcriptData.words || [];
+        for (const word of words) {
+            const startMs = Math.round(word.start * 1000);
+            await db.update(transcriptSegments)
+                .set({ 
+                    speakerId: word.speaker || null,
+                    speaker: word.speaker !== null ? `Speaker ${word.speaker + 1}` : null,
+                })
+                .where(and(
+                    eq(transcriptSegments.recordingId, recordingId),
+                    eq(transcriptSegments.start, startMs)
+                ));
+        }
+
+        revalidatePath(`/recordings/${recordingId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to perform diarization with AssemblyAI:', error);
+        return { success: false, error: 'Failed to perform diarization' };
+    }
+}
+

@@ -198,15 +198,15 @@ export async function notifyIntegrations(noteId: number): Promise<{ success: boo
             return { success: false, error: 'Note not found' };
         }
 
-        // 各統合に通知を送信
-        for (const integration of integrationList) {
-            try {
-                await sendToIntegration(integration, note);
-            } catch (error) {
-                console.error(`Failed to send to ${integration.provider}:`, error);
-                // エラーがあっても他の統合には送信を続ける
-            }
-        }
+        // 各統合に通知を送信（並列実行で高速化）
+        await Promise.allSettled(
+            integrationList.map(integration =>
+                sendToIntegration(integration, note).catch(error => {
+                    console.error(`Failed to send to ${integration.provider}:`, error);
+                    // エラーをログに記録するが、他の統合には影響しない
+                })
+            )
+        );
 
         return { success: true };
     } catch (error) {
@@ -241,13 +241,90 @@ async function sendToIntegration(integration: any, note: any) {
             }
             break;
         case 'notion':
-            // TODO: Notion APIを使用してページを作成
-            console.log('Notion integration not yet implemented');
+            if (integration.accessToken) {
+                // Notion APIを使用してページを作成
+                const notionDatabaseId = integration.settings?.databaseId;
+                if (notionDatabaseId) {
+                    await fetch('https://api.notion.com/v1/pages', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${integration.accessToken}`,
+                            'Content-Type': 'application/json',
+                            'Notion-Version': '2022-06-28',
+                        },
+                        body: JSON.stringify({
+                            parent: { database_id: notionDatabaseId },
+                            properties: {
+                                'Title': {
+                                    title: [{ text: { content: note.title } }],
+                                },
+                                'Summary': {
+                                    rich_text: [{ text: { content: note.summary || '' } }],
+                                },
+                                'Date': {
+                                    date: { start: note.meetingDate?.toISOString() || new Date().toISOString() },
+                                },
+                            },
+                            children: note.formattedMinutes ? [
+                                {
+                                    object: 'block',
+                                    type: 'paragraph',
+                                    paragraph: {
+                                        rich_text: [{ type: 'text', text: { content: note.formattedMinutes.substring(0, 2000) } }],
+                                    },
+                                },
+                            ] : [],
+                        }),
+                    });
+                }
+            }
             break;
         case 'hubspot':
+            if (integration.accessToken) {
+                // HubSpot APIを使用してレコードを作成
+                const contactId = integration.settings?.contactId;
+                if (contactId) {
+                    await fetch(`https://api.hubapi.com/crm/v3/objects/notes`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${integration.accessToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            properties: {
+                                hs_note_body: note.summary || note.formattedMinutes || '',
+                                hs_timestamp: new Date().toISOString(),
+                            },
+                            associations: [
+                                {
+                                    to: { id: contactId },
+                                    types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 214 }],
+                                },
+                            ],
+                        }),
+                    });
+                }
+            }
+            break;
         case 'salesforce':
-            // TODO: CRM APIを使用してレコードを作成
-            console.log(`${integration.provider} integration not yet implemented`);
+            if (integration.accessToken && integration.settings?.instanceUrl) {
+                // Salesforce APIを使用してレコードを作成
+                const objectType = integration.settings?.objectType || 'Note__c';
+                await fetch(`${integration.settings.instanceUrl}/services/data/v58.0/sobjects/${objectType}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${integration.accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        Title__c: note.title,
+                        Summary__c: note.summary || '',
+                        Content__c: note.formattedMinutes || '',
+                        Meeting_Date__c: note.meetingDate?.toISOString() || new Date().toISOString(),
+                    }),
+                });
+            }
             break;
     }
 }
+

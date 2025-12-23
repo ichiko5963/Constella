@@ -107,3 +107,4 @@ export async function updateAutoJoinSettings(
         return { success: false, error: 'Failed to update auto join settings' };
     }
 }
+

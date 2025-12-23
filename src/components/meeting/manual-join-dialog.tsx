@@ -180,3 +180,4 @@ export function ManualJoinDialog({ open, onOpenChange, projectId }: ManualJoinDi
         </Dialog>
     );
 }
+

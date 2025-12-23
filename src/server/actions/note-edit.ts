@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { meetingNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { logAuditEvent } from '@/lib/audit-log';
 
 export async function updateMeetingNoteContent(
     noteId: number,
@@ -37,6 +38,11 @@ export async function updateMeetingNoteContent(
             })
             .where(eq(meetingNotes.id, noteId));
 
+        // 監査ログを記録
+        await logAuditEvent('update', 'note', noteId, {
+            recordingId: note.recordingId,
+        });
+
         if (note.recordingId) {
             revalidatePath(`/recordings/${note.recordingId}`);
         }
@@ -47,3 +53,4 @@ export async function updateMeetingNoteContent(
         return { success: false, error: `Failed to update meeting note: ${errorMessage}` };
     }
 }
+

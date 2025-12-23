@@ -251,3 +251,4 @@ JSON形式で出力してください。フォーマット:
         return { success: false, error: 'Failed to retrieve default template' };
     }
 }
+

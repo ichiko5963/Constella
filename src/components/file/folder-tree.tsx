@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown, Plus, MoreVertical, Share2, X } from 'lucide-react';
 import { getFolderTree, createFolder, moveFile } from '@/server/actions/folder';
+import { MoveFileDialog } from './move-file-dialog';
 import { toast } from 'sonner';
 import {
     DropdownMenu,
@@ -34,6 +35,8 @@ export function FolderTree({ projectId, onFileSelect }: FolderTreeProps) {
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [parentFolderId, setParentFolderId] = useState<number | null>(null);
+    const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+    const [fileToMove, setFileToMove] = useState<{ id: number; parentId: number | null } | null>(null);
 
     useEffect(() => {
         loadTree();
@@ -157,9 +160,9 @@ export function FolderTree({ projectId, onFileSelect }: FolderTreeProps) {
                                     </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
-                                    onClick={async () => {
-                                        // TODO: ファイル移動ダイアログ
-                                        toast.info('ファイル移動機能は実装中です');
+                                    onClick={() => {
+                                        setFileToMove({ id: node.id, parentId: node.parentFileId });
+                                        setMoveDialogOpen(true);
                                     }}
                                 >
                                     移動
@@ -269,6 +272,20 @@ export function FolderTree({ projectId, onFileSelect }: FolderTreeProps) {
                     </div>
                 )}
             </CardContent>
+            {fileToMove && (
+                <MoveFileDialog
+                    open={moveDialogOpen}
+                    onOpenChange={setMoveDialogOpen}
+                    fileId={fileToMove.id}
+                    projectId={projectId}
+                    currentParentId={fileToMove.parentId}
+                    onMoveComplete={() => {
+                        loadTree();
+                        setFileToMove(null);
+                    }}
+                />
+            )}
         </Card>
     );
 }
+

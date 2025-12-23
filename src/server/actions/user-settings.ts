@@ -75,3 +75,4 @@ export async function updateBackgroundTheme(theme: BackgroundTheme) {
         return { success: false, error: 'Failed to update theme' };
     }
 }
+

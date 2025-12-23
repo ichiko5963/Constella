@@ -182,3 +182,4 @@ export async function getDefaultPrompt(): Promise<{ success: boolean; prompt?: s
         return { success: false, error: 'Failed to retrieve default prompt' };
     }
 }
+

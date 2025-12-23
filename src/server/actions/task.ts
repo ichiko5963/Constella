@@ -6,6 +6,7 @@ import { auth } from '@/auth';
 import { headers } from 'next/headers';
 import { eq, desc, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { logAuditEvent } from '@/lib/audit-log';
 
 export async function getTasks(projectId?: number) {
     const session = await auth();
@@ -59,6 +60,13 @@ export async function createTask(formData: FormData) {
             dueDate,
         }).returning();
 
+        // 監査ログを記録
+        await logAuditEvent('create', 'task', newTask.id, {
+            projectId: projectId || null,
+            status,
+            priority,
+        });
+
         revalidatePath('/tasks');
         return { success: true, taskId: newTask.id };
     } catch (error) {
@@ -79,6 +87,11 @@ export async function updateTaskStatus(taskId: number, newStatus: string) {
             .set({ status: newStatus })
             .where(and(eq(tasks.id, taskId), eq(tasks.userId, session.user.id)));
 
+        // 監査ログを記録
+        await logAuditEvent('update', 'task', taskId, {
+            status: newStatus,
+        });
+
         revalidatePath('/tasks');
         return { success: true };
     } catch (error) {
@@ -95,6 +108,9 @@ export async function deleteTask(taskId: number) {
     }
 
     try {
+        // 監査ログを記録（削除前）
+        await logAuditEvent('delete', 'task', taskId);
+
         await db.delete(tasks)
             .where(and(eq(tasks.id, taskId), eq(tasks.userId, session.user.id)));
 

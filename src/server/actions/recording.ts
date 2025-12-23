@@ -8,6 +8,7 @@ import { headers } from 'next/headers';
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
+import { logAuditEvent } from '@/lib/audit-log';
 
 export async function createRecordingUploadUrl(projectId?: number, fileType: string = 'audio/webm') {
     // 1. Authenticate user
@@ -47,6 +48,12 @@ export async function createRecordingUploadUrl(projectId?: number, fileType: str
             status: 'uploading',
             transcription: '', // Initialize
         }).returning();
+
+        // 監査ログを記録
+        await logAuditEvent('create', 'recording', inserted.id, {
+            projectId: projectId || null,
+            fileType,
+        });
 
         return {
             success: true,

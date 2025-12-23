@@ -115,3 +115,4 @@ export function ShareButton({ noteId, shareToken: initialShareToken }: ShareButt
         </Button>
     );
 }
+

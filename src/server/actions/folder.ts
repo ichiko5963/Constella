@@ -6,6 +6,7 @@ import { files, meetingNotes } from '@/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { nanoid } from 'nanoid';
+import { logAuditEvent } from '@/lib/audit-log';
 
 /**
  * フォルダを作成
@@ -168,6 +169,9 @@ export async function generateShareToken(noteId: number): Promise<{ success: boo
             })
             .where(eq(meetingNotes.id, noteId));
 
+        // 監査ログを記録
+        await logAuditEvent('share', 'note', noteId);
+
         revalidatePath(`/recordings`);
         return { success: true, shareToken };
     } catch (error) {
@@ -242,3 +246,4 @@ export async function revokeShareToken(noteId: number): Promise<{ success: boole
         return { success: false, error: 'Failed to revoke share token' };
     }
 }
+

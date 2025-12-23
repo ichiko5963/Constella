@@ -233,3 +233,4 @@ export function SpeakerDiarizationView({ recordingId }: SpeakerDiarizationViewPr
         </Card>
     );
 }
+

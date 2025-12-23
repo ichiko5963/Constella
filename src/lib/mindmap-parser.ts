@@ -66,3 +66,4 @@ export function flattenMindMap(nodes: MindMapNode[]): MindMapNode[] {
     nodes.forEach(node => traverse(node));
     return result;
 }
+

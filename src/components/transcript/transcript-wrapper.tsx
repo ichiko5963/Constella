@@ -42,3 +42,4 @@ export function TranscriptWrapper({ recordingId, audioUrl }: TranscriptWrapperPr
         </div>
     );
 }
+

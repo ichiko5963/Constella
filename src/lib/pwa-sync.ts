@@ -120,3 +120,4 @@ export function setupSyncListener() {
         syncUnsyncedItems();
     }, 30000); // 30秒ごと
 }
+

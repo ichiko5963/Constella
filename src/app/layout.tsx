@@ -24,6 +24,19 @@ export const metadata: Metadata = {
   },
   description: "Automate your meetings with Actory. Record, transcribe, summarize, and extract tasks instantly.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Actory',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
 };
 
 export default function RootLayout({
@@ -42,10 +55,26 @@ export default function RootLayout({
             <ThemeProvider>
               {children}
               <GlobalRecorderManager />
+              <PWAInstaller />
               <Toaster />
             </ThemeProvider>
           </RecordingProvider>
         </OpeningProvider>
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                  .then((registration) => {
+                    console.log('SW registered: ', registration);
+                  })
+                  .catch((registrationError) => {
+                    console.log('SW registration failed: ', registrationError);
+                  });
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );

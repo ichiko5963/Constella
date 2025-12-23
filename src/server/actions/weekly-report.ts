@@ -181,3 +181,4 @@ function getWeekStart(date: Date): Date {
     d.setHours(0, 0, 0, 0);
     return d;
 }
+

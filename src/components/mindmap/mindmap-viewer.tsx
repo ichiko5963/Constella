@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Network } from 'lucide-react';
 import { parseMarkdownToMindMap, flattenMindMap, type MindMapNode } from '@/lib/mindmap-parser';
+import { exportMindMapToPNG, exportMindMapToSVG } from './mindmap-export';
 import { toast } from 'sonner';
 
 interface MindMapViewerProps {
@@ -23,8 +24,16 @@ export function MindMapViewer({ markdown, noteId }: MindMapViewerProps) {
 
     const handleExportPNG = async () => {
         try {
-            // TODO: Canvas APIを使用してマインドマップをPNGとしてエクスポート
-            toast.info('PNGエクスポート機能は実装中です');
+            const blob = await exportMindMapToPNG(nodes, `Mind Map - Note ${noteId}`);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mindmap-note-${noteId}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast.success('PNG形式でエクスポートしました');
         } catch (error) {
             console.error('Failed to export PNG:', error);
             toast.error('PNGエクスポートに失敗しました');
@@ -33,8 +42,17 @@ export function MindMapViewer({ markdown, noteId }: MindMapViewerProps) {
 
     const handleExportSVG = async () => {
         try {
-            // TODO: SVGを生成してエクスポート
-            toast.info('SVGエクスポート機能は実装中です');
+            const svg = exportMindMapToSVG(nodes, `Mind Map - Note ${noteId}`);
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mindmap-note-${noteId}.svg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast.success('SVG形式でエクスポートしました');
         } catch (error) {
             console.error('Failed to export SVG:', error);
             toast.error('SVGエクスポートに失敗しました');
@@ -135,3 +153,4 @@ export function MindMapViewer({ markdown, noteId }: MindMapViewerProps) {
         </Card>
     );
 }
+

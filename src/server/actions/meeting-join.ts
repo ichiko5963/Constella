@@ -45,3 +45,4 @@ export async function createManualJoinEvent(data: ManualJoinEventData): Promise<
         return { success: false, error: 'Failed to create event' };
     }
 }
+

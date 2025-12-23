@@ -247,3 +247,4 @@ export async function getCalendarEvents() {
         return { success: false, error: 'Failed to retrieve events' };
     }
 }
+

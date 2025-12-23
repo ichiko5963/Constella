@@ -572,3 +572,66 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
         references: [users.id],
     }),
 }));
+
+// --- Booking Settings (Spear-like booking URLs) ---
+
+export const bookingSettings = sqliteTable("booking_setting", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("userId").notNull().references(() => users.id),
+    token: text("token").notNull().unique(), // Unique token for booking URL
+    title: text("title").notNull().default("予約可能な時間"),
+    description: text("description"),
+    duration: integer("duration").notNull().default(30), // Meeting duration in minutes
+    bufferTime: integer("bufferTime").default(0), // Buffer time between meetings in minutes
+    businessHoursStart: integer("businessHoursStart").default(9), // 9 AM
+    businessHoursEnd: integer("businessHoursEnd").default(18), // 6 PM
+    availableDays: text("availableDays"), // JSON array of day numbers (0=Sunday, 1=Monday, etc.)
+    timezone: text("timezone").default("Asia/Tokyo"),
+    autoGenerateMeetLink: integer("autoGenerateMeetLink", { mode: "boolean" }).default(true),
+    autoJoinActory: integer("autoJoinActory", { mode: "boolean" }).default(true), // Actory AI auto-join
+    autoRecord: integer("autoRecord", { mode: "boolean" }).default(false),
+    enabled: integer("enabled", { mode: "boolean" }).default(true),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const bookingSettingsRelations = relations(bookingSettings, ({ one, many }) => ({
+    user: one(users, {
+        fields: [bookingSettings.userId],
+        references: [users.id],
+    }),
+}));
+
+// --- Bookings (Actual bookings made through booking URLs) ---
+
+export const bookings = sqliteTable("booking", {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    bookingSettingId: integer("bookingSettingId").notNull().references(() => bookingSettings.id, { onDelete: 'cascade' }),
+    userId: text("userId").notNull().references(() => users.id), // Owner of the booking setting
+    attendeeName: text("attendeeName").notNull(),
+    attendeeEmail: text("attendeeEmail").notNull(),
+    message: text("message"),
+    startTime: integer("startTime", { mode: "timestamp" }).notNull(),
+    endTime: integer("endTime", { mode: "timestamp" }).notNull(),
+    meetingLink: text("meetingLink"), // Google Meet link
+    googleCalendarEventId: text("googleCalendarEventId"), // Google Calendar event ID
+    calendarEventId: integer("calendarEventId").references(() => calendarEvents.id, { onDelete: 'set null' }), // Actory calendar event
+    status: text("status").default("confirmed"), // confirmed, cancelled, completed
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
+});
+
+export const bookingsRelations = relations(bookings, ({ one }) => ({
+    bookingSetting: one(bookingSettings, {
+        fields: [bookings.bookingSettingId],
+        references: [bookingSettings.id],
+    }),
+    user: one(users, {
+        fields: [bookings.userId],
+        references: [users.id],
+    }),
+    calendarEvent: one(calendarEvents, {
+        fields: [bookings.calendarEventId],
+        references: [calendarEvents.id],
+    }),
+}));

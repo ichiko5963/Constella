@@ -1,0 +1,58 @@
+{
+  "name": "Actory - AI-Powered Meeting Minutes",
+  "short_name": "Actory",
+  "description": "Automate your meetings with Actory. Record, transcribe, summarize, and extract tasks instantly.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f0f",
+  "theme_color": "#00D4AA",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-square.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-horizontal.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Recording",
+      "short_name": "Record",
+      "description": "Start a new recording",
+      "url": "/dashboard?action=record",
+      "icons": [{ "src": "/logo-square.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "description": "View calendar",
+      "url": "/calendar",
+      "icons": [{ "src": "/logo-square.png", "sizes": "96x96" }]
+    }
+  ],
+  "share_target": {
+    "action": "/api/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "audio",
+          "accept": ["audio/*", "video/*"]
+        }
+      ]
+    }
+  }
+}

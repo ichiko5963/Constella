@@ -59,3 +59,4 @@ export async function updateEventJoinStatus(
 ): Promise<{ success: boolean; error?: string }> {
     return await updateJoinStatus(eventId, status, recordingId);
 }
+

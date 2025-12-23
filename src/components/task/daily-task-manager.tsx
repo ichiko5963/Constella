@@ -215,3 +215,4 @@ export function DailyTaskManager({ selectedDate = new Date() }: DailyTaskManager
         </Card>
     );
 }
+

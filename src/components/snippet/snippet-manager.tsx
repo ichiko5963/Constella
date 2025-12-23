@@ -436,3 +436,4 @@ export function SnippetManager({ noteId, currentTime, onJumpToTime }: SnippetMan
         </Card>
     );
 }
+

@@ -142,3 +142,4 @@ export async function deleteSnippet(snippetId: number): Promise<{ success: boole
         return { success: false, error: 'Failed to delete snippet' };
     }
 }
+

@@ -5,36 +5,41 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { AILogo } from '@/components/chat/ai-logo';
 
 export default function ChatPage() {
-    const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
+    const chatHelpers = useChat({
         api: '/api/chat',
-        streamProtocol: 'text',
-    });
+    } as any);
+    
+    // useChatの戻り値から必要なプロパティを取得（型安全に）
+    const messages = chatHelpers.messages || [];
+    const isLoading = ('isLoading' in chatHelpers ? (chatHelpers as any).isLoading : false) || 
+                      (chatHelpers.status === 'streaming' || chatHelpers.status === 'submitted');
+    const handleSubmit = chatHelpers.sendMessage ? 
+        ((e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const message = formData.get('message') as string;
+            if (message && message.trim()) {
+                (chatHelpers.sendMessage as any)({ content: message } as any);
+            }
+        }) : 
+        ('handleSubmit' in chatHelpers ? (chatHelpers as any).handleSubmit : undefined);
+    
+    // inputプロパティが存在しない場合は、ローカルstateを使用
+    const [localInput, setLocalInput] = useState('');
+    const input = 'input' in chatHelpers ? (chatHelpers as any).input : localInput;
+    const setInput = 'setInput' in chatHelpers ? (chatHelpers as any).setInput : setLocalInput;
+    const handleInputChange = 'handleInputChange' in chatHelpers 
+        ? (chatHelpers as any).handleInputChange 
+        : ((e: React.ChangeEvent<HTMLInputElement>) => setLocalInput(e.target.value));
+    
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    // handleInputChangeが存在しない場合のフォールバック
-    const handleChange = handleInputChange || ((e: React.ChangeEvent<HTMLInputElement>) => {
-        if (setInput && typeof setInput === 'function') {
-            setInput(e.target.value);
-        }
-    });
-
-    // 送信ハンドラー（handleSubmitが存在しない場合のフォールバック）
-    const onSubmit = handleSubmit || ((e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const message = formData.get('message') as string;
-        if (message && message.trim() && setInput) {
-            // カスタム送信処理（必要に応じて実装）
-            console.log('Submitting message:', message);
-        }
-    });
 
     // 入力値が有効かチェック
     const isValidInput = input && typeof input === 'string' && input.trim().length > 0;
@@ -137,12 +142,12 @@ export default function ChatPage() {
                                             }`}
                                     >
                                         {message.role === 'user' ? (
-                                            <p>{message.content}</p>
+                                            <p>{(message as any).content || (message as any).text || String(message)}</p>
                                         ) : (
                                             <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-headings:text-primary prose-a:text-primary hover:prose-a:underline">
                                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                     {/* @ts-ignore - content type depends on ai-sdk version */}
-                                                    {message.content}
+                                                    {(message as any).content || (message as any).text || String(message)}
                                                 </ReactMarkdown>
                                             </div>
                                         )}
@@ -182,12 +187,12 @@ export default function ChatPage() {
                 </CardContent>
 
                 <CardFooter className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
-                    <form onSubmit={onSubmit} className="flex w-full gap-3 relative">
+                    <form onSubmit={handleSubmit} className="flex w-full gap-3 relative">
                         <Input
                             ref={inputRef}
                             name="message"
                             value={input ?? ''}
-                            onChange={handleChange}
+                            onChange={handleInputChange}
                             onKeyDown={(e) => {
                                 // Enterキーで送信（Shift+Enterは改行）
                                 if (e.key === 'Enter' && !e.shiftKey) {

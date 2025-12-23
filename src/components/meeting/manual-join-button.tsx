@@ -25,3 +25,4 @@ export function ManualJoinButton({ projectId }: { projectId?: number }) {
         </>
     );
 }
+

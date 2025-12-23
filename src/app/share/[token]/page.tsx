@@ -54,3 +54,4 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
         </div>
     );
 }
+

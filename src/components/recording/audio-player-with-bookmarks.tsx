@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play } from 'lucide-react';
 import { BookmarkButton } from './bookmark-button';
 import { BookmarkList } from './bookmark-list';
+import { WaveformVisualizer } from './waveform-visualizer';
 
 interface AudioPlayerWithBookmarksProps {
     recordingId: number;
@@ -58,6 +59,14 @@ export function AudioPlayerWithBookmarks({ recordingId, audioUrl, onAudioRefRead
                     >
                         Your browser does not support the audio element.
                     </audio>
+                    {audioUrl && (
+                        <WaveformVisualizer
+                            audioRef={audioRef}
+                            audioUrl={audioUrl}
+                            onSeek={handleJumpToTime}
+                            height={80}
+                        />
+                    )}
                     <div className="flex justify-end">
                         <BookmarkButton
                             recordingId={recordingId}

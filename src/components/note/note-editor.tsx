@@ -208,3 +208,4 @@ export function NoteEditor({ noteId, initialContent, onCancel, onSave }: NoteEdi
         </div>
     );
 }
+

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/db';
 import { recordings, meetingNotes, tasks } from '@/db/schema';
+import { logAuditEvent } from '@/lib/audit-log';
 
 /**
  * クロスデバイス同期エンドポイント
@@ -18,29 +19,37 @@ export async function POST(req: NextRequest) {
         const item = await req.json();
         const { type, data } = item;
 
+        let resourceId: number | undefined;
+
         switch (type) {
             case 'recording':
                 // 録音データを同期
-                await db.insert(recordings).values({
+                const [recording] = await db.insert(recordings).values({
                     userId: session.user.id,
                     ...data,
-                });
+                }).returning();
+                resourceId = recording.id;
+                await logAuditEvent('create', 'recording', resourceId, { synced: true });
                 break;
 
             case 'note':
                 // 議事録データを同期
-                await db.insert(meetingNotes).values({
+                const [note] = await db.insert(meetingNotes).values({
                     userId: session.user.id,
                     ...data,
-                });
+                }).returning();
+                resourceId = note.id;
+                await logAuditEvent('create', 'note', resourceId, { synced: true });
                 break;
 
             case 'task':
                 // タスクデータを同期
-                await db.insert(tasks).values({
+                const [task] = await db.insert(tasks).values({
                     userId: session.user.id,
                     ...data,
-                });
+                }).returning();
+                resourceId = task.id;
+                await logAuditEvent('create', 'task', resourceId, { synced: true });
                 break;
 
             default:
@@ -50,7 +59,7 @@ export async function POST(req: NextRequest) {
                 );
         }
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, resourceId });
     } catch (error) {
         console.error('Failed to sync item:', error);
         return NextResponse.json(
@@ -59,3 +68,4 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+

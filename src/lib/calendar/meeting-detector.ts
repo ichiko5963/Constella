@@ -16,3 +16,4 @@ export function detectMeetingType(url: string): 'google-meet' | 'zoom' | 'teams'
     }
     return 'unknown';
 }
+

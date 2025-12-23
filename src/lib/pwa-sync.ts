@@ -70,7 +70,7 @@ export async function markAsSynced(itemId: string): Promise<void> {
     const db = await initIndexedDB();
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    const item = await store.get(itemId);
+    const item = await store.get(itemId) as any; // IndexedDBの型定義が不完全なためanyを使用
     if (item) {
         item.synced = true;
         await store.put(item);

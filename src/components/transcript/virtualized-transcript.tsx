@@ -7,7 +7,7 @@ import { getTranscriptSegments } from '@/server/actions/transcript';
 
 interface VirtualizedTranscriptProps {
     recordingId: number;
-    audioRef: React.RefObject<HTMLAudioElement>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
     className?: string;
 }
 

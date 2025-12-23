@@ -26,7 +26,7 @@ export function RecordingDetailClient({
     const [audioRefReady, setAudioRefReady] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
 
-    const handleAudioRefReady = (ref: React.RefObject<HTMLAudioElement>) => {
+    const handleAudioRefReady = (ref: React.RefObject<HTMLAudioElement | null>) => {
         if (ref.current) {
             audioRef.current = ref.current;
             setAudioRefReady(true);

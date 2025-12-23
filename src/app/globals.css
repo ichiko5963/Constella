@@ -316,19 +316,13 @@ body.theme-white button.border-blue-500\/30 {
 
 /* 白背景テーマ時の録音関連コンポーネント（背景が白以外の部分） */
 body.theme-white .bg-gradient-to-br,
-body.theme-white .bg-black,
-body.theme-white .bg-\[#020205\],
-body.theme-white .bg-\[#050510\],
-body.theme-white .bg-\[#0a101f\] {
+body.theme-white .bg-black {
   /* 録音画面などの黒背景部分は白背景テーマ時も黒背景を維持 */
 }
 
 /* 白背景テーマ時の録音関連のテキスト（黒背景上） */
 body.theme-white .bg-gradient-to-br .text-white,
-body.theme-white .bg-black .text-white,
-body.theme-white .bg-\[#020205\] .text-white,
-body.theme-white .bg-\[#050510\] .text-white,
-body.theme-white .bg-\[#0a101f\] .text-white {
+body.theme-white .bg-black .text-white {
   /* 黒背景上では白文字を維持（録音画面など） */
   color: #ffffff !important;
 }
@@ -343,6 +337,11 @@ body.theme-white .glass .text-white {
 body.theme-white .bg-white\/5 .text-white,
 body.theme-white .bg-white\/10 .text-white {
   color: #1f2937 !important;
+}
+
+/* 白背景テーマ時のAIチャットプレースホルダー */
+body.theme-white input.placeholder\:text-white\/70::placeholder {
+  color: #6b7280 !important; /* 白背景ではグレーに */
 }
 
 /* 白背景テーマ時のシャドウ */

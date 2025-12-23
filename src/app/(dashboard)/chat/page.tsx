@@ -203,7 +203,7 @@ export default function ChatPage() {
                                 }
                             }}
                             placeholder="質問を入力してください..."
-                            className="flex-1 bg-black/40 border-white/10 text-white placeholder:text-gray-600 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-14 pl-6 rounded-2xl backdrop-blur-xl transition-all"
+                            className="flex-1 bg-black/40 border-white/10 text-white placeholder:text-white/70 focus-visible:ring-primary/50 focus-visible:border-primary/50 h-14 pl-6 rounded-2xl backdrop-blur-xl transition-all"
                         />
                         <Button
                             type="submit"

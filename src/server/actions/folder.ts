@@ -121,7 +121,7 @@ export async function moveFile(
                 if (currentParentId === fileId) {
                     return { success: false, error: 'Cannot move folder into itself' };
                 }
-                const parent = await db.query.files.findFirst({
+                const parent: { parentFileId: number | null } | undefined = await db.query.files.findFirst({
                     where: eq(files.id, currentParentId),
                 });
                 currentParentId = parent?.parentFileId || null;

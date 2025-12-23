@@ -51,66 +51,55 @@ export function RecordingImport({ projectId, onImportComplete }: RecordingImport
         setUploadProgress(0);
 
         try {
-            // 音声フォーマットを正規化（必要に応じて）
-            let processedFile = file;
-            const needsConversion = !file.type.includes('webm') && !file.type.includes('wav');
-            
-            if (needsConversion && file.size < 25 * 1024 * 1024) {
-                // 25MB未満の場合はクライアントサイドで変換を試みる（オプション）
-                // 現在はサーバーサイドで処理するため、そのままアップロード
-            }
-
-            // 1. アップロードURLを取得
-            // ファイルタイプを適切に設定（拡張子から推測）
-            let fileType = file.type;
-            if (!fileType || fileType === 'application/octet-stream') {
-                const extension = file.name.split('.').pop()?.toLowerCase();
-                const mimeTypes: Record<string, string> = {
-                    'mp3': 'audio/mpeg',
-                    'wav': 'audio/wav',
-                    'm4a': 'audio/mp4',
-                    'webm': 'audio/webm',
-                    'ogg': 'audio/ogg',
-                };
-                fileType = mimeTypes[extension || ''] || 'audio/mpeg';
-            }
-
-            const { success, url, recordingId: newRecordingId, error } = await createRecordingUploadUrl(
-                projectId,
-                fileType
-            );
-
-            if (!success || !url || !newRecordingId) {
-                console.error('Upload URL creation failed:', { success, url, recordingId: newRecordingId, error });
-                throw new Error(error || 'アップロードURLの取得に失敗しました。S3の設定を確認してください。');
-            }
-
-            // 2. サーバー経由でアップロード（CORS問題を回避）
+            // サーバー経由でアップロード（CORS問題を回避）
             const formData = new FormData();
             formData.append('file', file);
             if (projectId) {
                 formData.append('projectId', projectId.toString());
             }
 
-            const uploadResponse = await fetch('/api/recordings/upload', {
-                method: 'POST',
-                body: formData,
+            // アップロード進捗を追跡（XMLHttpRequestを使用）
+            const xhr = new XMLHttpRequest();
+            
+            await new Promise<void>((resolve, reject) => {
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        setUploadProgress(percentComplete);
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        try {
+                            const result = JSON.parse(xhr.responseText);
+                            if (result.success && result.recordingId) {
+                                setRecordingId(result.recordingId);
+                                resolve();
+                            } else {
+                                reject(new Error(result.error || 'アップロードに失敗しました'));
+                            }
+                        } catch (parseError) {
+                            reject(new Error('レスポンスの解析に失敗しました'));
+                        }
+                    } else {
+                        console.error('Upload failed with status:', xhr.status, xhr.statusText, xhr.responseText);
+                        reject(new Error(`アップロードに失敗しました (ステータス: ${xhr.status})`));
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    console.error('Upload XHR error:', xhr.status, xhr.statusText, xhr.responseText);
+                    reject(new Error('アップロード中にエラーが発生しました。ネットワーク接続を確認してください。'));
+                });
+
+                xhr.addEventListener('abort', () => {
+                    reject(new Error('アップロードが中断されました'));
+                });
+
+                xhr.open('POST', '/api/recordings/upload');
+                xhr.send(formData);
             });
-
-            if (!uploadResponse.ok) {
-                const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }));
-                throw new Error(errorData.error || `アップロードに失敗しました (ステータス: ${uploadResponse.status})`);
-            }
-
-            const result = await uploadResponse.json();
-            const newRecordingId = result.recordingId || newRecordingId;
-            setRecordingId(newRecordingId);
-
-            // アップロード完了を確認
-            // サーバー側で自動的に文字起こしと議事録生成が開始される
-            setUploadStatus('transcribing');
-            setUploadProgress(100);
-            toast.success('アップロード完了。文字起こしを開始します...');
 
             // サーバー側で自動的に文字起こしと議事録生成が開始される
             // 処理はバックグラウンドで実行されるため、完了を待たずに成功メッセージを表示

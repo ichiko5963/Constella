@@ -132,8 +132,10 @@ export async function updateSpeakerName(
         if (segment) {
             await db.update(recordingSegments)
                 .set({ speakerLabel: speakerName })
-                .where(eq(recordingSegments.recordingId, segment.recordingId))
-                .where(eq(recordingSegments.speakerId, segment.speakerId));
+                .where(and(
+                    eq(recordingSegments.recordingId, segment.recordingId),
+                    eq(recordingSegments.speakerId, segment.speakerId)
+                ));
         }
 
         revalidatePath('/recordings');

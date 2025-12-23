@@ -200,6 +200,7 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                     textColor="text-green-200"
                 >
                     {/* Done列にはタスクは表示されない */}
+                    {null}
                 </DroppableColumn>
             </div>
 

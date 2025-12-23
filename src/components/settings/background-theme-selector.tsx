@@ -94,16 +94,15 @@ export function BackgroundThemeSelector() {
     if (isLoading) {
         return (
             <Card className="glass border-white/10 bg-black/40">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                        <Palette className="h-5 w-5 text-primary" />
+                <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-white text-lg">
+                        <Palette className="h-4 w-4 text-primary" />
                         背景テーマ
                     </CardTitle>
-                    <CardDescription className="text-gray-400">アプリケーションの背景をカスタマイズ</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                <CardContent className="pt-0">
+                    <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
                     </div>
                 </CardContent>
             </Card>
@@ -112,36 +111,36 @@ export function BackgroundThemeSelector() {
 
     return (
         <Card className="glass border-white/10 bg-black/40">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                    <Palette className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-white text-lg">
+                    <Palette className="h-4 w-4 text-primary" />
                     背景テーマ
                 </CardTitle>
-                <CardDescription className="text-gray-400">アプリケーションの背景をカスタマイズします</CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="pt-0">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {themes.map((theme) => (
                         <button
                             key={theme.id}
-                            onClick={() => handleThemeChange(theme.id)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleThemeChange(theme.id);
+                            }}
                             disabled={isUpdating}
-                            className={`relative p-4 rounded-lg border-2 transition-all duration-200 ${
+                            className={`relative p-2 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
                                 selectedTheme === theme.id
                                     ? 'border-primary bg-primary/10'
                                     : 'border-white/10 bg-white/5 hover:border-white/20'
-                            }`}
+                            } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <div className="flex items-start justify-between mb-2">
-                                <div>
-                                    <h3 className="font-semibold text-white mb-1">{theme.name}</h3>
-                                    <p className="text-xs text-gray-400">{theme.description}</p>
-                                </div>
+                            <div className={`w-full h-12 rounded mb-1.5 ${theme.preview} border border-white/10`} />
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-white">{theme.name}</span>
                                 {selectedTheme === theme.id && (
-                                    <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                                    <Check className="h-3 w-3 text-primary flex-shrink-0" />
                                 )}
                             </div>
-                            <div className={`w-full h-16 rounded ${theme.preview} border border-white/10`} />
                         </button>
                     ))}
                 </div>

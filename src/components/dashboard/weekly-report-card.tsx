@@ -11,10 +11,10 @@ interface WeeklyReport {
     id: number;
     weekStartDate: Date;
     weekEndDate: Date;
-    totalMeetings: number;
-    totalDuration: number;
-    totalTasks: number;
-    completedTasks: number;
+    totalMeetings: number | null;
+    totalDuration: number | null;
+    totalTasks: number | null;
+    completedTasks: number | null;
     summary: string | null;
     keyMetrics: {
         averageMeetingDuration: number;
@@ -145,7 +145,7 @@ export function WeeklyReportCard() {
                                     <Calendar className="h-4 w-4 text-primary" />
                                     <span className="text-xs text-gray-400">会議数</span>
                                 </div>
-                                <div className="text-2xl font-bold text-white">{latestReport.totalMeetings}</div>
+                                <div className="text-2xl font-bold text-white">{latestReport.totalMeetings || 0}</div>
                             </div>
                             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                                 <div className="flex items-center gap-2 mb-2">
@@ -153,7 +153,7 @@ export function WeeklyReportCard() {
                                     <span className="text-xs text-gray-400">合計時間</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">
-                                    {formatDuration(latestReport.totalDuration)}
+                                    {formatDuration(latestReport.totalDuration || 0)}
                                 </div>
                             </div>
                             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
@@ -162,7 +162,7 @@ export function WeeklyReportCard() {
                                     <span className="text-xs text-gray-400">タスク</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">
-                                    {latestReport.completedTasks}/{latestReport.totalTasks}
+                                    {latestReport.completedTasks || 0}/{latestReport.totalTasks || 0}
                                 </div>
                             </div>
                             <div className="p-4 rounded-lg bg-white/5 border border-white/10">

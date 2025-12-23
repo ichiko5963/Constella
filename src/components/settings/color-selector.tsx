@@ -95,16 +95,15 @@ export function ColorSelector() {
     if (isLoading) {
         return (
             <Card className="glass border-white/10 bg-black/40">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                        <Palette className="h-5 w-5 text-primary" />
+                <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-white text-lg">
+                        <Palette className="h-4 w-4 text-primary" />
                         色設定
                     </CardTitle>
-                    <CardDescription className="text-gray-400">アプリケーションの色をカスタマイズ</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                <CardContent className="pt-0">
+                    <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
                     </div>
                 </CardContent>
             </Card>
@@ -113,44 +112,47 @@ export function ColorSelector() {
 
     return (
         <Card className="glass border-white/10 bg-black/40">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                    <Palette className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-white text-lg">
+                    <Palette className="h-4 w-4 text-primary" />
                     色設定
                 </CardTitle>
-                <CardDescription className="text-gray-400">アプリケーションのプライマリカラーとアクセントカラーをカスタマイズします</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="pt-0 space-y-3">
                 {/* プリセットカラー */}
                 <div>
-                    <Label className="text-white mb-3 block">プリセットカラー</Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <Label className="text-gray-400 text-xs mb-2 block">プリセットカラー</Label>
+                    <div className="grid grid-cols-3 gap-2">
                         {PRESET_COLORS.map((preset) => {
                             const isSelected = colors.primaryColor === preset.primary && colors.accentColor === preset.accent;
                             return (
                                 <button
                                     key={preset.name}
-                                    onClick={() => handlePresetSelect(preset)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handlePresetSelect(preset);
+                                    }}
                                     disabled={isUpdating}
-                                    className={`relative p-3 rounded-lg border-2 transition-all duration-200 ${
+                                    className={`relative p-2 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
                                         isSelected
                                             ? 'border-primary bg-primary/10'
                                             : 'border-white/10 bg-white/5 hover:border-white/20'
-                                    }`}
+                                    } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
-                                    <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                         <div
-                                            className="w-8 h-8 rounded-full border-2 border-white/20"
+                                            className="w-6 h-6 rounded-full border border-white/20 shadow-sm"
                                             style={{ backgroundColor: preset.primary }}
                                         />
                                         <div
-                                            className="w-8 h-8 rounded-full border-2 border-white/20"
+                                            className="w-6 h-6 rounded-full border border-white/20 shadow-sm"
                                             style={{ backgroundColor: preset.accent }}
                                         />
                                     </div>
-                                    <p className="text-sm text-white font-medium">{preset.name}</p>
+                                    <p className="text-xs text-white font-medium text-center">{preset.name}</p>
                                     {isSelected && (
-                                        <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
+                                        <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />
                                     )}
                                 </button>
                             );
@@ -159,84 +161,57 @@ export function ColorSelector() {
                 </div>
 
                 {/* カスタムカラー */}
-                <div className="space-y-4">
-                    <Label className="text-white">カスタムカラー</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-gray-400 text-sm">プライマリカラー</Label>
-                            <div className="flex gap-2">
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                    <Label className="text-gray-400 text-xs">カスタムカラー</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                            <Label className="text-gray-500 text-xs">プライマリ</Label>
+                            <div className="flex gap-1.5">
                                 <Input
                                     type="color"
                                     value={colors.primaryColor}
                                     onChange={(e) => handleCustomColorChange('primary', e.target.value)}
-                                    className="w-16 h-10 p-1 border border-white/10 rounded cursor-pointer"
+                                    className="w-12 h-8 p-0.5 border border-white/10 rounded cursor-pointer"
                                 />
                                 <Input
                                     type="text"
                                     value={colors.primaryColor}
                                     onChange={(e) => handleCustomColorChange('primary', e.target.value)}
                                     placeholder="#00D4AA"
-                                    className="flex-1 bg-black/40 border-white/10 text-white"
+                                    className="flex-1 h-8 text-xs bg-black/40 border-white/10 text-white"
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-gray-400 text-sm">アクセントカラー</Label>
-                            <div className="flex gap-2">
+                        <div className="space-y-1">
+                            <Label className="text-gray-500 text-xs">アクセント</Label>
+                            <div className="flex gap-1.5">
                                 <Input
                                     type="color"
                                     value={colors.accentColor}
                                     onChange={(e) => handleCustomColorChange('accent', e.target.value)}
-                                    className="w-16 h-10 p-1 border border-white/10 rounded cursor-pointer"
+                                    className="w-12 h-8 p-0.5 border border-white/10 rounded cursor-pointer"
                                 />
                                 <Input
                                     type="text"
                                     value={colors.accentColor}
                                     onChange={(e) => handleCustomColorChange('accent', e.target.value)}
                                     placeholder="#0D7377"
-                                    className="flex-1 bg-black/40 border-white/10 text-white"
+                                    className="flex-1 h-8 text-xs bg-black/40 border-white/10 text-white"
                                 />
                             </div>
                         </div>
                     </div>
                     <Button
-                        onClick={handleCustomColorSave}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCustomColorSave();
+                        }}
                         disabled={isUpdating}
-                        className="w-full bg-primary hover:bg-primary/90 text-black"
+                        className="w-full h-8 text-xs bg-primary hover:bg-primary/90 text-black"
                     >
-                        {isUpdating ? '保存中...' : 'カスタムカラーを保存'}
+                        {isUpdating ? '保存中...' : '保存'}
                     </Button>
-                </div>
-
-                {/* プレビュー */}
-                <div className="space-y-2">
-                    <Label className="text-white">プレビュー</Label>
-                    <div className="p-4 rounded-lg border border-white/10 bg-white/5 space-y-3">
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: colors.primaryColor }}
-                            >
-                                A
-                            </div>
-                            <div>
-                                <p className="text-white font-medium">プライマリカラー</p>
-                                <p className="text-xs text-gray-400">{colors.primaryColor}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: colors.accentColor }}
-                            >
-                                A
-                            </div>
-                            <div>
-                                <p className="text-white font-medium">アクセントカラー</p>
-                                <p className="text-xs text-gray-400">{colors.accentColor}</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </CardContent>
         </Card>

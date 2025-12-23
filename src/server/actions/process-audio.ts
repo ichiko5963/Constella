@@ -233,10 +233,14 @@ JSON形式で返答してください:
             }
         }
         
+        // fileIdとprojectIdは必須のため、デフォルト値を設定
+        const defaultFileId = recording.fileId || 1; // TODO: デフォルトファイルを作成する
+        const defaultProjectId = projectId || 1; // TODO: デフォルトプロジェクトを作成する
+
         const [note] = await db.insert(meetingNotes).values({
             userId: userId,
-            fileId: recording.fileId || null,
-            projectId: projectId,
+            fileId: defaultFileId,
+            projectId: defaultProjectId,
             recordingId: recordingId,
             title: '自動生成議事録',
             summary: result.summary,

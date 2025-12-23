@@ -101,11 +101,13 @@ export async function normalizeAudioFormat(
             // 文字列の場合はそのまま使用
             return new Blob([data], { type: mimeType });
         } else if (data instanceof Uint8Array) {
-            // Uint8Arrayの場合はArrayBufferに変換
-            return new Blob([data.buffer], { type: mimeType });
+            // Uint8Arrayの場合はArrayBufferに変換（ArrayBufferLikeをArrayBufferに変換）
+            const buffer = data.buffer instanceof ArrayBuffer ? data.buffer : new Uint8Array(data).buffer;
+            return new Blob([buffer], { type: mimeType });
         } else {
-            // その他の場合はそのまま使用
-            return new Blob([data as BlobPart], { type: mimeType });
+            // その他の場合はUint8Arrayに変換してから使用
+            const uint8Array = new Uint8Array(data as ArrayLike<number>);
+            return new Blob([uint8Array.buffer], { type: mimeType });
         }
 
     } catch (error) {

@@ -18,6 +18,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const formData = await req.formData();
         const file = formData.get('file') as File;
@@ -45,11 +47,11 @@ export async function POST(req: NextRequest) {
         }
 
         // プロジェクトの検証（提供されている場合）
-        if (projectId && session.user.id) {
+        if (projectId) {
             const project = await db.query.projects.findFirst({
                 where: (p, { and, eq }) => and(
                     eq(p.id, projectId),
-                    eq(p.userId, session.user.id)
+                    eq(p.userId, userId)
                 )
             });
 
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
         const mimeExtension = fileType.split('/')[1] || 'webm';
         // ファイル名から拡張子を取得（より正確）
         const fileNameExtension = file.name.split('.').pop()?.toLowerCase() || mimeExtension;
-        const key = `recordings/${session.user.id}/${nanoid()}.${fileNameExtension}`;
+        const key = `recordings/${userId}/${nanoid()}.${fileNameExtension}`;
 
         // Presigned URLを取得
         const { url: presignedUrl } = await getPresignedUploadUrl(key, fileType);
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
 
         // 録音レコードを作成
         const [recording] = await db.insert(recordings).values({
-            userId: session.user.id,
+            userId: userId,
             projectId: projectId || null,
             audioKey: key,
             audioUrl: presignedUrl.split('?')[0], // Base URL without signature

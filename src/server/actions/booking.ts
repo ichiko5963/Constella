@@ -248,9 +248,29 @@ async function createGoogleCalendarEventWithMeet(
         }
 
         const eventData = await response.json();
-        const meetLink = eventData.hangoutLink || 
-                        eventData.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video')?.uri ||
-                        null;
+        
+        // Google Meetリンクを取得（複数の方法で試行）
+        let meetLink = eventData.hangoutLink;
+        
+        if (!meetLink && eventData.conferenceData?.entryPoints) {
+            const videoEntry = eventData.conferenceData.entryPoints.find(
+                (ep: any) => ep.entryPointType === 'video' || ep.entryPointType === 'hangoutsMeet'
+            );
+            meetLink = videoEntry?.uri || null;
+        }
+
+        // まだ見つからない場合は、conferenceDataから直接取得
+        if (!meetLink && eventData.conferenceData?.hangoutLink) {
+            meetLink = eventData.conferenceData.hangoutLink;
+        }
+
+        if (!meetLink) {
+            console.error('Google Meet link not found in response:', JSON.stringify(eventData, null, 2));
+            return { 
+                success: false, 
+                error: 'Google Meetリンクが生成されませんでした。Google Calendar APIの応答に問題があります。' 
+            };
+        }
 
         return {
             success: true,
@@ -296,49 +316,75 @@ export async function createBooking(
         let googleCalendarEventId: string | null = null;
         let meetLink: string | null = null;
 
-        // Google Meetリンクを生成してGoogle Calendarにイベントを作成
-        if (setting.autoGenerateMeetLink && integration?.accessToken) {
-            // トークンの有効期限をチェック
-            let accessToken = integration.accessToken;
-            if (integration.expiresAt && new Date() >= integration.expiresAt && integration.refreshToken) {
-                const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        client_id: process.env.GOOGLE_CLIENT_ID!,
-                        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-                        refresh_token: integration.refreshToken,
-                        grant_type: 'refresh_token',
-                    }),
-                });
-                const refreshData = await refreshResponse.json();
-                if (refreshResponse.ok) {
-                    accessToken = refreshData.access_token;
-                    await db.update(calendarIntegrations)
-                        .set({
-                            accessToken: refreshData.access_token,
-                            expiresAt: refreshData.expires_in
-                                ? new Date(Date.now() + refreshData.expires_in * 1000)
-                                : null,
-                        })
-                        .where(eq(calendarIntegrations.id, integration.id));
-                }
-            }
+        // Google Calendar統合が必須 - Meetリンクを生成するため
+        if (!integration?.accessToken) {
+            return { 
+                success: false, 
+                error: 'Google Calendar連携が必要です。設定からGoogle Calendarを連携してください。' 
+            };
+        }
 
-            const calendarResult = await createGoogleCalendarEventWithMeet(
-                accessToken,
-                `${setting.title} - ${attendeeName}`,
-                message || `予約者: ${attendeeName} (${attendeeEmail})\n${setting.description || ''}`,
-                selectedSlot,
-                endTime,
-                attendeeEmail,
-                attendeeName
-            );
-
-            if (calendarResult.success) {
-                googleCalendarEventId = calendarResult.eventId || null;
-                meetLink = calendarResult.meetLink || null;
+        // トークンの有効期限をチェックしてリフレッシュ
+        let accessToken = integration.accessToken;
+        if (integration.expiresAt && new Date() >= integration.expiresAt && integration.refreshToken) {
+            const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    client_id: process.env.GOOGLE_CLIENT_ID!,
+                    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+                    refresh_token: integration.refreshToken,
+                    grant_type: 'refresh_token',
+                }),
+            });
+            const refreshData = await refreshResponse.json();
+            if (refreshResponse.ok) {
+                accessToken = refreshData.access_token;
+                await db.update(calendarIntegrations)
+                    .set({
+                        accessToken: refreshData.access_token,
+                        expiresAt: refreshData.expires_in
+                            ? new Date(Date.now() + refreshData.expires_in * 1000)
+                            : null,
+                    })
+                    .where(eq(calendarIntegrations.id, integration.id));
+            } else {
+                console.error('Failed to refresh Google token:', refreshData);
+                return { 
+                    success: false, 
+                    error: 'Google Calendar連携の更新に失敗しました。設定から再連携してください。' 
+                };
             }
+        }
+
+        // Google Meetリンクを生成してGoogle Calendarにイベントを作成（必須）
+        const calendarResult = await createGoogleCalendarEventWithMeet(
+            accessToken,
+            `${setting.title} - ${attendeeName}`,
+            message || `予約者: ${attendeeName} (${attendeeEmail})\n${setting.description || ''}`,
+            selectedSlot,
+            endTime,
+            attendeeEmail,
+            attendeeName
+        );
+
+        if (!calendarResult.success) {
+            return { 
+                success: false, 
+                error: calendarResult.error || 'Google Calendarへの予定追加に失敗しました。' 
+            };
+        }
+
+        googleCalendarEventId = calendarResult.eventId || null;
+        meetLink = calendarResult.meetLink || null;
+
+        // Meetリンクが生成されなかった場合はエラー
+        if (!meetLink) {
+            console.error('Google Meet link was not generated');
+            return { 
+                success: false, 
+                error: 'Google Meetリンクの生成に失敗しました。' 
+            };
         }
 
         // Actoryのカレンダーイベントを作成

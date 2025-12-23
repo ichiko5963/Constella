@@ -22,7 +22,7 @@ interface CalendarPageClientProps {
 
 export function CalendarPageClient({ formattedTasks, candidates }: CalendarPageClientProps) {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [activeTab, setActiveTab] = useState<'scheduler' | 'booking'>('scheduler');
+    const [activeTab, setActiveTab] = useState<'scheduler' | 'booking'>('booking');
 
     return (
         <div className="space-y-8">
@@ -58,16 +58,6 @@ export function CalendarPageClient({ formattedTasks, candidates }: CalendarPageC
                 <div className="mb-6">
                     <div className="flex gap-2 border-b border-white/10">
                         <button
-                            onClick={() => setActiveTab('scheduler')}
-                            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
-                                activeTab === 'scheduler'
-                                    ? 'border-primary text-white'
-                                    : 'border-transparent text-gray-400 hover:text-white'
-                            }`}
-                        >
-                            直接予約
-                        </button>
-                        <button
                             onClick={() => setActiveTab('booking')}
                             className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
                                 activeTab === 'booking'
@@ -77,15 +67,25 @@ export function CalendarPageClient({ formattedTasks, candidates }: CalendarPageC
                         >
                             予約URL管理
                         </button>
+                        <button
+                            onClick={() => setActiveTab('scheduler')}
+                            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+                                activeTab === 'scheduler'
+                                    ? 'border-primary text-white'
+                                    : 'border-transparent text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            直接予約
+                        </button>
                     </div>
                 </div>
 
-                {activeTab === 'scheduler' && (
-                    <MeetingScheduler />
-                )}
-
                 {activeTab === 'booking' && (
                     <BookingSettingsManager />
+                )}
+
+                {activeTab === 'scheduler' && (
+                    <MeetingScheduler />
                 )}
             </div>
 

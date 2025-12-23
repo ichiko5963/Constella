@@ -49,10 +49,12 @@ export async function getFolderTree(projectId: number) {
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const allFiles = await db.query.files.findMany({
             where: (files, { and, eq }) => and(
-                eq(files.userId, session.user.id),
+                eq(files.userId, userId),
                 eq(files.projectId, projectId)
             ),
         });

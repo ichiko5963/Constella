@@ -49,18 +49,37 @@ export async function processRecording(recordingId: number, skipAuth?: boolean) 
         const response = await fetch(signedUrl);
         if (!response.ok) throw new Error('Failed to fetch audio file');
 
+        // ファイルサイズをチェック（Content-Lengthヘッダーから取得）
+        const contentLength = response.headers.get('content-length');
+        const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
+        const maxSize = 25 * 1024 * 1024; // 25MB
+
         // Save to temp file needed for OpenAI SDK? 
         // OpenAI Node SDK `audio.transcriptions.create` accepts `fs.createReadStream` or specialized objects.
         // Let's write to temp file.
-        const tempFilePath = path.join(os.tmpdir(), `rec_${recordingId}.webm`);
+        const fileExtension = recording.audioKey.split('.').pop() || 'webm';
+        const tempFilePath = path.join(os.tmpdir(), `rec_${recordingId}.${fileExtension}`);
         const fileStream = fs.createWriteStream(tempFilePath);
         if (!response.body) throw new Error('No body');
 
         // @ts-expect-error pipeline signature mismatch with web streams
         await pipeline(response.body, fileStream);
 
+        // ファイルサイズを再確認（実際にダウンロードしたファイル）
+        const actualFileSize = fs.statSync(tempFilePath).size;
+
+        let transcription: any;
+        
+        // 25MB以上の場合はエラーメッセージを表示（将来的に分割処理を実装）
+        if (actualFileSize > maxSize) {
+            console.warn(`File size (${(actualFileSize / 1024 / 1024).toFixed(2)}MB) exceeds 25MB limit. Large file splitting not yet implemented.`);
+            // 現在はエラーを返す（将来的に分割処理を実装）
+            fs.unlinkSync(tempFilePath);
+            throw new Error(`ファイルサイズが大きすぎます（${(actualFileSize / 1024 / 1024).toFixed(2)}MB）。25MB以下のファイルをアップロードしてください。将来的に大容量ファイルの分割処理を実装予定です。`);
+        }
+
         // 3. Call Whisper with verbose_json to get word-level timestamps
-        const transcription = await openai.audio.transcriptions.create({
+        transcription = await openai.audio.transcriptions.create({
             file: fs.createReadStream(tempFilePath),
             model: 'whisper-1',
             response_format: 'verbose_json',

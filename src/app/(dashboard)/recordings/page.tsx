@@ -1,4 +1,5 @@
 import { RecorderTriggerCard } from '@/components/recording/recorder-trigger-card';
+import { RecordingImport } from '@/components/recording/recording-import';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/db';
 import { recordings } from '@/db/schema';
@@ -31,6 +32,11 @@ export default async function RecordingsPage() {
 
             <div className="w-full mb-8">
                 <RecorderTriggerCard />
+            </div>
+
+            {/* 録音インポート機能 */}
+            <div className="mb-8">
+                <RecordingImport />
             </div>
 
             <div className="grid grid-cols-1 gap-8">

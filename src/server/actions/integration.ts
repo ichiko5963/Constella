@@ -18,9 +18,11 @@ export async function getIntegrations() {
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const integrationList = await db.query.integrations.findMany({
-            where: eq(integrations.userId, session.user.id),
+            where: eq(integrations.userId, userId),
         });
 
         return {

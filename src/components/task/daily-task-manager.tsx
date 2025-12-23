@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { CheckSquare, Clock, Calendar, Filter } from 'lucide-react';
 import { format, isToday, isTomorrow, isYesterday, startOfDay, endOfDay } from 'date-fns';
+import { ja } from 'date-fns/locale/ja';
 import { getTasks } from '@/server/actions/task';
 import { updateTask } from '@/server/actions/task';
 import { toast } from 'sonner';
@@ -107,7 +108,7 @@ export function DailyTaskManager({ selectedDate = new Date() }: DailyTaskManager
                             {getDateLabel()}のタスク
                         </CardTitle>
                         <CardDescription>
-                            {format(selectedDate, 'yyyy年M月d日 (EEEE)', { locale: require('date-fns/locale/ja') })}
+                            {format(selectedDate, 'yyyy年M月d日 (EEEE)', { locale: ja })}
                         </CardDescription>
                     </div>
                     <div className="flex gap-2">

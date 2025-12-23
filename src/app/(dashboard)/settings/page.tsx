@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { CalendarSync } from '@/components/settings/calendar-sync';
 import { BackgroundThemeSelector } from '@/components/settings/background-theme-selector';
+import { ColorSelector } from '@/components/settings/color-selector';
 import { CustomPromptManager } from '@/components/settings/custom-prompt-manager';
 import { SummaryTemplateManager } from '@/components/settings/summary-template-manager';
 import { IntegrationManager } from '@/components/settings/integration-manager';
@@ -27,6 +28,9 @@ export default async function SettingsPage() {
             <div className="space-y-6">
                 {/* 背景テーマ */}
                 <BackgroundThemeSelector />
+                
+                {/* 色設定 */}
+                <ColorSelector />
                 
                 {/* カレンダー連携 */}
                 <CalendarSync />

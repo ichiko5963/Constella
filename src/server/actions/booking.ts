@@ -288,7 +288,7 @@ export async function createBooking(
         const integration = await db.query.calendarIntegrations.findFirst({
             where: and(
                 eq(calendarIntegrations.userId, setting.userId),
-                eq(calendarIntegrations.provider, 'google'),
+                eq(calendarIntegrations.provider, 'google' as any),
                 eq(calendarIntegrations.enabled, true)
             ),
         });

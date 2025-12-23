@@ -15,9 +15,9 @@ interface BookingSetting {
     title: string;
     description: string | null;
     duration: number;
-    businessHoursStart: number;
-    businessHoursEnd: number;
-    timezone: string;
+    businessHoursStart: number | null;
+    businessHoursEnd: number | null;
+    timezone: string | null;
 }
 
 interface BookingPageClientProps {

@@ -15,6 +15,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                     body.classList.remove('theme-default', 'theme-white', 'theme-gradient-cool', 'theme-gradient-warm');
                     // 新しいテーマクラスを追加
                     body.classList.add(`theme-${theme}`);
+                    
+                    // 色設定を適用
+                    if (result.settings.primaryColor) {
+                        document.documentElement.style.setProperty('--primary', result.settings.primaryColor);
+                    }
+                    if (result.settings.accentColor) {
+                        document.documentElement.style.setProperty('--accent', result.settings.accentColor);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to apply theme:', error);

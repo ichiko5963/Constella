@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { RecordingProvider } from "@/lib/recording-context";
@@ -55,7 +56,6 @@ export default function RootLayout({
             <ThemeProvider>
               {children}
               <GlobalRecorderManager />
-              <PWAInstaller />
               <Toaster />
             </ThemeProvider>
           </RecordingProvider>

@@ -49,9 +49,13 @@ export async function GET(request: NextRequest) {
         }
 
         // カレンダー統合を保存または更新
+        const userId = session.user.id;
+        if (!userId) {
+            return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
+        }
         const existing = await db.query.calendarIntegrations.findFirst({
             where: (integrations, { and, eq }) => and(
-                eq(integrations.userId, session.user.id),
+                eq(integrations.userId, userId),
                 eq(integrations.provider, 'google')
             ),
         });

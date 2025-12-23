@@ -14,22 +14,27 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { priceId, successUrl, cancelUrl } = body;
+        const { priceId } = body;
 
-        const checkoutSession = await createCheckoutSession({
-            userId: session.user.id,
-            priceId: priceId || process.env.STRIPE_PRICE_ID || '',
-            successUrl: successUrl || `${req.nextUrl.origin}/settings/billing?success=true`,
-            cancelUrl: cancelUrl || `${req.nextUrl.origin}/settings/billing?canceled=true`,
-        });
-
-        if (checkoutSession.success && checkoutSession.url) {
-            return NextResponse.json({ url: checkoutSession.url });
-        } else {
+        const finalPriceId = priceId || process.env.STRIPE_PRICE_ID || '';
+        if (!finalPriceId) {
             return NextResponse.json(
-                { error: checkoutSession.error || 'Failed to create checkout session' },
-                { status: 500 }
+                { error: 'Price ID is required' },
+                { status: 400 }
             );
+        }
+
+        // createCheckoutSessionは内部でredirectするため、try-catchで処理
+        try {
+            await createCheckoutSession(finalPriceId);
+            // redirectが実行されるため、ここには到達しない
+            return NextResponse.json({ success: true });
+        } catch (redirectError: any) {
+            // redirectエラーは正常な動作
+            if (redirectError?.digest?.startsWith('NEXT_REDIRECT')) {
+                throw redirectError;
+            }
+            throw redirectError;
         }
     } catch (error) {
         console.error('Failed to create checkout session:', error);

@@ -322,6 +322,8 @@ export const userSettings = sqliteTable("user_setting", {
     id: integer("id").primaryKey({ autoIncrement: true }),
     userId: text("userId").notNull().references(() => users.id).unique(),
     backgroundTheme: text("backgroundTheme").default('default'), // default, white, gradient-cool, gradient-warm
+    primaryColor: text("primaryColor").default('#00D4AA'), // プライマリカラー（HEX形式）
+    accentColor: text("accentColor").default('#0D7377'), // アクセントカラー（HEX形式）
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
 });

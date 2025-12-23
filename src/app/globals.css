@@ -48,6 +48,8 @@
 :root {
   /* Default to Dark Mode values for "Jet Black" aesthetic */
   --background: #0a0f0f;
+  --primary: #00D4AA;
+  --accent: #0D7377;
   /* Deep dark teal/black */
   --foreground: #ededed;
 

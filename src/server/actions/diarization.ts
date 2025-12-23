@@ -92,8 +92,10 @@ export async function performDiarization(recordingId: number): Promise<{ success
                     speakerId: word.speaker || null,
                     speaker: `Speaker ${(word.speaker || 0) + 1}`,
                 })
-                .where(eq(transcriptSegments.recordingId, recordingId))
-                .where(eq(transcriptSegments.start, startMs));
+                .where(and(
+                    eq(transcriptSegments.recordingId, recordingId),
+                    eq(transcriptSegments.start, startMs)
+                ));
         }
 
         revalidatePath(`/recordings/${recordingId}`);

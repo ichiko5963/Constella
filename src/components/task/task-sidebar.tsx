@@ -33,10 +33,8 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
     const loadAllTasks = async () => {
         setIsLoading(true);
         try {
-            const result = await getTasks();
-            if (result.success && result.tasks) {
-                setAllTasks(result.tasks);
-            }
+            const tasks = await getTasks();
+            setAllTasks(tasks || []);
         } catch (error) {
             console.error('Failed to load tasks:', error);
             toast.error('タスクの読み込みに失敗しました');

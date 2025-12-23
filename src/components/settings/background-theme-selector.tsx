@@ -55,7 +55,8 @@ export function BackgroundThemeSelector() {
         try {
             const result = await getUserSettings();
             if (result.success && result.settings) {
-                setSelectedTheme(result.settings.backgroundTheme || 'default');
+                const theme = result.settings.backgroundTheme as BackgroundTheme;
+                setSelectedTheme(theme || 'default');
             }
         } catch (error) {
             console.error('Failed to load settings:', error);

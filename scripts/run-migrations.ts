@@ -48,6 +48,7 @@ async function main() {
         path.resolve(process.cwd(), 'drizzle/0000_first_thunderbird.sql'),
         path.resolve(process.cwd(), 'drizzle/0002_loud_warhawk.sql'),
         path.resolve(process.cwd(), 'drizzle/0003_yummy_doctor_octopus.sql'),
+        path.resolve(process.cwd(), 'drizzle/0004_absent_thanos.sql'),
     ];
     
     for (const file of migrationFiles) {

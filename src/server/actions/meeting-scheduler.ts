@@ -30,11 +30,13 @@ export async function getAvailableTimeSlots(date: Date, duration: number = 30): 
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         // ユーザーのカレンダー統合を取得
         const integrations = await db.query.calendarIntegrations.findMany({
             where: (integrations, { and, eq }) => and(
-                eq(integrations.userId, session.user.id),
+                eq(integrations.userId, userId),
                 eq(integrations.enabled, true)
             ),
         });
@@ -47,7 +49,7 @@ export async function getAvailableTimeSlots(date: Date, duration: number = 30): 
 
         const existingEvents = await db.query.calendarEvents.findMany({
             where: (events, { and, eq, gte, lte }) => and(
-                eq(events.userId, session.user.id),
+                eq(events.userId, userId),
                 gte(events.startTime, startOfDay),
                 lte(events.startTime, endOfDay)
             ),
@@ -105,7 +107,7 @@ export async function createBookingRequest(data: BookingRequest): Promise<{ succ
 
         // カレンダーイベントを作成（手動追加として）
         const [inserted] = await db.insert(calendarEvents).values({
-            userId: session.user.id,
+            userId: userId,
             integrationId: null, // 手動追加
             externalId: null,
             title: `${data.name} との予約`,

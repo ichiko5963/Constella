@@ -27,7 +27,7 @@ export async function getIntegrations() {
             success: true,
             integrations: integrationList.map(i => ({
                 id: i.id,
-                provider: i.provider,
+                provider: i.provider as IntegrationProvider,
                 enabled: i.enabled || false,
                 webhookUrl: i.webhookUrl,
                 settings: i.settings ? JSON.parse(i.settings) : {},

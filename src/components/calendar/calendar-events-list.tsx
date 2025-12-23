@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Video, Clock, MapPin, Users } from 'lucide-react';
 import { getCalendarEvents } from '@/server/actions/calendar';
 import { AutoJoinButton } from './auto-join-button';
-import { Button } from '@/components/ui/button';
 
 export function CalendarEventsList() {
     const [events, setEvents] = useState<any[]>([]);

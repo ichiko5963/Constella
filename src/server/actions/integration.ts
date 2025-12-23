@@ -89,7 +89,7 @@ export async function upsertIntegration(
         } else {
             // 作成
             const [inserted] = await db.insert(integrations).values({
-                userId: session.user.id,
+                userId: userId,
                 provider,
                 accessToken,
                 refreshToken: refreshToken || null,
@@ -186,7 +186,7 @@ export async function notifyIntegrations(noteId: number): Promise<{ success: boo
         // 有効な統合を取得
         const integrationList = await db.query.integrations.findMany({
             where: (integrations, { and, eq }) => and(
-                eq(integrations.userId, session.user.id),
+                eq(integrations.userId, userId),
                 eq(integrations.enabled, true)
             ),
         });

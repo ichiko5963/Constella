@@ -205,7 +205,7 @@ function CalendarIntegrationButtons() {
                 size="sm"
                 className={`w-full justify-start ${
                     zoomIntegration 
-                        ? "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" 
+                        ? "border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 dark:hover:bg-blue-500/10" 
                         : "bg-blue-600 text-white hover:bg-blue-700"
                 }`}
             >

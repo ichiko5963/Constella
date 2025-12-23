@@ -305,6 +305,46 @@ body.theme-white .border-primary {
   border-color: var(--primary) !important;
 }
 
+/* 白背景テーマ時のZoom連携ボタン */
+body.theme-white .text-blue-400 {
+  color: #2563eb !important; /* より濃い青に変更 */
+}
+
+body.theme-white button.border-blue-500\/30 {
+  color: #2563eb !important;
+}
+
+/* 白背景テーマ時の録音関連コンポーネント（背景が白以外の部分） */
+body.theme-white .bg-gradient-to-br,
+body.theme-white .bg-black,
+body.theme-white .bg-\[#020205\],
+body.theme-white .bg-\[#050510\],
+body.theme-white .bg-\[#0a101f\] {
+  /* 録音画面などの黒背景部分は白背景テーマ時も黒背景を維持 */
+}
+
+/* 白背景テーマ時の録音関連のテキスト（黒背景上） */
+body.theme-white .bg-gradient-to-br .text-white,
+body.theme-white .bg-black .text-white,
+body.theme-white .bg-\[#020205\] .text-white,
+body.theme-white .bg-\[#050510\] .text-white,
+body.theme-white .bg-\[#0a101f\] .text-white {
+  /* 黒背景上では白文字を維持（録音画面など） */
+  color: #ffffff !important;
+}
+
+/* 白背景テーマ時の録音関連のテキスト（白背景上） */
+body.theme-white .bg-white .text-white,
+body.theme-white .glass .text-white {
+  color: #1f2937 !important;
+}
+
+/* 白背景テーマ時の録音カード（白背景部分） */
+body.theme-white .bg-white\/5 .text-white,
+body.theme-white .bg-white\/10 .text-white {
+  color: #1f2937 !important;
+}
+
 /* 白背景テーマ時のシャドウ */
 body.theme-white .shadow-lg,
 body.theme-white .shadow-xl,

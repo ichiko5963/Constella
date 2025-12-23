@@ -107,27 +107,21 @@ export function RecordingImport({ projectId, onImportComplete }: RecordingImport
             setRecordingId(newRecordingId);
 
             // アップロード完了を確認
+            // サーバー側で自動的に文字起こしと議事録生成が開始される
             setUploadStatus('transcribing');
             setUploadProgress(100);
             toast.success('アップロード完了。文字起こしを開始します...');
 
-            // 3. 文字起こしと議事録生成を開始（非同期）
-            // バックグラウンドで処理（タイムアウトを避けるため）
-            // 少し待ってから処理を開始（S3への反映を待つ）
-            setTimeout(() => {
-                processRecording(newRecordingId).then(() => {
-                    setUploadStatus('completed');
-                    toast.success('文字起こしと議事録生成が完了しました！');
-                    router.refresh();
-                    if (onImportComplete) {
-                        onImportComplete(newRecordingId);
-                    }
-                }).catch((error) => {
-                    console.error('Processing failed:', error);
-                    setUploadStatus('error');
-                    toast.error('処理中にエラーが発生しました: ' + (error instanceof Error ? error.message : 'Unknown error'));
-                });
-            }, 1000); // 1秒待ってから処理を開始
+            // サーバー側で自動的に文字起こしと議事録生成が開始される
+            // 処理はバックグラウンドで実行されるため、完了を待たずに成功メッセージを表示
+            // ユーザーは録音一覧ページで進捗を確認できる
+            setUploadStatus('completed');
+            toast.success('アップロード完了。文字起こしと議事録生成を開始しました。');
+            router.refresh();
+            
+            if (onImportComplete && recordingId) {
+                onImportComplete(recordingId);
+            }
 
         } catch (error) {
             console.error('Upload failed:', error);

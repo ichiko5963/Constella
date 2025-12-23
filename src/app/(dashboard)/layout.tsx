@@ -9,11 +9,12 @@ export default async function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const session = await auth();
+    try {
+        const session = await auth();
 
-    if (!session) {
-        redirect('/login');
-    }
+        if (!session) {
+            redirect('/login');
+        }
 
     return (
         <div className="flex h-screen overflow-hidden">
@@ -79,4 +80,9 @@ export default async function DashboardLayout({
             </main>
         </div>
     );
+    } catch (error) {
+        console.error('Dashboard layout error:', error);
+        // エラーが発生した場合はログインページにリダイレクト
+        redirect('/login');
+    }
 }

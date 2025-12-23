@@ -12,14 +12,31 @@ if (!databaseUrl) {
         TURSO_AUTH_TOKEN: authToken ? 'defined' : 'undefined',
         NODE_ENV: process.env.NODE_ENV,
     });
-    throw new Error(
-        'TURSO_DATABASE_URL is not defined. Please check your .env.local file and restart the development server.'
-    );
+    // 開発環境では警告のみ、本番環境ではエラー
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error(
+            'TURSO_DATABASE_URL is not defined. Please check your environment variables.'
+        );
+    } else {
+        console.warn(
+            '⚠️ TURSO_DATABASE_URL is not defined. Database operations will fail. Please check your .env.local file.'
+        );
+    }
 }
 
-const client = createClient({
-    url: databaseUrl,
-    authToken: authToken,
-});
+// データベースURLが設定されている場合のみクライアントを作成
+let client: ReturnType<typeof createClient> | null = null;
+let dbInstance: ReturnType<typeof drizzle> | null = null;
 
-export const db = drizzle(client, { schema });
+if (databaseUrl) {
+    client = createClient({
+        url: databaseUrl,
+        authToken: authToken,
+    });
+    dbInstance = drizzle(client, { schema });
+}
+
+// データベースが利用可能でない場合でもエラーをスローしないようにする
+export const db = dbInstance || (() => {
+    throw new Error('Database is not configured. Please set TURSO_DATABASE_URL in your environment variables.');
+})();

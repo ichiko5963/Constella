@@ -12,9 +12,27 @@ import { useRouter } from 'next/navigation';
 
 // We map generic statuses to Kanban columns
 const COLUMNS = [
-    { id: 'pending', title: 'To Do', color: 'bg-gray-100' },
-    { id: 'in_progress', title: 'In Progress', color: 'bg-blue-50' },
-    { id: 'completed', title: 'Done', color: 'bg-green-50' },
+    { 
+        id: 'pending', 
+        title: 'To Do', 
+        gradient: 'from-gray-500/20 via-gray-400/15 to-gray-500/20',
+        borderColor: 'border-gray-400/30',
+        textColor: 'text-gray-200'
+    },
+    { 
+        id: 'in_progress', 
+        title: 'In Progress', 
+        gradient: 'from-blue-500/20 via-blue-400/15 to-blue-500/20',
+        borderColor: 'border-blue-400/30',
+        textColor: 'text-blue-200'
+    },
+    { 
+        id: 'completed', 
+        title: 'Done', 
+        gradient: 'from-green-500/20 via-green-400/15 to-green-500/20',
+        borderColor: 'border-green-400/30',
+        textColor: 'text-green-200'
+    },
 ];
 
 interface Task {
@@ -152,10 +170,9 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                             count={colTasks.length}
                             isEmpty={colTasks.length === 0}
                             taskIds={colTasks.map(t => t.id)}
-                            className={cn(
-                                col.id === 'pending' && "bg-white/5 border-white/10",
-                                col.id === 'in_progress' && "bg-blue-500/10 border-white/10"
-                            )}
+                            gradient={col.gradient}
+                            borderColor={col.borderColor}
+                            textColor={col.textColor}
                         >
                             {colTasks.map(task => (
                                 <TaskCard key={task.id} task={task} />
@@ -178,7 +195,9 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                             <span className="text-green-400 font-semibold">完了として非表示</span>になります
                         </div>
                     }
-                    className="border-2 border-dashed border-green-500/30 bg-green-500/10 hover:border-green-500/50"
+                    gradient="from-green-500/20 via-green-400/15 to-green-500/20"
+                    borderColor="border-green-400/30"
+                    textColor="text-green-200"
                 />
             </div>
 

@@ -61,13 +61,28 @@ export function RecordingImport({ projectId, onImportComplete }: RecordingImport
             }
 
             // 1. アップロードURLを取得
+            // ファイルタイプを適切に設定（拡張子から推測）
+            let fileType = file.type;
+            if (!fileType || fileType === 'application/octet-stream') {
+                const extension = file.name.split('.').pop()?.toLowerCase();
+                const mimeTypes: Record<string, string> = {
+                    'mp3': 'audio/mpeg',
+                    'wav': 'audio/wav',
+                    'm4a': 'audio/mp4',
+                    'webm': 'audio/webm',
+                    'ogg': 'audio/ogg',
+                };
+                fileType = mimeTypes[extension || ''] || 'audio/mpeg';
+            }
+
             const { success, url, recordingId: newRecordingId, error } = await createRecordingUploadUrl(
                 projectId,
-                file.type || 'audio/mpeg'
+                fileType
             );
 
             if (!success || !url || !newRecordingId) {
-                throw new Error(error || 'アップロードURLの取得に失敗しました');
+                console.error('Upload URL creation failed:', { success, url, recordingId: newRecordingId, error });
+                throw new Error(error || 'アップロードURLの取得に失敗しました。S3の設定を確認してください。');
             }
 
             setRecordingId(newRecordingId);

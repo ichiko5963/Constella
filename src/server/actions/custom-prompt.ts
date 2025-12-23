@@ -156,10 +156,12 @@ export async function getDefaultPrompt(): Promise<{ success: boolean; prompt?: s
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id; // TypeScriptの型チェックを確実にするため
+
     try {
         const defaultPrompt = await db.query.customPrompts.findFirst({
             where: (prompts, { and, eq }) => and(
-                eq(prompts.userId, session.user.id),
+                eq(prompts.userId, userId),
                 eq(prompts.isDefault, true)
             ),
         });

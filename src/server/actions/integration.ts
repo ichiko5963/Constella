@@ -31,7 +31,7 @@ export async function getIntegrations() {
                 enabled: i.enabled || false,
                 webhookUrl: i.webhookUrl ?? undefined, // nullをundefinedに変換
                 settings: i.settings ? JSON.parse(i.settings) : {},
-                lastSyncAt: i.lastSyncAt,
+                lastSyncAt: i.lastSyncAt ?? undefined, // nullをundefinedに変換
                 createdAt: i.createdAt,
                 updatedAt: i.updatedAt,
             })),

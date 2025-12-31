@@ -26,9 +26,12 @@ export async function GET(request: NextRequest) {
 
     try {
         // アクセストークンを取得
-        // リダイレクトURIはconnectルートと同じものを使用する必要がある
-        // 本番環境では環境変数を使用、開発環境ではリクエストのオリジンを自動使用
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        // リダイレクトURIはconnectルートと同じものを使用する必要がある（Google ConsoleのURIと一致）
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+        if (!baseUrl) {
+            console.error('NEXT_PUBLIC_APP_URL is not set. Set it to e.g. http://localhost:3000');
+            return NextResponse.redirect(new URL('/settings?error=missing_app_url', request.url));
+        }
         const redirectUri = `${baseUrl}/api/calendar/google/callback`;
         const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',

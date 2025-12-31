@@ -1,9 +1,8 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { LayoutDashboard, Folder, Mic, Calendar, MessageSquare, Settings, CheckSquare } from 'lucide-react';
-import { NavLink } from '@/components/navigation/nav-link';
 import { Logo } from '@/components/navigation/logo';
 import { TopBar } from '@/components/navigation/topbar';
+import { ModeAwareNav } from '@/components/navigation/mode-aware-nav';
 
 export default async function DashboardLayout({
     children,
@@ -43,36 +42,7 @@ export default async function DashboardLayout({
                     </div>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-1">
-                    <NavLink href="/dashboard" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <LayoutDashboard className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        ダッシュボード
-                    </NavLink>
-                    <NavLink href="/projects" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <Folder className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        コンテキスト
-                    </NavLink>
-                    <NavLink href="/recordings" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <Mic className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        録音
-                    </NavLink>
-                    <NavLink href="/calendar" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <Calendar className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        カレンダー
-                    </NavLink>
-                    <NavLink href="/tasks" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <CheckSquare className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        タスク管理
-                    </NavLink>
-                    <NavLink href="/chat" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <MessageSquare className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        AIチャット
-                    </NavLink>
-                    <NavLink href="/settings" className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group">
-                        <Settings className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-                        設定
-                    </NavLink>
-                </nav>
+                <ModeAwareNav />
 
                 <div className="p-4 border-t border-white/5 bg-black/20">
                     <div className="flex items-center px-2 py-2">

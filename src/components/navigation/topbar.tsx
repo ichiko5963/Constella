@@ -30,6 +30,8 @@ export function TopBar() {
       document.body.classList.remove("mode-personal", "mode-team");
       document.body.classList.add(value === "personal" ? "mode-personal" : "mode-team");
       document.body.dataset.actoryMode = value;
+      // モード変更を他コンポーネントへ通知（Navなど）
+      window.dispatchEvent(new CustomEvent("actory-mode-change", { detail: value }));
     }
   };
 

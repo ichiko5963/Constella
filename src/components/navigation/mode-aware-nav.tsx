@@ -49,6 +49,23 @@ export function ModeAwareNav() {
     if (saved === "personal" || saved === "team") {
       setMode(saved);
     }
+    // 変更イベントを監視（TopBarからのカスタムイベント + storageイベント）
+    const handler = (event: Event) => {
+      if (event instanceof CustomEvent) {
+        const val = event.detail as Mode;
+        if (val === "personal" || val === "team") setMode(val);
+      }
+    };
+    const storageHandler = () => {
+      const next = localStorage.getItem("actoryMode") as Mode | null;
+      if (next === "personal" || next === "team") setMode(next);
+    };
+    window.addEventListener("actory-mode-change", handler as EventListener);
+    window.addEventListener("storage", storageHandler);
+    return () => {
+      window.removeEventListener("actory-mode-change", handler as EventListener);
+      window.removeEventListener("storage", storageHandler);
+    };
   }, []);
 
   const items = mode === "team" ? teamNav : personalNav;

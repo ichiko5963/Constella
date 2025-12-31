@@ -1,5 +1,5 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { fetchFile } from '@ffmpeg/util';
 
 let ffmpegInstance: FFmpeg | null = null;
 let isLoaded = false;
@@ -8,12 +8,16 @@ let isLoaded = false;
  * FFmpegインスタンスを初期化（シングルトン）
  */
 async function getFFmpeg(): Promise<FFmpeg> {
+    if (typeof window === 'undefined') {
+        throw new Error('FFmpeg can only be initialized on the client.');
+    }
+
     if (ffmpegInstance && isLoaded) {
         return ffmpegInstance;
     }
 
     const ffmpeg = new FFmpeg();
-    
+
     // ログ出力を無効化（オプション）
     ffmpeg.on('log', ({ message }) => {
         // console.log(message);
@@ -25,11 +29,12 @@ async function getFFmpeg(): Promise<FFmpeg> {
     });
 
     try {
-        // CDNからFFmpeg.wasmをロード
+        // CDNからFFmpeg.wasmをロード（blob: を使わず直接URL指定して解決エラーを回避）
         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
         await ffmpeg.load({
-            coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-            wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+            coreURL: `${baseURL}/ffmpeg-core.js`,
+            wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+            workerURL: `${baseURL}/ffmpeg-core.worker.js`,
         });
 
         ffmpegInstance = ffmpeg;

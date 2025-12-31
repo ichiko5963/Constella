@@ -637,3 +637,6 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
         references: [calendarEvents.id],
     }),
 }));
+
+// Export all tables and relations from schema-extensions
+export * from './schema-extensions';

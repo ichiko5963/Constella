@@ -47,9 +47,14 @@ export async function getSnippets(noteId?: number) {
     }
 
     try {
+        const userId = session.user?.id;
+        if (!userId) {
+            return { success: false, error: 'Unauthorized' };
+        }
+
         const snippetList = await db.query.snippets.findMany({
             where: (snippets, { and, eq }) => {
-                const conditions = [eq(snippets.userId, session.user.id)];
+                const conditions = [eq(snippets.userId, userId)];
                 if (noteId) {
                     conditions.push(eq(snippets.noteId, noteId));
                 }

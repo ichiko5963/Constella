@@ -24,7 +24,7 @@ const personalNav = [
   { href: "/calendar", label: "カレンダー", icon: Calendar },
   { href: "/tasks", label: "タスク管理", icon: CheckSquare },
   { href: "/chat", label: "AIチャット", icon: MessageSquare },
-  { href: "/chat", label: "コンテンツ生成", icon: Sparkles },
+  { href: "/content", label: "コンテンツ生成", icon: Sparkles },
   { href: "/settings", label: "設定", icon: Settings },
 ];
 
@@ -35,6 +35,7 @@ const teamNav = [
   { href: "/calendar", label: "カレンダー", icon: Calendar },
   { href: "/tasks", label: "タスク管理", icon: CheckSquare },
   { href: "/chat", label: "AIチャット", icon: MessageSquare },
+  { href: "/content", label: "コンテンツ生成", icon: Sparkles },
   // 組織専用導線
   { href: "/onboarding", label: "組織セットアップ", icon: Building2 },
   { href: "/settings", label: "メンバー招待", icon: Users },

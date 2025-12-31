@@ -18,13 +18,26 @@ export function TopBar() {
     const saved = localStorage.getItem("actoryMode") as Mode | null;
     if (saved === "personal" || saved === "team") {
       setMode(saved);
+      applyBodyMode(saved);
+    } else {
+      applyBodyMode("personal");
+      setMode("personal");
     }
   }, []);
+
+  const applyBodyMode = (value: Mode) => {
+    if (typeof document !== "undefined") {
+      document.body.classList.remove("mode-personal", "mode-team");
+      document.body.classList.add(value === "personal" ? "mode-personal" : "mode-team");
+      document.body.dataset.actoryMode = value;
+    }
+  };
 
   const handleModeChange = (value: string) => {
     if (value === "personal" || value === "team") {
       setMode(value);
       localStorage.setItem("actoryMode", value);
+      applyBodyMode(value);
     }
   };
 
@@ -71,7 +84,7 @@ export function TopBar() {
         <Link href="/projects">
           <Button variant="ghost" size="sm" className="gap-2">
             <FolderKanban className="h-4 w-4" />
-            プロジェクト
+            コンテキスト
           </Button>
         </Link>
         <Link href="/recordings">

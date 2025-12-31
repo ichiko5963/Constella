@@ -38,6 +38,28 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Mode-based UI polish */
+.mode-personal {
+  background: radial-gradient(circle at 20% 20%, rgba(0,212,170,0.15), transparent 35%),
+              radial-gradient(circle at 80% 0%, rgba(13,115,119,0.12), transparent 30%),
+              #0b0c10;
+}
+.mode-team {
+  background: radial-gradient(circle at 15% 10%, rgba(73,102,255,0.16), transparent 35%),
+              radial-gradient(circle at 85% 20%, rgba(255,147,80,0.12), transparent 30%),
+              #0b0c10;
+}
+.mode-personal .glass {
+  backdrop-filter: blur(14px);
+  background-color: rgba(255,255,255,0.04);
+  border-color: rgba(0,212,170,0.15);
+}
+.mode-team .glass {
+  backdrop-filter: blur(14px);
+  background-color: rgba(255,255,255,0.04);
+  border-color: rgba(73,102,255,0.15);
+}
+
 /* 
   Actory Premium Dark Theme 
   Concept: Jet Black x Inorganic x Minimalist

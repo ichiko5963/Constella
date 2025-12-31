@@ -22,55 +22,63 @@ async function runMigrations() {
   try {
     console.log('🚀 Running new feature migrations...');
 
-    // SQLファイルを読み込み
-    const sql = readFileSync(
-      join(process.cwd(), 'drizzle', '0005_add_new_features.sql'),
-      'utf-8'
-    );
+    // SQLファイルを読み込み（最新のマイグレーション）
+    const migrationFiles = [
+      '0005_add_new_features.sql',
+      '0006_database_optimization.sql',
+    ];
 
-    // 改行とコメントを処理
-    const lines = sql.split('\n');
-    let currentStatement = '';
-    const statements: string[] = [];
+    for (const migrationFile of migrationFiles) {
+      console.log(`\n📄 Processing ${migrationFile}...`);
+      const sql = readFileSync(
+        join(process.cwd(), 'drizzle', migrationFile),
+        'utf-8'
+      );
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      // コメント行をスキップ
-      if (trimmed.startsWith('--') || trimmed.length === 0) {
-        continue;
+      // 改行とコメントを処理
+      const lines = sql.split('\n');
+      let currentStatement = '';
+      const statements: string[] = [];
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // コメント行をスキップ
+        if (trimmed.startsWith('--') || trimmed.length === 0) {
+          continue;
+        }
+
+        currentStatement += ' ' + trimmed;
+
+        // セミコロンで終わる場合は1つのステートメント完了
+        if (trimmed.endsWith(';')) {
+          statements.push(currentStatement.trim().slice(0, -1)); // セミコロンを除去
+          currentStatement = '';
+        }
       }
 
-      currentStatement += ' ' + trimmed;
-
-      // セミコロンで終わる場合は1つのステートメント完了
-      if (trimmed.endsWith(';')) {
-        statements.push(currentStatement.trim().slice(0, -1)); // セミコロンを除去
-        currentStatement = '';
-      }
-    }
-
-    // ステートメントを順番に実行
-    for (const statement of statements) {
-      try {
-        console.log(`Executing: ${statement.substring(0, 80)}...`);
-        await client.execute(statement);
-        console.log('✅ Success');
-      } catch (error: any) {
-        // テーブルが既に存在する場合はスキップ
-        if (
-          error.message.includes('already exists') ||
-          error.message.includes('duplicate column name')
-        ) {
-          console.log('⚠️  Already exists, skipping');
-        } else {
-          console.error('❌ Error:', error.message);
-          // エラーを続行（一部のステートメントが失敗しても続ける）
-          // throw error;
+      // ステートメントを順番に実行
+      for (const statement of statements) {
+        try {
+          console.log(`Executing: ${statement.substring(0, 80)}...`);
+          await client.execute(statement);
+          console.log('✅ Success');
+        } catch (error: any) {
+          // テーブルが既に存在する場合はスキップ
+          if (
+            error.message.includes('already exists') ||
+            error.message.includes('duplicate column name')
+          ) {
+            console.log('⚠️  Already exists, skipping');
+          } else {
+            console.error('❌ Error:', error.message);
+            // エラーを続行（一部のステートメントが失敗しても続ける）
+            // throw error;
+          }
         }
       }
     }
 
-    console.log('✨ All migrations completed successfully!');
+    console.log('\n✨ All migrations completed successfully!');
   } catch (error) {
     console.error('Failed to run migrations:', error);
     process.exit(1);

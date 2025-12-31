@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { LayoutDashboard, Folder, Mic, Calendar, MessageSquare, Settings, CheckSquare } from 'lucide-react';
 import { NavLink } from '@/components/navigation/nav-link';
 import { Logo } from '@/components/navigation/logo';
+import { TopBar } from '@/components/navigation/topbar';
 
 export default async function DashboardLayout({
     children,
@@ -88,9 +89,11 @@ export default async function DashboardLayout({
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto relative z-10">
-                {/* Header/Top Bar could go here if needed, for now just children */}
-                <div className="p-8">
-                    {children}
+                <div className="p-8 pt-4">
+                    <TopBar />
+                    <div className="pt-2">
+                        {children}
+                    </div>
                 </div>
             </main>
         </div>

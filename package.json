@@ -67,6 +67,7 @@
     "flexsearch": "^0.8.212",
     "framer-motion": "^12.23.26",
     "graphology": "^0.26.0",
+    "graphology-layout": "^0.6.1",
     "graphology-types": "^0.24.8",
     "lucide-react": "^0.562.0",
     "nanoid": "^5.1.6",

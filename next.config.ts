@@ -3,11 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   
-  // React Compiler を有効化（Next.js 16では最上位に移動）
-  reactCompiler: true,
+  // React Compiler は未導入（babel-plugin-react-compiler が無いため無効化）
+  // 導入時は依存追加後に true へ変更
+  reactCompiler: false,
   
-  // Turbopack設定（空でもOK、エラーを回避）
-  turbopack: {},
+  // Turbopack設定
+  turbopack: {
+    // ルートを明示してロックファイル検出警告を回避
+    root: __dirname,
+  },
   
   // 画像最適化
   images: {

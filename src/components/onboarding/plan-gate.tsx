@@ -31,6 +31,7 @@ export function PlanGate() {
     const stored = localStorage.getItem("actoryModeSelection");
     if (!stored) {
       setShow(true);
+      document.body.classList.add("gate-open");
       return;
     }
     try {
@@ -40,9 +41,11 @@ export function PlanGate() {
         applyMode(parsed);
       } else {
         setShow(true);
+        document.body.classList.add("gate-open");
       }
     } catch {
       setShow(true);
+      document.body.classList.add("gate-open");
     }
   }, []);
 
@@ -68,6 +71,7 @@ export function PlanGate() {
     localStorage.setItem("actoryModeSelection", JSON.stringify(selection));
     applyMode(selection);
     setShow(false);
+    document.body.classList.remove("gate-open");
   };
 
   if (!show) return null;

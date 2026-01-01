@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Logo } from '@/components/navigation/logo';
 import { TopBar } from '@/components/navigation/topbar';
 import { ModeAwareNav } from '@/components/navigation/mode-aware-nav';
+import { PlanGate } from '@/components/onboarding/plan-gate';
 
 export default async function DashboardLayout({
     children,
@@ -60,6 +61,7 @@ export default async function DashboardLayout({
             {/* Main Content */}
             <main className="flex-1 overflow-auto relative z-10">
                 <div className="p-8 pt-4">
+                    <PlanGate />
                     <TopBar />
                     <div className="pt-2">
                         {children}

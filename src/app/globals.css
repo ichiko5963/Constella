@@ -60,6 +60,36 @@
   border-color: rgba(73,102,255,0.15);
 }
 
+/* Animated gradient for onboarding overlay */
+.animated-gradient {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    130deg,
+    rgba(0, 212, 170, 0.45),
+    rgba(73, 102, 255, 0.5),
+    rgba(255, 147, 80, 0.4),
+    rgba(0, 212, 170, 0.4)
+  );
+  background-size: 300% 300%;
+  filter: blur(48px);
+  opacity: 0.65;
+  animation: gradientShift 12s ease infinite;
+  pointer-events: none;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 /* 
   Actory Premium Dark Theme 
   Concept: Jet Black x Inorganic x Minimalist

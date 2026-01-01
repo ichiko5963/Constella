@@ -74,7 +74,8 @@ export function PlanGate() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,rgba(0,212,170,0.15),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(73,102,255,0.15),transparent_32%)]" />
+      <div className="animated-gradient" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/5 via-transparent to-white/5" />
       <div className="relative w-full max-w-3xl mx-4 rounded-3xl border border-white/10 bg-black/70 p-10 shadow-2xl shadow-primary/20">
         <div className="space-y-2 mb-8">
           <p className="text-sm uppercase tracking-[0.3em] text-primary">Actory</p>

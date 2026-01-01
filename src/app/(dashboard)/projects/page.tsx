@@ -7,8 +7,8 @@ import { CreateProjectDialog } from './components/create-project-dialog';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Projects',
-    description: 'Manage your projects and recordings.',
+    title: 'Contexts',
+    description: 'コンテキストと録音を管理',
 };
 
 export default async function ProjectsPage() {
@@ -18,8 +18,8 @@ export default async function ProjectsPage() {
         <div className="p-8 max-w-7xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">プロジェクト</h1>
-                    <p className="text-gray-400">ワークスペースと録音を管理</p>
+                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">コンテキスト</h1>
+                    <p className="text-gray-400">ナレッジコンテキストと録音を管理</p>
                 </div>
                 <CreateProjectDialog />
             </div>
@@ -48,7 +48,7 @@ export default async function ProjectsPage() {
 
                 {projects.length === 0 && (
                     <div className="col-span-full text-center py-12 bg-black/20 glass rounded-xl border border-dashed border-white/10">
-                        <p className="text-gray-400">プロジェクトが見つかりません。最初のプロジェクトを作成しましょう！</p>
+                        <p className="text-gray-400">コンテキストが見つかりません。最初のコンテキストを作成しましょう！</p>
                     </div>
                 )}
             </div>

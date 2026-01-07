@@ -135,7 +135,7 @@ export async function hybridSearch(query: string, limit: number = 10) {
 
     // ベクトル検索結果をスコアリング（類似度をそのまま使用）
     vectorResults.forEach((result, index) => {
-      if (result.note) {
+      if ('note' in result && result.note) {
         const noteId = result.note.id;
         const score = result.similarity * (vectorResults.length - index);
         scoreMap.set(noteId, {
@@ -206,7 +206,7 @@ export async function findRelatedNotes(noteId: number, limit: number = 5) {
     );
 
     // 自分自身を除外
-    const filtered = relatedResults.filter(r => r.note?.id !== noteId).slice(0, limit);
+    const filtered = relatedResults.filter(r => 'note' in r && r.note?.id !== noteId).slice(0, limit);
 
     return filtered;
   } catch (error) {

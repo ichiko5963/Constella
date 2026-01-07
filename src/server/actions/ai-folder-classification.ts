@@ -59,7 +59,7 @@ export async function suggestFolderStructure(
       JSON.stringify({
         similarContent: similarContent.map(s => ({
           content: s.content,
-          note: s.note,
+          similarity: s.similarity,
         })),
         corrections: corrections.map(c => ({
           original: JSON.parse(c.originalPath),

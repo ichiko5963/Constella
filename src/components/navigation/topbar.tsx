@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, FolderKanban, Workflow, Bot } from "lucide-react";
+import { Star, Stars, Mic, Network } from "lucide-react";
 
 type Mode = "personal" | "team";
 
 /**
  * Top bar for switching between personal/team modes and quick context actions.
- * Keeps the selected mode in localStorage (`actoryMode`).
+ * Updated for Constella design system.
  */
 export function TopBar() {
   const [mode, setMode] = useState<Mode>("personal");
 
   useEffect(() => {
-    const saved = localStorage.getItem("actoryMode") as Mode | null;
+    const saved = localStorage.getItem("constellaMode") as Mode | null;
     if (saved === "personal" || saved === "team") {
       setMode(saved);
       applyBodyMode(saved);
@@ -29,74 +29,79 @@ export function TopBar() {
     if (typeof document !== "undefined") {
       document.body.classList.remove("mode-personal", "mode-team");
       document.body.classList.add(value === "personal" ? "mode-personal" : "mode-team");
-      document.body.dataset.actoryMode = value;
-      // モード変更を他コンポーネントへ通知（Navなど）
-      window.dispatchEvent(new CustomEvent("actory-mode-change", { detail: value }));
+      document.body.dataset.constellaMode = value;
+      window.dispatchEvent(new CustomEvent("constella-mode-change", { detail: value }));
     }
   };
 
   const handleModeChange = (value: string) => {
     if (value === "personal" || value === "team") {
       setMode(value);
-      localStorage.setItem("actoryMode", value);
+      localStorage.setItem("constellaMode", value);
       applyBodyMode(value);
     }
   };
 
   return (
-    <div className="sticky top-0 z-30 mb-6 flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-black/30 px-4 py-3 backdrop-blur">
+    <div className="sticky top-0 z-30 mb-6 flex items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+      {/* Mode Switcher */}
       <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-400">モード</span>
-        <div className="flex rounded-xl border border-white/5 bg-white/5 overflow-hidden">
-          <Button
-            variant={mode === "personal" ? "default" : "ghost"}
-            size="sm"
-            className="rounded-none px-3"
+        <span className="text-sm text-gray-500">Mode</span>
+        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+          <button
+            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+              mode === "personal"
+                ? "bg-gray-900 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
             onClick={() => handleModeChange("personal")}
           >
-            個人
-          </Button>
-          <Button
-            variant={mode === "team" ? "default" : "ghost"}
-            size="sm"
-            className="rounded-none px-3"
+            Personal
+          </button>
+          <button
+            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+              mode === "team"
+                ? "bg-gray-900 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
             onClick={() => handleModeChange("team")}
           >
-            組織
-          </Button>
+            Team
+          </button>
         </div>
-        <div className="rounded-full bg-primary/15 px-3 py-1 text-xs text-primary">
-          {mode === "personal" ? "Actory for One" : "Actory for Company"}
+        <div className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+          <Star className="h-3 w-3" />
+          {mode === "personal" ? "Your Constellation" : "Team Constellation"}
         </div>
       </div>
 
+      {/* Quick Actions */}
       <div className="flex items-center gap-2">
         <Link href="/chat">
-          <Button variant="secondary" size="sm" className="gap-2">
-            <Bot className="h-4 w-4" />
-            コンテキストAI
+          <Button variant="outline" size="sm" className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50">
+            <Stars className="h-4 w-4" />
+            AI Chat
           </Button>
         </Link>
         <Link href="/graph">
-          <Button variant="secondary" size="sm" className="gap-2">
-            <Workflow className="h-4 w-4" />
-            グラフビュー
+          <Button variant="outline" size="sm" className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50">
+            <Network className="h-4 w-4" />
+            Constellation
           </Button>
         </Link>
         <Link href="/projects">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <FolderKanban className="h-4 w-4" />
-            コンテキスト
+          <Button variant="outline" size="sm" className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50">
+            <Star className="h-4 w-4" />
+            Stella
           </Button>
         </Link>
         <Link href="/recordings">
-          <Button size="sm" className="gap-2">
-            <Brain className="h-4 w-4" />
-            録音/議事録
+          <Button size="sm" className="gap-2 bg-gray-900 text-white hover:bg-gray-800">
+            <Mic className="h-4 w-4" />
+            Record
           </Button>
         </Link>
       </div>
     </div>
   );
 }
-

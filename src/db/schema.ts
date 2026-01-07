@@ -71,6 +71,8 @@ export const files = sqliteTable("file", {
     fileType: text("fileType").default('meeting_notes'), // enum not natively supported in sqlite the same way, using text
     parentFileId: integer("parentFileId"), // for nesting if implemented via adjacency list
     aiGenerated: integer("aiGenerated", { mode: "boolean" }).default(false),
+    isArchived: integer("isArchived", { mode: "boolean" }).default(false),
+    sharedToTeam: integer("sharedToTeam", { mode: "boolean" }).default(false),
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(new Date()),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$onUpdate(() => new Date()),
 });

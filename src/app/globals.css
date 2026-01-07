@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/*
+ * Constella Design System
+ * "Connect context, like stars."
+ *
+ * Theme: White & Black Minimalist
+ * Concept: Stars (Stella) forming Constellations
+ */
+
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -38,26 +46,312 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Mode-based UI polish */
-.mode-personal {
-  background: radial-gradient(circle at 20% 20%, rgba(0,212,170,0.15), transparent 35%),
-              radial-gradient(circle at 80% 0%, rgba(13,115,119,0.12), transparent 30%),
-              #0b0c10;
+/*
+ * Constella Light Theme (Default)
+ * Clean, minimal, spacious
+ */
+:root {
+  /* Base */
+  --background: #FFFFFF;
+  --foreground: #0A0A0A;
+
+  /* Cards & Popover */
+  --card: #FFFFFF;
+  --card-foreground: #0A0A0A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A0A0A;
+
+  /* Primary - Black */
+  --primary: #0A0A0A;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary - Gray */
+  --secondary: #F5F5F5;
+  --secondary-foreground: #0A0A0A;
+
+  /* Muted */
+  --muted: #F5F5F5;
+  --muted-foreground: #737373;
+
+  /* Accent - Subtle highlight */
+  --accent: #F5F5F5;
+  --accent-foreground: #0A0A0A;
+
+  /* Destructive */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* Borders & Inputs */
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #0A0A0A;
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Constella-specific */
+  --constella-star: #0A0A0A;
+  --constella-star-glow: rgba(0, 0, 0, 0.1);
+  --constella-constellation-line: rgba(0, 0, 0, 0.15);
 }
-.mode-team {
-  background: radial-gradient(circle at 15% 10%, rgba(73,102,255,0.16), transparent 35%),
-              radial-gradient(circle at 85% 20%, rgba(255,147,80,0.12), transparent 30%),
-              #0b0c10;
+
+/* Body Base Styles */
+body {
+  @apply bg-white text-gray-900;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-.mode-personal .glass {
-  backdrop-filter: blur(14px);
-  background-color: rgba(255,255,255,0.04);
-  border-color: rgba(0,212,170,0.15);
+
+/* Scrollbar - Minimal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-.mode-team .glass {
-  backdrop-filter: blur(14px);
-  background-color: rgba(255,255,255,0.04);
-  border-color: rgba(73,102,255,0.15);
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4D4D4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A3A3A3;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-white border border-gray-200 rounded-xl;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+}
+
+/* Glass Effect (for special overlays) */
+.glass {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Star/Stella Animations */
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse-star {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@keyframes constellation-draw {
+  from {
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes star-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes converge {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-star {
+  animation: pulse-star 2s ease-in-out infinite;
+}
+
+.animate-constellation-draw {
+  animation: constellation-draw 1.5s ease-out forwards;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.animate-star-appear {
+  animation: star-appear 0.6s ease-out forwards;
+}
+
+/* Stella Icon Base */
+.stella-icon {
+  @apply relative;
+}
+
+.stella-icon::after {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stella-icon:hover::after {
+  opacity: 1;
+}
+
+/* Navigation Styles */
+.nav-item {
+  @apply flex items-center px-4 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all duration-200;
+}
+
+.nav-item.active {
+  @apply bg-gray-900 text-white;
+}
+
+.nav-item.active:hover {
+  @apply bg-gray-800;
+}
+
+/* Button Variants */
+.btn-primary {
+  @apply bg-gray-900 text-white hover:bg-gray-800 transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 transition-colors;
+}
+
+.btn-ghost {
+  @apply bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors;
+}
+
+/* Input Styles */
+.input-constella {
+  @apply bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-900;
+  @apply focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent;
+  @apply placeholder:text-gray-400;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Recording UI - Starry Theme */
+.recording-bg {
+  @apply bg-gray-900;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.3), transparent);
+  background-size: 200px 200px;
+}
+
+.recording-pulse {
+  @apply relative;
+}
+
+.recording-pulse::before {
+  content: '';
+  @apply absolute inset-0 rounded-full bg-white/20;
+  animation: pulse-star 1.5s ease-in-out infinite;
+}
+
+/* Constellation Lines */
+.constellation-line {
+  stroke: rgba(0, 0, 0, 0.15);
+  stroke-width: 1;
+  fill: none;
+}
+
+/* Star Nodes */
+.star-node {
+  @apply w-3 h-3 bg-gray-900 rounded-full;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.star-node.active {
+  @apply bg-gray-900;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+/* Utility Classes */
+.text-balance {
+  text-wrap: balance;
+}
+
+.spacious {
+  @apply py-8 px-6 md:py-12 md:px-8;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 0, 0, 0.1);
+  color: inherit;
+}
+
+/* Focus Visible */
+:focus-visible {
+  @apply outline-none ring-2 ring-gray-900 ring-offset-2;
 }
 
 /* Gate open: hide underlying app chrome */
@@ -68,448 +362,30 @@
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-/* Animated gradient for onboarding overlay */
-.animated-gradient {
-  position: absolute;
-  inset: -20%;
-  background: linear-gradient(
-    130deg,
-    rgba(0, 212, 170, 0.45),
-    rgba(73, 102, 255, 0.5),
-    rgba(255, 147, 80, 0.4),
-    rgba(0, 212, 170, 0.4)
-  );
-  background-size: 300% 300%;
-  filter: blur(48px);
-  opacity: 0.65;
-  animation: gradientShift 12s ease infinite;
-  pointer-events: none;
+/* Mode-based styling (kept for compatibility) */
+.mode-personal,
+.mode-team {
+  @apply bg-white;
 }
 
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
+/* Print Styles */
+@media print {
+  body {
+    @apply bg-white text-black;
   }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+
+  .no-print {
+    display: none !important;
   }
 }
 
-/* 
-  Actory Premium Dark Theme 
-  Concept: Jet Black x Inorganic x Minimalist
-  Primary: Cyan (#00D4AA)
-  Background: Deep Gradient
-*/
-
-:root {
-  /* Default to Dark Mode values for "Jet Black" aesthetic */
-  --background: #0a0f0f;
-  --primary: #00D4AA;
-  --accent: #0D7377;
-  /* Deep dark teal/black */
-  --foreground: #ededed;
-
-  --card: #131b1b;
-  /* Slightly lighter than bg */
-  --card-foreground: #ededed;
-
-  --popover: #131b1b;
-  --popover-foreground: #ededed;
-
-  --primary: #C8A2C8;
-  /* Light Purple */
-  --primary-foreground: #000000;
-
-  --secondary: #0D7377;
-  /* Teal */
-  --secondary-foreground: #ffffff;
-
-  --muted: #1f2e2e;
-  --muted-foreground: #889999;
-
-  --accent: #10B981;
-  /* Emerald */
-  --accent-foreground: #ffffff;
-
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-
-  --border: #1f2e2e;
-  --input: #1f2e2e;
-  --ring: #00D4AA;
-
-  --radius: 0.75rem;
-  /* Rounder, modern look */
-
-  /* Custom Gradients */
-  --bg-gradient-start: #0a0f0f;
-  --bg-gradient-end: #1a2f2f;
-}
-
-/* Force Dark Mode (optional, seeing requirement is specific) */
-@media (prefers-color-scheme: light) {
-
-  /* Keeping the same dark aesthetic even in light mode for strict brand adherence */
-  :root {
-    --background: #0a0f0f;
-    --foreground: #ededed;
-    --card: #131b1b;
-    --card-foreground: #ededed;
-    --popover: #131b1b;
-    --popover-foreground: #ededed;
-    --primary: #00D4AA;
-    --primary-foreground: #000000;
-    --secondary: #0D7377;
-    --secondary-foreground: #ffffff;
-    --muted: #1f2e2e;
-    --muted-foreground: #889999;
-    --accent: #10B981;
-    --accent-foreground: #ffffff;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #1f2e2e;
-    --input: #1f2e2e;
-    --ring: #00D4AA;
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-}
-
-body {
-  @apply bg-[#020205] text-white;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
-    /* Purple Glow */
-    radial-gradient(circle at 80% 20%, rgba(192, 38, 211, 0.12) 0%, transparent 50%),
-    /* Magenta Glow */
-    radial-gradient(circle at 50% 70%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    /* Blue Glow */
-    radial-gradient(circle at 10% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
-    /* Cyan Glow */
-    radial-gradient(circle at 90% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
-    /* Pink Glow */
-    radial-gradient(circle at 50% 0%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
-    /* Primary Cyan Glow */
-    linear-gradient(to bottom, #020205 0%, #050510 100%);
-  /* Deep Dark Base */
-  background-attachment: fixed;
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  position: relative;
-}
-
-/* 背景テーマクラス */
-body.theme-default {
-  @apply bg-[#020205] text-white;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(192, 38, 211, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 50% 70%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 10% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 90% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 0%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
-    linear-gradient(to bottom, #020205 0%, #050510 100%);
-  background-attachment: fixed;
-}
-
-body.theme-white {
-  @apply bg-white text-gray-900;
-  background-image: none;
-  background-attachment: fixed;
-  color: #1f2937;
-}
-
-/* 白背景テーマ時のテキスト色の調整 */
-body.theme-white * {
-  color: inherit;
-}
-
-body.theme-white .text-white,
-body.theme-white h1.text-white,
-body.theme-white h2.text-white,
-body.theme-white h3.text-white,
-body.theme-white h4.text-white,
-body.theme-white p.text-white,
-body.theme-white span.text-white,
-body.theme-white div.text-white {
-  color: #1f2937 !important;
-}
-
-body.theme-white .text-gray-400,
-body.theme-white .text-gray-500 {
-  color: #6b7280 !important;
-}
-
-body.theme-white .text-gray-300 {
-  color: #9ca3af !important;
-}
-
-/* 白背景テーマ時のカードとコンポーネント */
-body.theme-white .glass {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-}
-
-body.theme-white .glass::before {
-  opacity: 0.02;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.02) 0%,
-    rgba(0, 0, 0, 0.01) 25%,
-    rgba(0, 0, 0, 0.01) 50%,
-    rgba(0, 0, 0, 0.01) 75%,
-    rgba(0, 0, 0, 0.02) 100%
-  );
-}
-
-body.theme-white .glass-hover:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: rgba(0, 0, 0, 0.15);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* 白背景テーマ時のボーダー */
-body.theme-white .border-white\/10,
-body.theme-white .border-white\/5,
-body.theme-white .border-white\/20 {
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-/* 白背景テーマ時の背景色 */
-body.theme-white .bg-black\/40,
-body.theme-white .bg-black\/5,
-body.theme-white .bg-white\/5,
-body.theme-white .bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.03) !important;
-}
-
-body.theme-white .bg-white\/5:hover {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-body.theme-white .bg-white\/10:hover {
-  background-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* 白背景テーマ時の入力フィールド */
-body.theme-white input,
-body.theme-white textarea,
-body.theme-white select {
-  background-color: #ffffff !important;
-  border-color: rgba(0, 0, 0, 0.2) !important;
-  color: #1f2937 !important;
-}
-
-body.theme-white input::placeholder,
-body.theme-white textarea::placeholder {
-  color: #9ca3af !important;
-}
-
-/* 白背景テーマ時のボタン */
-body.theme-white button:not(.bg-primary):not(.bg-accent) {
-  color: #1f2937 !important;
-}
-
-body.theme-white button.bg-primary,
-body.theme-white button.bg-accent {
-  color: #ffffff !important;
-}
-
-/* 白背景テーマ時のスクロールバー */
-body.theme-white ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2) !important;
-}
-
-body.theme-white ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3) !important;
-}
-
-/* 白背景テーマ時のノイズオーバーレイを非表示 */
-body.theme-white::before {
-  display: none;
-}
-
-/* 白背景テーマ時のアイコンとSVG */
-body.theme-white svg:not([fill="none"]) {
-  color: #1f2937;
-}
-
-body.theme-white .text-primary {
-  color: var(--primary) !important;
-}
-
-body.theme-white .text-accent {
-  color: var(--accent) !important;
-}
-
-/* 白背景テーマ時のリンク */
-body.theme-white a {
-  color: #2563eb;
-}
-
-body.theme-white a:hover {
-  color: #1d4ed8;
-}
-
-/* 白背景テーマ時の選択された要素 */
-body.theme-white .bg-primary\/10 {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-body.theme-white .border-primary {
-  border-color: var(--primary) !important;
-}
-
-/* 白背景テーマ時のZoom連携ボタン */
-body.theme-white .text-blue-400 {
-  color: #2563eb !important; /* より濃い青に変更 */
-}
-
-body.theme-white button.border-blue-500\/30 {
-  color: #2563eb !important;
-}
-
-/* 白背景テーマ時の録音関連コンポーネント（背景が白以外の部分） */
-body.theme-white .bg-gradient-to-br,
-body.theme-white .bg-black {
-  /* 録音画面などの黒背景部分は白背景テーマ時も黒背景を維持 */
-}
-
-/* 白背景テーマ時の録音関連のテキスト（黒背景上） */
-body.theme-white .bg-gradient-to-br .text-white,
-body.theme-white .bg-black .text-white {
-  /* 黒背景上では白文字を維持（録音画面など） */
-  color: #ffffff !important;
-}
-
-/* 白背景テーマ時の録音関連のテキスト（白背景上） */
-body.theme-white .bg-white .text-white,
-body.theme-white .glass .text-white {
-  color: #1f2937 !important;
-}
-
-/* 白背景テーマ時の録音カード（白背景部分） */
-body.theme-white .bg-white\/5 .text-white,
-body.theme-white .bg-white\/10 .text-white {
-  color: #1f2937 !important;
-}
-
-/* 白背景テーマ時のAIチャットプレースホルダー */
-body.theme-white input.placeholder\:text-white\/70::placeholder {
-  color: #6b7280 !important; /* 白背景ではグレーに */
-}
-
-/* 白背景テーマ時のシャドウ */
-body.theme-white .shadow-lg,
-body.theme-white .shadow-xl,
-body.theme-white .shadow-2xl {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-}
-
-body.theme-gradient-cool {
-  @apply text-white;
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #312e81 50%, #1e1b4b 75%, #0f172a 100%);
-  background-attachment: fixed;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 50% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
-}
-
-body.theme-gradient-warm {
-  @apply text-white;
-  background: linear-gradient(135deg, #7c2d12 0%, #9f1239 25%, #be185d 50%, #9f1239 75%, #7c2d12 100%);
-  background-attachment: fixed;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(251, 146, 60, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 50% 70%, rgba(244, 63, 94, 0.15) 0%, transparent 50%);
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.06;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Glassmorphism Utilities */
-.glass {
-  background: rgba(19, 27, 27, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  position: relative;
-}
-
-.glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(88, 28, 135, 0.1) 0%,
-    rgba(192, 38, 211, 0.05) 25%,
-    rgba(59, 130, 246, 0.05) 50%,
-    rgba(6, 182, 212, 0.05) 75%,
-    rgba(236, 72, 153, 0.1) 100%
-  );
-  border-radius: inherit;
-  opacity: 0.5;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.glass-hover:hover {
-  background: rgba(19, 27, 27, 0.6);
-  border-color: rgba(0, 212, 170, 0.2);
-}
-
-.glass-hover:hover::before {
-  opacity: 0.7;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--muted);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
-}
-
-/* Animations */
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 10px rgba(0, 212, 170, 0.1);
-  }
-
-  50% {
-    box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 3s infinite;
 }

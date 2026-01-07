@@ -9,7 +9,7 @@ export function OpeningProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // 初回訪問時のみオープニングを表示
-        const hasSeenOpening = sessionStorage.getItem('actory-opening-seen');
+        const hasSeenOpening = sessionStorage.getItem('constella-opening-seen');
         if (!hasSeenOpening) {
             setShowOpening(true);
         } else {
@@ -18,7 +18,7 @@ export function OpeningProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const handleComplete = () => {
-        sessionStorage.setItem('actory-opening-seen', 'true');
+        sessionStorage.setItem('constella-opening-seen', 'true');
         setShowOpening(false);
         setHasShown(true);
     };

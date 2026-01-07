@@ -17,21 +17,24 @@
 - ✅ カレンダー連携
 - ✅ チャット機能
 - ✅ 設定画面
+- ✅ オンボーディング機能（5-step wizard）
+- ✅ AI自動フォルダ管理（LLM分類 + 学習機能）
+- ✅ Structured Outputs実装（議事録、タスク、フォルダ分類スキーマ）
+- ✅ Turso Vector Search（ベクトル埋め込み + ハイブリッド検索）
+- ✅ WebGL Graph View (Sigma.js + 10,000ノード対応)
+- ✅ コンテキスト管理UI（AIによる日次質問）
+- ✅ 外部サービス連携（Notion OAuth + ページインポート）
+- ✅ 外部サービス連携（Slack OAuth + メッセージインポート）
+- ✅ コンテンツ生成機能（note/X/YouTube/PDFマニュアル）
+- ✅ 口調管理機能（関係性分類 + 口調学習）
+- ✅ 組織共有機能（権限管理 + 自動アーカイブ）
+- ✅ サーバーサイドFFmpeg処理（音声分割 + 波形生成）
 
 ### 未実装（要件定義書より）
-- ❌ オンボーディング機能
-- ❌ AI自動フォルダ管理
-- ❌ Capacitorモバイルアプリ
-- ❌ サーバーサイドFFmpeg処理
-- ❌ Structured Outputs実装
-- ❌ WebGL Graph View (Sigma.js)
-- ❌ コンテキスト管理AI
-- ❌ 外部サービス連携（Notion, Slack）
-- ❌ コンテンツ生成機能
-- ❌ 口調管理機能
-- ❌ 組織共有機能
-- ❌ Apple Watch録音
-- ❌ Turso Vector Search最適化
+- ❌ Capacitorモバイルアプリ（P4-1）
+- ❌ Apple Watch録音（P4-2）
+- ❌ 単体テスト / E2Eテスト（P6）
+- ❌ パフォーマンス最適化（P5）
 
 ---
 
@@ -39,50 +42,50 @@
 
 ### Priority 0: 技術基盤の安定化（Week 1-2）
 
-#### P0-1: Next.js/React バージョン確認と調整
-**現状**: Next.js 16.1.0 + React 19.2.3  
+#### P0-1: Next.js/React バージョン確認と調整 ✅ 完了
+**現状**: Next.js 16.1.0 + React 19.2.3
 **要件**: Next.js 14 + React 18推奨（安定性のため）
 
-- [ ] 現在のNext.js 16.1.0 + React 19.2.3での動作確認
-- [ ] Better Auth 1.4.7との互換性確認
-- [ ] 問題がある場合はダウングレード検討
-- [ ] エラーログの確認と修正
+- [x] 現在のNext.js 16.1.0 + React 19.2.3での動作確認
+- [x] Better Auth 1.4.7との互換性確認
+- [x] 問題がある場合はダウングレード検討
+- [x] エラーログの確認と修正
 
-**推定時間**: 2-3日  
-**リスク**: 高（既存機能への影響）  
+**推定時間**: 2-3日
+**リスク**: 高（既存機能への影響）
 **依存**: なし
 
-#### P0-2: Turso Vector Search環境構築
+#### P0-2: Turso Vector Search環境構築 ✅ 完了
 **説明**: DiskANNインデックスを使用したベクトル検索の実装
 
-- [ ] Turso接続の動作確認
-- [ ] DiskANNインデックスの作成スクリプト実装
-- [ ] ベクトル埋め込み生成の実装（OpenAI Embeddings）
-- [ ] ハイブリッド検索（Vector + FTS5）の実装
-- [ ] データベーススキーマ拡張
-  - [ ] `knowledgeEmbeddings`テーブル作成
-  - [ ] `knowledge_vector_index`仮想テーブル作成
+- [x] Turso接続の動作確認
+- [x] DiskANNインデックスの作成スクリプト実装
+- [x] ベクトル埋め込み生成の実装（OpenAI Embeddings）
+- [x] ハイブリッド検索（Vector + FTS5）の実装
+- [x] データベーススキーマ拡張
+  - [x] `embeddings`テーブル作成
+  - [x] ベクトル検索関数実装
 
-**推定時間**: 3-4日  
-**リスク**: 中  
-**依存**: なし  
-**参考**: 
+**推定時間**: 3-4日
+**リスク**: 中
+**依存**: なし
+**参考**:
 - `docs/04_AI_ML_INNOVATION/VECTOR_DATABASE_MASTERY.md`
 - `最強要件定義書.md` 5.4節
 
-#### P0-3: OpenAI Structured Outputs実装
+#### P0-3: OpenAI Structured Outputs実装 ✅ 完了
 **説明**: 議事録生成とタスク抽出を型安全にする
 
-- [ ] 議事録生成スキーマの定義
-- [ ] タスク抽出スキーマの定義
-- [ ] フォルダ分類スキーマの定義
-- [ ] 既存の議事録生成を移行
-- [ ] 既存のタスク抽出を移行
+- [x] 議事録生成スキーマの定義
+- [x] タスク抽出スキーマの定義
+- [x] フォルダ分類スキーマの定義
+- [x] 既存の議事録生成を移行
+- [x] 既存のタスク抽出を移行
 
-**推定時間**: 2-3日  
-**リスク**: 低  
-**依存**: なし  
-**参考**: 
+**推定時間**: 2-3日
+**リスク**: 低
+**依存**: なし
+**参考**:
 - `最強要件定義書.md` 5.5節
 - `docs/04_AI_ML_INNOVATION/PROMPT_ENGINEERING_BIBLE.md`
 
@@ -90,81 +93,81 @@
 
 ### Priority 1: コア機能実装（Week 3-6）
 
-#### P1-1: オンボーディング機能
+#### P1-1: オンボーディング機能 ✅ 完了
 **説明**: 初回ユーザーの事業・部門構造入力と自動フォルダ生成
 
 **タスク**:
-- [ ] データベーススキーマ拡張
-  - [ ] `onboardingResponses`テーブル作成
-  - [ ] `folderCorrections`テーブル作成
-- [ ] オンボーディングページ作成 (`app/(dashboard)/onboarding/page.tsx`)
-  - [ ] ステップ1: プラン選択（個人/チーム）
-  - [ ] ステップ2: 事業数・事業名入力
-  - [ ] ステップ3: 部門数・部門名入力
-  - [ ] ステップ4: 主な用途選択
-  - [ ] ステップ5: フォルダ構造プレビュー
-- [ ] Server Actions実装
-  - [ ] `server/actions/onboarding.ts`
-  - [ ] `generateFolderStructure()`
-  - [ ] `completeOnboarding()`
-- [ ] 個人用/チーム用切り替え機能
-  - [ ] ヘッダーに切り替えボタン追加
-  - [ ] モード別データフィルタリング
+- [x] データベーススキーマ拡張
+  - [x] `onboardingResponses`テーブル作成
+  - [x] `folderCorrections`テーブル作成
+- [x] オンボーディングページ作成 (`app/(dashboard)/onboarding/page.tsx`)
+  - [x] ステップ1: プラン選択（個人/チーム）
+  - [x] ステップ2: 事業数・事業名入力
+  - [x] ステップ3: 部門数・部門名入力
+  - [x] ステップ4: 主な用途選択
+  - [x] ステップ5: フォルダ構造プレビュー
+- [x] Server Actions実装
+  - [x] `server/actions/onboarding.ts`
+  - [x] `generateFolderStructure()`
+  - [x] `completeOnboarding()`
+- [x] 個人用/チーム用切り替え機能
+  - [x] ヘッダーに切り替えボタン追加
+  - [x] モード別データフィルタリング
 
-**推定時間**: 5-7日  
-**リスク**: 中  
-**依存**: P0-3 (Structured Outputs)  
+**推定時間**: 5-7日
+**リスク**: 中
+**依存**: P0-3 (Structured Outputs)
 **参考**: `最強要件定義書.md` 4.2節
 
-#### P1-2: AI自動フォルダ管理
+#### P1-2: AI自動フォルダ管理 ✅ 完了
 **説明**: LLMによる自動フォルダ分類と階層構造生成
 
 **タスク**:
-- [ ] Server Actions実装
-  - [ ] `server/actions/ai-folder-classification.ts`
-  - [ ] `suggestFolderStructure()` - コンテンツから適切なフォルダを提案
-  - [ ] `applyFolderCorrection()` - ユーザー修正を学習
-- [ ] UI実装
-  - [ ] 録音時のプロジェクト選択モーダル
-  - [ ] フォルダツリービュー
-  - [ ] AI提案ボタン
-  - [ ] 階層構造編集UI
-- [ ] 学習機能実装
-  - [ ] 修正履歴の保存
-  - [ ] 過去の修正をコンテキストに含める
+- [x] Server Actions実装
+  - [x] `server/actions/ai-folder-classification.ts`
+  - [x] `suggestFolderStructure()` - コンテンツから適切なフォルダを提案
+  - [x] `applyFolderCorrection()` - ユーザー修正を学習
+- [x] UI実装
+  - [x] 録音時のプロジェクト選択モーダル
+  - [x] フォルダツリービュー
+  - [x] AI提案ボタン
+  - [x] 階層構造編集UI
+- [x] 学習機能実装
+  - [x] 修正履歴の保存
+  - [x] 過去の修正をコンテキストに含める
 
-**推定時間**: 7-10日  
-**リスク**: 高  
-**依存**: P0-2 (Vector Search), P0-3 (Structured Outputs), P1-1 (オンボーディング)  
+**推定時間**: 7-10日
+**リスク**: 高
+**依存**: P0-2 (Vector Search), P0-3 (Structured Outputs), P1-1 (オンボーディング)
 **参考**: `最強要件定義書.md` 4.1節
 
-#### P1-3: サーバーサイドFFmpeg音声処理
+#### P1-3: サーバーサイドFFmpeg音声処理 ✅ 完了
 **説明**: 無音検知による音声分割とWhisper API連携
 
 **タスク**:
-- [ ] FFmpeg環境構築
-  - [ ] Dockerfileの作成/更新（FFmpeg含む）
-  - [ ] 本番環境へのFFmpegインストール
-- [ ] 音声分割ワーカー実装
-  - [ ] `server/workers/audio-splitter.ts`
-  - [ ] 無音検知アルゴリズム（`silencedetect`）
-  - [ ] 25MB以下のチャンク生成
-- [ ] Whisper API統合
-  - [ ] `server/actions/transcribe-split-audio.ts`
-  - [ ] 分割音声の順次文字起こし
-  - [ ] 文字起こし結果の統合（重複除去）
-- [ ] 音声波形生成（Peaks.js用）
-  - [ ] `server/workers/waveform-generator.ts`
-  - [ ] 波形データの生成とS3保存
-  - [ ] `audioWaveforms`テーブル作成
-- [ ] 進捗表示UI
-  - [ ] リアルタイム進捗バー
-  - [ ] 処理状況の通知
+- [x] FFmpeg環境構築
+  - [x] Dockerfileの作成/更新（FFmpeg含む）
+  - [x] 本番環境へのFFmpegインストール
+- [x] 音声分割ワーカー実装
+  - [x] `server/workers/audio-splitter.ts`
+  - [x] 無音検知アルゴリズム（`silencedetect`）
+  - [x] 25MB以下のチャンク生成
+- [x] Whisper API統合
+  - [x] `server/actions/transcribe-split-audio.ts`
+  - [x] 分割音声の順次文字起こし
+  - [x] 文字起こし結果の統合（重複除去）
+- [x] 音声波形生成（Peaks.js用）
+  - [x] `server/workers/waveform-generator.ts`
+  - [x] 波形データの生成とS3保存
+  - [x] `audioWaveforms`テーブル作成
+- [x] 進捗表示UI
+  - [x] リアルタイム進捗バー
+  - [x] 処理状況の通知
 
-**推定時間**: 10-14日  
-**リスク**: 高  
-**依存**: なし  
-**参考**: 
+**推定時間**: 10-14日
+**リスク**: 高
+**依存**: なし
+**参考**:
 - `最強要件定義書.md` 5.2節
 - `docs/03_BACKEND_EXCELLENCE/ASYNC_PROGRAMMING_MASTERY.md`
 
@@ -172,174 +175,174 @@
 
 ### Priority 2: UI/UX実装（Week 7-10）
 
-#### P2-1: WebGL Graph View (Sigma.js)
+#### P2-1: WebGL Graph View (Sigma.js) ✅ 完了
 **説明**: ナレッジグラフの可視化
 
 **タスク**:
-- [ ] パッケージインストール
-  - [ ] `npm install sigma graphology`
-- [ ] データベーススキーマ拡張
-  - [ ] `fileLinks`テーブル作成（既存確認）
-- [ ] Graph View コンポーネント実装
-  - [ ] `components/graph/sigma-graph-view.tsx`
-  - [ ] ノード・エッジの描画
-  - [ ] インタラクション（ズーム、パン、クリック）
-- [ ] パフォーマンス最適化
-  - [ ] 仮想化（viewport外は非表示）
-  - [ ] WebGLレンダリング設定
-  - [ ] 10,000ノード対応
-- [ ] ページ実装
-  - [ ] `app/(dashboard)/graph/page.tsx`
+- [x] パッケージインストール
+  - [x] `npm install sigma graphology`
+- [x] データベーススキーマ拡張
+  - [x] `fileLinks`テーブル作成
+- [x] Graph View コンポーネント実装
+  - [x] `components/graph/sigma-graph-view.tsx`
+  - [x] ノード・エッジの描画
+  - [x] インタラクション（ズーム、パン、クリック）
+- [x] パフォーマンス最適化
+  - [x] 仮想化（viewport外は非表示）
+  - [x] WebGLレンダリング設定
+  - [x] 10,000ノード対応
+- [x] ページ実装
+  - [x] `app/(dashboard)/graph/page.tsx`
 
-**推定時間**: 7-10日  
-**リスク**: 高  
-**依存**: P0-2 (Vector Search)  
+**推定時間**: 7-10日
+**リスク**: 高
+**依存**: P0-2 (Vector Search)
 **参考**: `最強要件定義書.md` 5.3節
 
-#### P2-2: コンテキスト管理UI
+#### P2-2: コンテキスト管理UI ✅ 完了
 **説明**: AIによる日次質問とコンテキスト整理
 
 **タスク**:
-- [ ] データベーススキーマ拡張
-  - [ ] `contextManagementSessions`テーブル作成
-- [ ] LLM-as-OS実装
-  - [ ] `lib/ai/file-system-abstraction.ts`
-  - [ ] 仮想ファイルシステムの実装
-  - [ ] AI Agent向けツールの定義
-- [ ] 毎日自動質問スケジューラー
-  - [ ] `app/api/cron/daily-context-questions/route.ts`
-  - [ ] Vercel Cron設定
-  - [ ] 質問生成ロジック
-  - [ ] ユーザーへの通知
-- [ ] コンテキスト管理画面実装
-  - [ ] `app/(dashboard)/context/page.tsx`
-  - [ ] AI質問の表示と回答UI
-  - [ ] 階層構造ビュー
-  - [ ] ファイル関連性の調整UI
+- [x] データベーススキーマ拡張
+  - [x] `contextManagementSessions`テーブル作成
+- [x] LLM-as-OS実装
+  - [x] `lib/ai/file-system-abstraction.ts`
+  - [x] 仮想ファイルシステムの実装
+  - [x] AI Agent向けツールの定義
+- [x] 毎日自動質問スケジューラー
+  - [x] `app/api/cron/daily-context-questions/route.ts`
+  - [x] Vercel Cron設定
+  - [x] 質問生成ロジック
+  - [x] ユーザーへの通知
+- [x] コンテキスト管理画面実装
+  - [x] `app/(dashboard)/context/page.tsx`
+  - [x] AI質問の表示と回答UI
+  - [x] 階層構造ビュー
+  - [x] ファイル関連性の調整UI
 
-**推定時間**: 10-14日  
-**リスク**: 高  
-**依存**: P1-2 (AI自動フォルダ管理)  
+**推定時間**: 10-14日
+**リスク**: 高
+**依存**: P1-2 (AI自動フォルダ管理)
 **参考**: `最強要件定義書.md` 4.4節
 
 ---
 
 ### Priority 3: 拡張機能（Week 11-16）
 
-#### P3-1: 外部サービス連携（Notion）
+#### P3-1: 外部サービス連携（Notion） ✅ 完了
 **説明**: Notionページのインポートと再構成
 
 **タスク**:
-- [ ] データベーススキーマ拡張
-  - [ ] `externalIntegrations`テーブル作成
-  - [ ] `importedContents`テーブル作成
-- [ ] Notion OAuth認証
-  - [ ] `lib/integrations/notion.ts`
-  - [ ] OAuth設定
-- [ ] ページインポート機能
-  - [ ] Notion APIでページ取得
-  - [ ] ブロックをMarkdownに変換
-  - [ ] AI再構成ロジック
-- [ ] UI実装
-  - [ ] 設定画面に連携セクション追加
-  - [ ] インポート進捗表示
+- [x] データベーススキーマ拡張
+  - [x] `externalIntegrations`テーブル作成
+  - [x] `importedContents`テーブル作成
+- [x] Notion OAuth認証
+  - [x] `lib/integrations/notion.ts`
+  - [x] OAuth設定
+- [x] ページインポート機能
+  - [x] Notion APIでページ取得
+  - [x] ブロックをMarkdownに変換
+  - [x] AI再構成ロジック
+- [x] UI実装
+  - [x] 設定画面に連携セクション追加
+  - [x] インポート進捗表示
 
-**推定時間**: 7-10日  
-**リスク**: 中  
-**依存**: P1-2 (AI自動フォルダ管理)  
+**推定時間**: 7-10日
+**リスク**: 中
+**依存**: P1-2 (AI自動フォルダ管理)
 **参考**: `最強要件定義書.md` 4.5.1節
 
-#### P3-2: 外部サービス連携（Slack）
+#### P3-2: 外部サービス連携（Slack） ✅ 完了
 **説明**: Slackメッセージのインポートと口調学習
 
 **タスク**:
-- [ ] Slack OAuth認証
-  - [ ] Slack App作成
-  - [ ] OAuth設定
-- [ ] メッセージインポート機能
-  - [ ] チャンネル一覧取得
-  - [ ] メッセージ取得（スレッド含む）
-  - [ ] AI分類と保存
-- [ ] 口調情報抽出
-  - [ ] `relationshipProfiles`テーブル作成
-  - [ ] 口調パターンの学習
+- [x] Slack OAuth認証
+  - [x] Slack App作成
+  - [x] OAuth設定
+- [x] メッセージインポート機能
+  - [x] チャンネル一覧取得
+  - [x] メッセージ取得（スレッド含む）
+  - [x] AI分類と保存
+- [x] 口調情報抽出
+  - [x] `relationshipProfiles`テーブル作成
+  - [x] 口調パターンの学習
 
-**推定時間**: 7-10日  
-**リスク**: 中  
-**依存**: P3-3 (口調管理機能)  
+**推定時間**: 7-10日
+**リスク**: 中
+**依存**: P3-3 (口調管理機能)
 **参考**: `最強要件定義書.md` 4.5.2節
 
-#### P3-3: 口調管理機能
+#### P3-3: 口調管理機能 ✅ 完了
 **説明**: メッセージ履歴から口調を学習し、返信生成に適用
 
 **タスク**:
-- [ ] データベーススキーマ拡張
-  - [ ] `relationshipProfiles`テーブル作成
-- [ ] 口調分析AI実装
-  - [ ] `lib/ai/tone-classification.ts`
-  - [ ] 関係性の自動分類（superior, boss, peer, subordinate）
-  - [ ] 口調パターンの抽出
-- [ ] 返信生成実装
-  - [ ] `lib/ai/tone-aware-reply.ts`
-  - [ ] 口調を考慮した返信生成
-- [ ] UI実装
-  - [ ] 口調設定画面
-  - [ ] 返信生成UI
+- [x] データベーススキーマ拡張
+  - [x] `relationshipProfiles`テーブル作成
+- [x] 口調分析AI実装
+  - [x] `lib/ai/tone-classification.ts`
+  - [x] 関係性の自動分類（superior, boss, peer, subordinate）
+  - [x] 口調パターンの抽出
+- [x] 返信生成実装
+  - [x] `lib/ai/tone-aware-reply.ts`
+  - [x] 口調を考慮した返信生成
+- [x] UI実装
+  - [x] 口調設定画面
+  - [x] 返信生成UI
 
-**推定時間**: 7-10日  
-**リスク**: 中  
-**依存**: P0-3 (Structured Outputs)  
+**推定時間**: 7-10日
+**リスク**: 中
+**依存**: P0-3 (Structured Outputs)
 **参考**: `最強要件定義書.md` 4.7節
 
-#### P3-4: コンテンツ生成機能
+#### P3-4: コンテンツ生成機能 ✅ 完了
 **説明**: 議事録からnote記事、X投稿、YouTube台本などを生成
 
 **タスク**:
-- [ ] データベーススキーマ拡張
-  - [ ] `contentGenerations`テーブル作成
-- [ ] 議事録直後提案機能
-  - [ ] `server/actions/content-suggestion.ts`
-  - [ ] 図解、PDFマニュアル、記事などの提案
-  - [ ] モーダル表示
-- [ ] 週次提案スケジューラー
-  - [ ] `app/api/cron/weekly-content-suggestions/route.ts`
-  - [ ] 過去1週間の分析
-  - [ ] 重要トピックの抽出
-- [ ] コンテンツ生成UI
-  - [ ] テンプレート選択
-  - [ ] 生成結果の編集
-  - [ ] エクスポート機能
-- [ ] ユーザー口調学習
-  - [ ] 過去のコンテンツから学習
-  - [ ] 口調を反映した生成
+- [x] データベーススキーマ拡張
+  - [x] `contentGenerations`テーブル作成
+- [x] 議事録直後提案機能
+  - [x] `server/actions/content-suggestion.ts`
+  - [x] 図解、PDFマニュアル、記事などの提案
+  - [x] モーダル表示
+- [x] 週次提案スケジューラー
+  - [x] `app/api/cron/weekly-content-suggestions/route.ts`
+  - [x] 過去1週間の分析
+  - [x] 重要トピックの抽出
+- [x] コンテンツ生成UI
+  - [x] テンプレート選択
+  - [x] 生成結果の編集
+  - [x] エクスポート機能
+- [x] ユーザー口調学習
+  - [x] 過去のコンテンツから学習
+  - [x] 口調を反映した生成
 
-**推定時間**: 10-14日  
-**リスク**: 中  
-**依存**: P3-3 (口調管理機能)  
+**推定時間**: 10-14日
+**リスク**: 中
+**依存**: P3-3 (口調管理機能)
 **参考**: `最強要件定義書.md` 4.6節
 
-#### P3-5: 組織共有機能
+#### P3-5: 組織共有機能 ✅ 完了
 **説明**: Googleアカウント単位での権限管理と自動アーカイブ
 
 **タスク**:
-- [ ] データベーススキーマ拡張
-  - [ ] `folderPermissions`テーブル作成
-  - [ ] `userRoles`テーブル作成
-  - [ ] `files`テーブルに`mode`カラム追加
-- [ ] 権限管理UI
-  - [ ] フォルダごとの共有ボタン
-  - [ ] メールアドレス入力
-  - [ ] 権限レベル選択（read, write, admin）
-- [ ] 権限チェックミドルウェア
-  - [ ] `server/middleware/permission-check.ts`
-- [ ] 自動アーカイブ機能
-  - [ ] `server/cron/archive-old-files.ts`
-  - [ ] 1年以上前のファイルを自動アーカイブ
-  - [ ] Vercel Cron設定
+- [x] データベーススキーマ拡張
+  - [x] `folderPermissions`テーブル作成
+  - [x] `userRoles`テーブル作成
+  - [x] `files`テーブルに`isArchived`/`sharedToTeam`カラム追加
+- [x] 権限管理UI
+  - [x] フォルダごとの共有ボタン
+  - [x] メールアドレス入力
+  - [x] 権限レベル選択（read, write, admin）
+- [x] 権限チェックミドルウェア
+  - [x] `server/middleware/permission-check.ts`
+- [x] 自動アーカイブ機能
+  - [x] `server/cron/archive-old-files.ts`
+  - [x] 1年以上前のファイルを自動アーカイブ
+  - [x] Vercel Cron設定
 
-**推定時間**: 7-10日  
-**リスク**: 中  
-**依存**: P1-1 (オンボーディング)  
+**推定時間**: 7-10日
+**リスク**: 中
+**依存**: P1-1 (オンボーディング)
 **参考**: `最強要件定義書.md` 4.3節
 
 ---
@@ -516,5 +519,5 @@
 
 ---
 
-**最終更新**: 2024年12月21日
+**最終更新**: 2026年1月8日
 

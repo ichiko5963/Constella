@@ -1,213 +1,307 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { OpeningLogo } from './opening-logo';
 
-const COLORS = [
-    { r: 24, g: 24, b: 48 },
-    { r: 88, g: 28, b: 135 },
-    { r: 192, g: 38, b: 211 },
-    { r: 59, g: 130, b: 246 },
-    { r: 6, g: 182, b: 212 },
-    { r: 236, g: 72, b: 153 }
-];
-
-class OpeningOrb {
-    index: number;
-    seed: number;
-    color: { r: number, g: number, b: number };
-    x: number = 0;
-    y: number = 0;
-    vx: number = 0;
-    vy: number = 0;
-    baseRadius: number = 0;
-    currentRadius: number = 0;
-
-    constructor(index: number) {
-        this.index = index;
-        this.seed = Math.random() * 100;
-        this.color = COLORS[index % COLORS.length];
-    }
-
-    reset(width: number, height: number) {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.3;
-        const minDim = Math.min(width, height);
-        this.baseRadius = minDim * (0.4 + Math.random() * 0.5);
-    }
-
-    update(width: number, height: number, t: number) {
-        const speedMultiplier = 0.15;
-
-        const noiseX = Math.sin(t * 0.001 + this.seed) * Math.cos(t * 0.002 + this.index);
-        const noiseY = Math.cos(t * 0.001 + this.seed) * Math.sin(t * 0.003 + this.index);
-
-        this.x += this.vx * speedMultiplier + noiseX * speedMultiplier;
-        this.y += this.vy * speedMultiplier + noiseY * speedMultiplier;
-
-        const margin = this.baseRadius * 0.5;
-        if (this.x < -margin) this.x = width + margin;
-        if (this.x > width + margin) this.x = -margin;
-        if (this.y < -margin) this.y = height + margin;
-        if (this.y > height + margin) this.y = -margin;
-
-        this.currentRadius = this.baseRadius + Math.sin(t * 0.5 + this.index) * (this.baseRadius * 0.1);
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        ctx.beginPath();
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.currentRadius);
-        const { r, g, b } = this.color;
-
-        gradient.addColorStop(0, `rgba(${Math.min(255, r + 50)}, ${Math.min(255, g + 50)}, ${Math.min(255, b + 50)}, 0.6)`);
-        gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 0.4)`);
-        gradient.addColorStop(0.8, `rgba(${r}, ${g}, ${b}, 0.15)`);
-        gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-
-        ctx.fillStyle = gradient;
-        ctx.globalCompositeOperation = 'screen';
-        ctx.arc(this.x, this.y, this.currentRadius, 0, Math.PI * 2);
-        ctx.fill();
-    }
+interface Star {
+    id: number;
+    x: number;
+    y: number;
+    targetX: number;
+    targetY: number;
+    size: number;
+    opacity: number;
+    delay: number;
+    isLogoStar: boolean;
 }
 
+interface ConstellationLine {
+    from: number;
+    to: number;
+    opacity: number;
+}
+
+// Constella logo points (normalized 0-1)
+const LOGO_POINTS = [
+    { x: 0.5, y: 0.2 },   // Top
+    { x: 0.3, y: 0.35 },  // Upper left
+    { x: 0.7, y: 0.35 },  // Upper right
+    { x: 0.2, y: 0.5 },   // Middle left
+    { x: 0.8, y: 0.5 },   // Middle right
+    { x: 0.35, y: 0.65 }, // Lower left
+    { x: 0.65, y: 0.65 }, // Lower right
+    { x: 0.5, y: 0.8 },   // Bottom
+];
+
+// Connections between logo points
+const LOGO_CONNECTIONS: [number, number][] = [
+    [0, 1], [0, 2],           // Top to upper sides
+    [1, 3], [2, 4],           // Upper to middle sides
+    [1, 2],                    // Connect upper left to right
+    [3, 5], [4, 6],           // Middle to lower sides
+    [5, 7], [6, 7],           // Lower to bottom
+    [5, 6],                    // Connect lower left to right
+    [0, 7],                    // Top to bottom (center line)
+];
+
 export function OpeningScreen({ onComplete }: { onComplete: () => void }) {
+    const [phase, setPhase] = useState<'scatter' | 'converge' | 'connect' | 'logo' | 'fadeout'>('scatter');
     const [opacity, setOpacity] = useState(1);
-    const [showContent, setShowContent] = useState(false);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const orbsRef = useRef<OpeningOrb[]>([]);
-    const timeRef = useRef(0);
-    const fadeOutTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [stars, setStars] = useState<Star[]>([]);
+    const [lines, setLines] = useState<ConstellationLine[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const animationRef = useRef<number | null>(null);
+    const startTimeRef = useRef<number>(0);
 
     const handleSkip = useCallback(() => {
-        if (fadeOutTimerRef.current) {
-            clearTimeout(fadeOutTimerRef.current);
-        }
         setOpacity(0);
         setTimeout(() => {
             onComplete();
         }, 300);
     }, [onComplete]);
 
+    // Initialize stars
     useEffect(() => {
-        // アニメーション開始
-        setTimeout(() => setShowContent(true), 300);
+        const container = containerRef.current;
+        if (!container) return;
 
-        // Escキーでスキップ
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const logoSize = Math.min(rect.width, rect.height) * 0.4;
+
+        // Create background stars
+        const bgStars: Star[] = Array.from({ length: 50 }, (_, i) => ({
+            id: i,
+            x: Math.random() * rect.width,
+            y: Math.random() * rect.height,
+            targetX: Math.random() * rect.width,
+            targetY: Math.random() * rect.height,
+            size: Math.random() * 2 + 1,
+            opacity: Math.random() * 0.5 + 0.2,
+            delay: Math.random() * 500,
+            isLogoStar: false,
+        }));
+
+        // Create logo stars
+        const logoStars: Star[] = LOGO_POINTS.map((point, i) => ({
+            id: 50 + i,
+            x: Math.random() * rect.width,
+            y: Math.random() * rect.height,
+            targetX: centerX + (point.x - 0.5) * logoSize,
+            targetY: centerY + (point.y - 0.5) * logoSize,
+            size: 6,
+            opacity: 0,
+            delay: i * 100,
+            isLogoStar: true,
+        }));
+
+        setStars([...bgStars, ...logoStars]);
+
+        // Keyboard listener
         const handleKeyPress = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                handleSkip();
-            }
+            if (e.key === 'Escape') handleSkip();
         };
         window.addEventListener('keydown', handleKeyPress);
 
-        // 3秒後にフェードアウト開始
-        fadeOutTimerRef.current = setTimeout(() => {
-            setOpacity(0);
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [handleSkip]);
+
+    // Animation phases
+    useEffect(() => {
+        startTimeRef.current = Date.now();
+
+        const timers = [
+            setTimeout(() => setPhase('converge'), 500),
+            setTimeout(() => setPhase('connect'), 1500),
+            setTimeout(() => setPhase('logo'), 2200),
+            setTimeout(() => setPhase('fadeout'), 3000),
             setTimeout(() => {
-                onComplete();
-            }, 500);
-        }, 2500);
+                setOpacity(0);
+                setTimeout(onComplete, 500);
+            }, 3500),
+        ];
 
-        const resize = () => {
-            if (canvasRef.current) {
-                canvasRef.current.width = window.innerWidth;
-                canvasRef.current.height = window.innerHeight;
-                orbsRef.current.forEach(orb => orb.reset(window.innerWidth, window.innerHeight));
-            }
-        };
+        return () => timers.forEach(clearTimeout);
+    }, [onComplete]);
 
-        window.addEventListener('resize', resize);
-        resize();
-
-        // Initialize Orbs
-        if (orbsRef.current.length === 0) {
-            const numOrbs = 8;
-            for (let i = 0; i < numOrbs; i++) {
-                orbsRef.current.push(new OpeningOrb(i));
-            }
-            orbsRef.current.forEach(orb => orb.reset(window.innerWidth, window.innerHeight));
+    // Animate stars
+    useEffect(() => {
+        if (phase === 'converge' || phase === 'connect' || phase === 'logo') {
+            setStars(prev => prev.map(star => {
+                if (star.isLogoStar) {
+                    const progress = Math.min(1, (Date.now() - startTimeRef.current - 500 - star.delay) / 800);
+                    const easeProgress = 1 - Math.pow(1 - Math.max(0, progress), 3);
+                    return {
+                        ...star,
+                        x: star.x + (star.targetX - star.x) * easeProgress,
+                        y: star.y + (star.targetY - star.y) * easeProgress,
+                        opacity: Math.min(1, progress * 2),
+                    };
+                }
+                return star;
+            }));
         }
+    }, [phase]);
 
+    // Draw constellation lines
+    useEffect(() => {
+        if (phase === 'connect' || phase === 'logo' || phase === 'fadeout') {
+            const newLines: ConstellationLine[] = LOGO_CONNECTIONS.map(([from, to], i) => ({
+                from: 50 + from,
+                to: 50 + to,
+                opacity: Math.min(1, (Date.now() - startTimeRef.current - 1500 - i * 50) / 300),
+            }));
+            setLines(newLines);
+        }
+    }, [phase]);
+
+    // Animation loop
+    useEffect(() => {
         const animate = () => {
-            if (!canvasRef.current) return;
-            const ctx = canvasRef.current.getContext('2d');
-            if (!ctx) return;
+            setStars(prev => prev.map(star => {
+                if (star.isLogoStar && (phase === 'converge' || phase === 'connect')) {
+                    const elapsed = Date.now() - startTimeRef.current - 500 - star.delay;
+                    const progress = Math.min(1, Math.max(0, elapsed / 800));
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-            timeRef.current += 0.01;
+                    const startX = star.x;
+                    const startY = star.y;
 
-            // Clear Background
-            ctx.fillStyle = '#020205';
-            ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                    return {
+                        ...star,
+                        x: startX + (star.targetX - startX) * 0.1,
+                        y: startY + (star.targetY - startY) * 0.1,
+                        opacity: Math.min(1, progress * 2),
+                    };
+                }
+                // Twinkle background stars
+                if (!star.isLogoStar) {
+                    return {
+                        ...star,
+                        opacity: star.opacity + (Math.random() - 0.5) * 0.05,
+                    };
+                }
+                return star;
+            }));
 
-            // Draw Orbs
-            ctx.filter = 'blur(80px)';
-            orbsRef.current.forEach(orb => {
-                orb.update(canvasRef.current!.width, canvasRef.current!.height, timeRef.current);
-                orb.draw(ctx);
-            });
-            ctx.filter = 'none';
-
-            animationFrameRef.current = requestAnimationFrame(animate);
+            if (phase !== 'fadeout') {
+                animationRef.current = requestAnimationFrame(animate);
+            }
         };
 
-        animate();
+        animationRef.current = requestAnimationFrame(animate);
 
         return () => {
-            if (fadeOutTimerRef.current) {
-                clearTimeout(fadeOutTimerRef.current);
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
             }
-            window.removeEventListener('resize', resize);
-            window.removeEventListener('keydown', handleKeyPress);
-            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
         };
-    }, [onComplete, handleSkip]);
+    }, [phase]);
+
+    const logoStars = stars.filter(s => s.isLogoStar);
 
     return (
-        <div 
-            className="fixed inset-0 z-[9999] transition-opacity duration-500"
+        <div
+            ref={containerRef}
+            className="fixed inset-0 z-[9999] bg-white transition-opacity duration-500"
             style={{ opacity }}
         >
-            <canvas
-                ref={canvasRef}
-                className="absolute inset-0 w-full h-full"
-            />
-            {/* Noise Overlay */}
-            <div 
-                className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.12] mix-blend-overlay"
-                style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`,
-                }}
-            />
             {/* Skip Button */}
             <button
                 onClick={handleSkip}
-                className="absolute top-6 right-6 z-50 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                className="absolute top-6 right-6 z-50 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-600 text-sm font-medium transition-all duration-200 hover:scale-105"
             >
-                スキップ (Esc)
+                Skip (Esc)
             </button>
 
-            {/* Content */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                <div 
+            {/* Stars */}
+            <svg className="absolute inset-0 w-full h-full">
+                {/* Background stars */}
+                {stars.filter(s => !s.isLogoStar).map(star => (
+                    <circle
+                        key={star.id}
+                        cx={star.x}
+                        cy={star.y}
+                        r={star.size}
+                        fill="#000"
+                        opacity={Math.max(0.1, Math.min(0.4, star.opacity))}
+                        className="animate-twinkle"
+                        style={{ animationDelay: `${star.delay}ms` }}
+                    />
+                ))}
+
+                {/* Constellation lines */}
+                {lines.map((line, i) => {
+                    const fromStar = stars.find(s => s.id === line.from);
+                    const toStar = stars.find(s => s.id === line.to);
+                    if (!fromStar || !toStar || line.opacity <= 0) return null;
+
+                    return (
+                        <line
+                            key={`line-${i}`}
+                            x1={fromStar.targetX}
+                            y1={fromStar.targetY}
+                            x2={toStar.targetX}
+                            y2={toStar.targetY}
+                            stroke="#000"
+                            strokeWidth="1"
+                            opacity={Math.min(0.3, line.opacity * 0.3)}
+                            className="animate-constellation-draw"
+                            style={{ animationDelay: `${i * 50}ms` }}
+                        />
+                    );
+                })}
+
+                {/* Logo stars */}
+                {logoStars.map(star => (
+                    <g key={star.id}>
+                        {/* Glow */}
+                        <circle
+                            cx={star.targetX}
+                            cy={star.targetY}
+                            r={star.size * 2}
+                            fill="url(#starGlow)"
+                            opacity={star.opacity * 0.5}
+                        />
+                        {/* Star */}
+                        <circle
+                            cx={star.targetX}
+                            cy={star.targetY}
+                            r={star.size}
+                            fill="#000"
+                            opacity={star.opacity}
+                        />
+                    </g>
+                ))}
+
+                {/* Gradient definitions */}
+                <defs>
+                    <radialGradient id="starGlow">
+                        <stop offset="0%" stopColor="#000" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#000" stopOpacity="0" />
+                    </radialGradient>
+                </defs>
+            </svg>
+
+            {/* Logo Text */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div
                     className={`text-center transition-all duration-1000 ${
-                        showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                        phase === 'logo' || phase === 'fadeout'
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 translate-y-4'
                     }`}
                 >
-                    <div className="relative mb-8 mx-auto flex flex-col items-center gap-4">
-                        <OpeningLogo />
-                        <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-secondary">
-                            Actory
-                        </h1>
-                    </div>
-                    <div className="h-1 w-32 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto opacity-60" />
+                    <h1 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-4">
+                        Constella
+                    </h1>
+                    <p className="text-lg text-gray-500 font-light tracking-wide">
+                        Connect context, like stars.
+                    </p>
                 </div>
             </div>
         </div>
     );
 }
-
-

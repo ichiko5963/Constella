@@ -1,4 +1,4 @@
-# Googleカレンダー連携の設定方法
+# Google認証・カレンダー連携の設定方法
 
 ## エラー: redirect_uri_mismatch の解決方法
 
@@ -6,23 +6,27 @@
 
 ## 解決手順
 
-### 1. リダイレクトURIの自動決定
-
-アプリは以下のロジックでリダイレクトURIを自動決定します：
-- **本番環境**: `NEXT_PUBLIC_APP_URL`環境変数が設定されている場合はそれを使用
-- **開発環境**: 環境変数が設定されていない場合は、リクエストのオリジン（`http://localhost:3000`など）を自動使用
-
-これにより、開発環境では環境変数を設定せずに動作します。
-
-### 2. Google Cloud Consoleで設定を確認・追加
+### 1. Google Cloud Consoleで必要なリダイレクトURIを追加
 
 1. [Google Cloud Console](https://console.cloud.google.com/)にアクセス
 2. プロジェクトを選択
 3. 「APIとサービス」→「認証情報」に移動
 4. OAuth 2.0 クライアント IDを選択（または新規作成）
-5. 「承認済みのリダイレクト URI」に以下を追加：
-   - **開発環境**: `http://localhost:3000/api/calendar/google/callback`
-   - **本番環境**: `https://your-domain.com/api/calendar/google/callback`（実際のドメインに置き換え）
+5. **「承認済みのリダイレクト URI」に以下を全て追加**：
+
+#### ログイン用（Next-Auth）
+- **開発環境**: `http://localhost:3000/api/auth/callback/google`
+- **本番環境**: `https://your-domain.com/api/auth/callback/google`
+
+#### Googleカレンダー連携用
+- **開発環境**: `http://localhost:3000/api/calendar/google/callback`
+- **本番環境**: `https://your-domain.com/api/calendar/google/callback`
+
+### 2. リダイレクトURIの自動決定
+
+アプリは以下のロジックでリダイレクトURIを自動決定します：
+- **本番環境**: `NEXT_PUBLIC_APP_URL`環境変数が設定されている場合はそれを使用
+- **開発環境**: 環境変数が設定されていない場合は、リクエストのオリジン（`http://localhost:3000`など）を自動使用
 
 ### 3. 環境変数の設定（本番環境のみ必須）
 

@@ -30,10 +30,11 @@ export async function getSummaryTemplates() {
     }
 
     try {
+        const userId = session.user.id;
         // システムデフォルトとユーザー独自のテンプレートを取得
         const templates = await db.query.summaryTemplates.findMany({
             where: (templates, { or, eq, isNull }) => or(
-                eq(templates.userId, session.user.id),
+                eq(templates.userId, userId),
                 isNull(templates.userId)
             ),
             orderBy: (templates, { desc, asc }) => [
@@ -201,10 +202,11 @@ export async function getDefaultSummaryTemplate() {
     }
 
     try {
+        const userId = session.user.id;
         // ユーザーのデフォルトテンプレートを探す
         const userDefault = await db.query.summaryTemplates.findFirst({
             where: (templates, { and, eq }) => and(
-                eq(templates.userId, session.user.id),
+                eq(templates.userId, userId),
                 eq(templates.isDefault, true)
             ),
         });

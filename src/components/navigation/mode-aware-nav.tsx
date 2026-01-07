@@ -3,54 +3,63 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "@/components/navigation/nav-link";
 import {
-  LayoutDashboard,
-  Folder,
+  Star,
+  Stars,
   Mic,
   Calendar,
   MessageSquare,
   Settings,
   CheckSquare,
   Sparkles,
-  Users,
+  Network,
+  HelpCircle,
+  Share2,
   Building2,
+  Home,
 } from "lucide-react";
 
 type Mode = "personal" | "team";
 
+// Stella = Context in Constella terminology
 const personalNav = [
-  { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
-  { href: "/projects", label: "コンテキスト", icon: Folder },
-  { href: "/recordings", label: "録音", icon: Mic },
-  { href: "/calendar", label: "カレンダー", icon: Calendar },
-  { href: "/tasks", label: "タスク管理", icon: CheckSquare },
-  { href: "/chat", label: "AIチャット", icon: MessageSquare },
-  { href: "/content", label: "コンテンツ生成", icon: Sparkles },
-  { href: "/settings", label: "設定", icon: Settings },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/projects", label: "Stella", icon: Star },
+  { href: "/recordings", label: "Record", icon: Mic },
+  { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/chat", label: "AI Chat", icon: MessageSquare },
+  { href: "/content", label: "Generate", icon: Sparkles },
+  { href: "/graph", label: "Constellation", icon: Network },
+  { href: "/context", label: "Connect", icon: Stars },
+  { href: "/tone", label: "Tone", icon: HelpCircle },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const teamNav = [
-  { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
-  { href: "/projects", label: "コンテキスト", icon: Folder },
-  { href: "/recordings", label: "録音", icon: Mic },
-  { href: "/calendar", label: "カレンダー", icon: Calendar },
-  { href: "/tasks", label: "タスク管理", icon: CheckSquare },
-  { href: "/chat", label: "AIチャット", icon: MessageSquare },
-  { href: "/content", label: "コンテンツ生成", icon: Sparkles },
-  // 組織専用導線
-  { href: "/onboarding", label: "組織セットアップ", icon: Building2 },
-  { href: "/settings", label: "メンバー招待", icon: Users },
-  { href: "/settings", label: "設定", icon: Settings },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/projects", label: "Stella", icon: Star },
+  { href: "/recordings", label: "Record", icon: Mic },
+  { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/chat", label: "AI Chat", icon: MessageSquare },
+  { href: "/content", label: "Generate", icon: Sparkles },
+  { href: "/graph", label: "Constellation", icon: Network },
+  { href: "/context", label: "Connect", icon: Stars },
+  { href: "/tone", label: "Tone", icon: HelpCircle },
+  { href: "/sharing", label: "Share", icon: Share2 },
+  { href: "/onboarding", label: "Setup", icon: Building2 },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function ModeAwareNav() {
   const [mode, setMode] = useState<Mode>("personal");
 
   useEffect(() => {
-    const saved = localStorage.getItem("actoryMode") as Mode | null;
+    const saved = localStorage.getItem("constellaMode") as Mode | null;
     if (saved === "personal" || saved === "team") {
       setMode(saved);
     }
-    // 変更イベントを監視（TopBarからのカスタムイベント + storageイベント）
+    // 変更イベントを監視
     const handler = (event: Event) => {
       if (event instanceof CustomEvent) {
         const val = event.detail as Mode;
@@ -58,13 +67,13 @@ export function ModeAwareNav() {
       }
     };
     const storageHandler = () => {
-      const next = localStorage.getItem("actoryMode") as Mode | null;
+      const next = localStorage.getItem("constellaMode") as Mode | null;
       if (next === "personal" || next === "team") setMode(next);
     };
-    window.addEventListener("actory-mode-change", handler as EventListener);
+    window.addEventListener("constella-mode-change", handler as EventListener);
     window.addEventListener("storage", storageHandler);
     return () => {
-      window.removeEventListener("actory-mode-change", handler as EventListener);
+      window.removeEventListener("constella-mode-change", handler as EventListener);
       window.removeEventListener("storage", storageHandler);
     };
   }, []);
@@ -72,21 +81,20 @@ export function ModeAwareNav() {
   const items = mode === "team" ? teamNav : personalNav;
 
   return (
-    <nav className="flex-1 px-4 space-y-1">
+    <nav className="flex-1 px-3 space-y-1">
       {items.map((item) => {
         const Icon = item.icon;
         return (
           <NavLink
             key={item.href + item.label}
             href={item.href}
-            className="flex items-center px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-xl transition-all duration-200 group"
+            className="flex items-center px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-all duration-200 group"
           >
-            <Icon className="mr-3 h-5 w-5 text-gray-500 group-hover:text-primary transition-colors" />
-            {item.label}
+            <Icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+            <span className="text-sm font-medium">{item.label}</span>
           </NavLink>
         );
       })}
     </nav>
   );
 }
-

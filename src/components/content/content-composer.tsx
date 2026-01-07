@@ -3,11 +3,21 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Folder, ListChecks, Upload } from "lucide-react";
+import { Sparkles, Folder, ListChecks, Upload, Loader2, Copy, Download, CheckCircle } from "lucide-react";
+import { generateContent } from "@/server/actions/content-generation";
+import { toast } from "sonner";
 
 type ContentType = "x" | "note" | "newsletter" | "line" | "pdf" | "youtube";
+
+const contentTypeMapping: Record<ContentType, 'x_post' | 'note_article' | 'youtube_script' | 'pdf_manual' | 'diagram'> = {
+  x: 'x_post',
+  note: 'note_article',
+  newsletter: 'note_article',
+  line: 'x_post',
+  pdf: 'pdf_manual',
+  youtube: 'youtube_script',
+};
 
 interface Project {
   id: number;
@@ -19,12 +29,20 @@ interface ContentComposerProps {
   projects: Project[];
 }
 
+interface GeneratedContent {
+  type: ContentType;
+  content: string;
+  title: string;
+}
+
 export function ContentComposer({ projects }: ContentComposerProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(projects[0]?.id ?? null);
   const [selectedTypes, setSelectedTypes] = useState<ContentType[]>(["x", "note", "newsletter", "line"]);
   const [prompt, setPrompt] = useState("");
   const [sources, setSources] = useState("");
   const [oldNotes, setOldNotes] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedContents, setGeneratedContents] = useState<GeneratedContent[]>([]);
 
   const projectMap = useMemo(() => new Map(projects.map((p) => [p.id, p.name])), [projects]);
 
@@ -34,8 +52,49 @@ export function ContentComposer({ projects }: ContentComposerProps) {
     );
   };
 
-  const handleGenerate = () => {
-    alert("コンテンツ生成リクエストを送信しました（サンプルUI）");
+  const handleGenerate = async () => {
+    if (!selectedProjectId || selectedTypes.length === 0) {
+      toast.error("プロジェクトとコンテンツタイプを選択してください");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGeneratedContents([]);
+
+    try {
+      const results: GeneratedContent[] = [];
+
+      for (const type of selectedTypes) {
+        const apiType = contentTypeMapping[type];
+        const instructions = `${prompt}\n\n追加ソース:\n${sources}\n\n過去のNote記事:\n${oldNotes}`;
+
+        const result = await generateContent(
+          apiType,
+          null,
+          `${projectMap.get(selectedProjectId)} - ${type}`,
+          instructions
+        );
+
+        results.push({
+          type,
+          content: result.content,
+          title: `${projectMap.get(selectedProjectId)} - ${type}`,
+        });
+      }
+
+      setGeneratedContents(results);
+      toast.success(`${results.length}件のコンテンツを生成しました`);
+    } catch (error) {
+      console.error("Failed to generate content:", error);
+      toast.error("コンテンツ生成に失敗しました");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyToClipboard = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast.success("クリップボードにコピーしました");
   };
 
   return (
@@ -140,11 +199,62 @@ export function ContentComposer({ projects }: ContentComposerProps) {
         </div>
 
         <div className="flex justify-end">
-          <Button size="lg" onClick={handleGenerate} disabled={!selectedProjectId}>
-            コンテンツ生成を依頼する
+          <Button
+            size="lg"
+            onClick={handleGenerate}
+            disabled={!selectedProjectId || isGenerating || selectedTypes.length === 0}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              'コンテンツ生成を依頼する'
+            )}
           </Button>
         </div>
       </Card>
+
+      {/* 生成結果表示エリア */}
+      {generatedContents.length > 0 && (
+        <Card className="p-4 xl:col-span-3 space-y-6">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <h3 className="font-semibold">生成されたコンテンツ</h3>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {generatedContents.map((item, index) => (
+              <Card key={index} className="p-4 border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-medium text-sm">
+                    {item.type === 'x' && 'X投稿'}
+                    {item.type === 'note' && 'Note記事'}
+                    {item.type === 'newsletter' && 'メルマガ'}
+                    {item.type === 'line' && '公式LINE'}
+                    {item.type === 'pdf' && 'PDFマニュアル'}
+                    {item.type === 'youtube' && 'YouTube台本'}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(item.content)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="bg-black/20 rounded-lg p-3 max-h-64 overflow-y-auto">
+                  <pre className="text-sm whitespace-pre-wrap text-gray-300">
+                    {item.content}
+                  </pre>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

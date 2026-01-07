@@ -12,29 +12,29 @@
     {
       "idx": 1,
       "version": "6",
-      "when": 1766392351975,
-      "tag": "0001_careless_vanisher",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
       "when": 1766392528359,
       "tag": "0002_loud_warhawk",
       "breakpoints": true
     },
     {
-      "idx": 3,
+      "idx": 2,
       "version": "6",
       "when": 1766449541413,
       "tag": "0003_yummy_doctor_octopus",
       "breakpoints": true
     },
     {
-      "idx": 4,
+      "idx": 3,
       "version": "6",
       "when": 1766451072975,
       "tag": "0004_absent_thanos",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1767815184157,
+      "tag": "0005_complex_scarecrow",
       "breakpoints": true
     }
   ]

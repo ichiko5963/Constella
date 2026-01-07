@@ -106,9 +106,16 @@ export function ProjectSelector({
               <h3 className="font-semibold mb-3">フォルダ</h3>
               <FolderTree
                 projectId={selectedProjectId}
-                selectedPath={selectedPath}
-                onSelect={setSelectedPath}
+                onFileSelect={(fileId) => {
+                  // 選択されたファイルIDをパスに変換（簡略化のため、ファイル名として保持）
+                  setSelectedPath([String(fileId)]);
+                }}
               />
+              {selectedPath.length > 0 && (
+                <div className="text-sm text-muted-foreground mt-2">
+                  選択中: {selectedPath.join(' > ')}
+                </div>
+              )}
             </div>
           )}
 

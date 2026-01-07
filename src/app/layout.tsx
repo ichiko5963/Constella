@@ -20,16 +20,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Actory | AI-Powered Meeting Minutes & Task Management",
-    template: "%s | Actory"
+    default: "Constella | Connect context, like stars.",
+    template: "%s | Constella"
   },
-  description: "Automate your meetings with Actory. Record, transcribe, summarize, and extract tasks instantly.",
+  description: "Constella - Transform your thoughts into constellations of meaning. Record, connect, and discover the patterns in your context.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Actory',
+    statusBarStyle: 'default',
+    title: 'Constella',
   },
   viewport: {
     width: 'device-width',

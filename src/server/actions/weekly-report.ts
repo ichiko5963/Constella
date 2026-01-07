@@ -21,6 +21,8 @@ export async function generateWeeklyReport(weekStartDate?: Date): Promise<{ succ
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id;
+
     try {
         // 週の開始日と終了日を計算
         const start = weekStartDate || getWeekStart(new Date());
@@ -33,7 +35,7 @@ export async function generateWeeklyReport(weekStartDate?: Date): Promise<{ succ
             // 会議数と合計時間
             db.query.meetingNotes.findMany({
                 where: (notes, { and, eq, gte, lte }) => and(
-                    eq(notes.userId, session.user.id),
+                    eq(notes.userId, userId),
                     gte(notes.meetingDate, start),
                     lte(notes.meetingDate, end)
                 ),
@@ -44,7 +46,7 @@ export async function generateWeeklyReport(weekStartDate?: Date): Promise<{ succ
             // タスク数
             db.query.tasks.findMany({
                 where: (tasks, { and, eq, gte, lte }) => and(
-                    eq(tasks.userId, session.user.id),
+                    eq(tasks.userId, userId),
                     gte(tasks.createdAt, start),
                     lte(tasks.createdAt, end)
                 ),
@@ -52,7 +54,7 @@ export async function generateWeeklyReport(weekStartDate?: Date): Promise<{ succ
             // 録音データ
             db.query.recordings.findMany({
                 where: (recordings, { and, eq, gte, lte }) => and(
-                    eq(recordings.userId, session.user.id),
+                    eq(recordings.userId, userId),
                     gte(recordings.createdAt, start),
                     lte(recordings.createdAt, end)
                 ),
@@ -107,7 +109,7 @@ export async function generateWeeklyReport(weekStartDate?: Date): Promise<{ succ
 
         // 週間レポートを保存
         const [inserted] = await db.insert(weeklyReports).values({
-            userId: session.user.id,
+            userId,
             weekStartDate: start,
             weekEndDate: end,
             totalMeetings,
@@ -140,9 +142,11 @@ export async function getWeeklyReports(limit: number = 10) {
         return { success: false, error: 'Unauthorized' };
     }
 
+    const userId = session.user.id;
+
     try {
         const reports = await db.query.weeklyReports.findMany({
-            where: eq(weeklyReports.userId, session.user.id),
+            where: eq(weeklyReports.userId, userId),
             orderBy: (reports, { desc }) => [desc(reports.weekStartDate)],
             limit,
         });

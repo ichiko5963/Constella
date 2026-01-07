@@ -157,6 +157,105 @@ export async function completeContextSession(sessionId: number) {
 }
 
 /**
+ * コンテキストセッションをスキップ
+ */
+export async function skipContextSession(sessionId: number) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    await db
+      .update(contextManagementSessions)
+      .set({
+        status: 'skipped',
+        completedAt: new Date(),
+      })
+      .where(eq(contextManagementSessions.id, sessionId));
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to skip context session:', error);
+    throw new Error('Failed to skip context session');
+  }
+}
+
+/**
+ * 新しいコンテキストセッションを生成
+ */
+export async function generateContextSession() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 今日追加された議事録を取得
+    const newNotes = await db
+      .select()
+      .from(meetingNotes)
+      .where(and(
+        eq(meetingNotes.userId, session.user.id),
+        gte(meetingNotes.createdAt, today)
+      ));
+
+    // 今日追加された録音を取得
+    const newRecordings = await db
+      .select()
+      .from(recordings)
+      .where(and(
+        eq(recordings.userId, session.user.id),
+        gte(recordings.createdAt, today)
+      ));
+
+    if (newNotes.length === 0 && newRecordings.length === 0) {
+      return null; // 今日追加されたデータがない
+    }
+
+    // データをまとめる
+    const recentData = {
+      notes: newNotes.map(n => ({
+        title: n.title,
+        summary: n.summary,
+        agendaItems: n.agendaItems,
+      })),
+      recordings: newRecordings.map(r => ({
+        duration: r.duration,
+        transcription: r.transcription?.substring(0, 500),
+      })),
+    };
+
+    // 質問を生成
+    const result = await generateContextQuestions(JSON.stringify(recentData));
+
+    // セッションを作成
+    const [contextSession] = await db
+      .insert(contextManagementSessions)
+      .values({
+        userId: session.user.id,
+        targetFileIds: JSON.stringify([
+          ...newNotes.map(n => n.fileId),
+          ...newRecordings.map(r => r.fileId),
+        ]),
+        questions: JSON.stringify(result.questions),
+        responses: JSON.stringify({}),
+        status: 'active',
+        createdAt: new Date(),
+      })
+      .returning();
+
+    return contextSession;
+  } catch (error) {
+    console.error('Failed to generate context session:', error);
+    throw new Error('Failed to generate context session');
+  }
+}
+
+/**
  * アクティブなコンテキストセッションを取得
  */
 export async function getActiveContextSession() {
@@ -166,22 +265,22 @@ export async function getActiveContextSession() {
   }
 
   try {
-    const activeSession = await db.query.contextManagementSessions.findFirst({
+    // 今日のセッションを取得（アクティブまたは完了/スキップ済み）
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todaySession = await db.query.contextManagementSessions.findFirst({
       where: and(
         eq(contextManagementSessions.userId, session.user.id),
-        eq(contextManagementSessions.status, 'active')
+        gte(contextManagementSessions.createdAt, today)
       ),
     });
 
-    if (!activeSession) {
+    if (!todaySession) {
       return null;
     }
 
-    return {
-      ...activeSession,
-      questions: JSON.parse(activeSession.questions || '[]'),
-      responses: JSON.parse(activeSession.responses || '{}'),
-    };
+    return todaySession;
   } catch (error) {
     console.error('Failed to get active context session:', error);
     throw new Error('Failed to get active context session');
@@ -235,6 +334,7 @@ export async function chatWithVFS(message: string, conversationHistory: any[] = 
       const toolResults = [];
 
       for (const toolCall of responseMessage.tool_calls) {
+        if (toolCall.type !== 'function') continue;
         const toolName = toolCall.function.name;
         const toolArgs = JSON.parse(toolCall.function.arguments);
 

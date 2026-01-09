@@ -13,42 +13,44 @@ interface DroppableColumnProps {
     isEmpty?: boolean;
     emptyMessage?: React.ReactNode;
     taskIds?: number[];
-    gradient?: string;
+    bgColor?: string;
     borderColor?: string;
     textColor?: string;
+    badgeColor?: string;
 }
 
-export function DroppableColumn({ 
-    id, 
-    title, 
-    count, 
-    children, 
+export function DroppableColumn({
+    id,
+    title,
+    count,
+    children,
     className,
     isEmpty = false,
     emptyMessage = 'タスクをドラッグ&ドロップ',
     taskIds = [],
-    gradient = 'from-gray-500/20 via-gray-400/15 to-gray-500/20',
-    borderColor = 'border-white/10',
-    textColor = 'text-white'
+    bgColor = 'bg-gray-50',
+    borderColor = 'border-gray-200',
+    textColor = 'text-gray-700',
+    badgeColor = 'bg-gray-200 text-gray-700'
 }: DroppableColumnProps) {
     const { setNodeRef, isOver } = useDroppable({
         id,
     });
 
     return (
-        <div 
+        <div
             ref={setNodeRef}
             className={cn(
-                "flex flex-col h-full rounded-lg p-4 glass border transition-all relative overflow-hidden",
-                `bg-gradient-to-br ${gradient}`,
+                "flex flex-col h-full rounded-xl p-4 border transition-all",
+                bgColor,
                 borderColor,
-                isOver && "border-primary border-2 scale-[1.02] shadow-lg shadow-primary/20",
+                isOver && "border-gray-900 ring-2 ring-gray-900/20 scale-[1.01]",
                 className
             )}
         >
-            <div className="flex items-center justify-between mb-4 relative z-10">
-                <h3 className={cn("font-bold text-lg", textColor)}>{title}</h3>
-                <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-white shadow-sm border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className={cn("font-semibold text-base", textColor)}>{title}</h3>
+                <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium", badgeColor)}>
                     {count}
                 </span>
             </div>
@@ -58,12 +60,12 @@ export function DroppableColumn({
                 items={taskIds}
                 strategy={verticalListSortingStrategy}
             >
-                <div 
+                <div
                     className={cn(
-                        "flex-1 space-y-3 min-h-[200px] p-2 rounded-lg transition-colors relative z-10",
-                        isOver && "bg-primary/20 backdrop-blur-sm"
+                        "flex-1 space-y-3 min-h-[200px] p-2 rounded-lg transition-colors",
+                        isOver && "bg-gray-100"
                     )}
-                    style={{ 
+                    style={{
                         minHeight: '200px',
                     }}
                 >

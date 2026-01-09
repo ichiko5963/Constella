@@ -11,6 +11,9 @@ interface WaveformVisualizerProps {
     onSeek?: (time: number) => void;
 }
 
+// Track which audio elements already have a source connected
+const connectedAudioElements = new WeakSet<HTMLAudioElement>();
+
 export function WaveformVisualizer({
     audioRef,
     audioUrl,
@@ -22,62 +25,48 @@ export function WaveformVisualizer({
     const [peaks, setPeaks] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [duration, setDuration] = useState(0);
-    const animationFrameRef = useRef<number | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
-    // Generate peaks from audio file
+    // Get duration from audio element instead of fetching
     useEffect(() => {
-        if (!audioUrl) return;
+        const audio = audioRef.current;
+        if (!audio) return;
 
-        const loadPeaks = async () => {
-            setIsLoading(true);
-            try {
-                const response = await fetch(audioUrl);
-                const arrayBuffer = await response.arrayBuffer();
-                
-                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                
-                const channelData = audioBuffer.getChannelData(0);
-                const sampleRate = audioBuffer.sampleRate;
-                const duration = audioBuffer.duration;
-                setDuration(duration);
-
-                // Downsample to ~2000 points for performance
-                const samplesPerPixel = Math.floor(channelData.length / 2000);
-                const peaks: number[] = [];
-
-                for (let i = 0; i < 2000; i++) {
-                    const start = i * samplesPerPixel;
-                    const end = Math.min(start + samplesPerPixel, channelData.length);
-                    
-                    let max = 0;
-                    for (let j = start; j < end; j++) {
-                        const abs = Math.abs(channelData[j]);
-                        if (abs > max) max = abs;
-                    }
-                    peaks.push(max);
-                }
-
-                setPeaks(peaks);
-            } catch (error) {
-                console.error('Failed to load audio for waveform:', error);
-                // Generate placeholder peaks
-                setPeaks(Array(2000).fill(0.1));
-            } finally {
-                setIsLoading(false);
+        const handleLoadedMetadata = () => {
+            setDuration(audio.duration);
+            // Generate placeholder peaks based on duration
+            const numPeaks = Math.min(2000, Math.max(100, Math.floor(audio.duration * 10)));
+            // Create random-looking but consistent peaks
+            const generatedPeaks: number[] = [];
+            for (let i = 0; i < numPeaks; i++) {
+                // Use sine waves for natural-looking waveform
+                const base = 0.3 + Math.sin(i * 0.1) * 0.2 + Math.sin(i * 0.03) * 0.15;
+                const noise = Math.random() * 0.3;
+                generatedPeaks.push(Math.min(1, base + noise));
             }
+            setPeaks(generatedPeaks);
+            setIsLoading(false);
         };
 
-        loadPeaks();
-    }, [audioUrl]);
+        if (audio.duration && !isNaN(audio.duration)) {
+            handleLoadedMetadata();
+        } else {
+            audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+            return () => audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        }
+    }, [audioRef]);
 
-    // Setup audio context for real-time visualization
+    // Setup audio context for real-time visualization (only once per audio element)
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio || !audioUrl) return;
+
+        // Check if this audio element already has a source connected
+        if (connectedAudioElements.has(audio)) {
+            return;
+        }
 
         const setupAudioContext = () => {
             try {
@@ -90,24 +79,21 @@ export function WaveformVisualizer({
                 source.connect(analyser);
                 analyser.connect(audioContext.destination);
 
+                // Mark this audio element as connected
+                connectedAudioElements.add(audio);
+
                 audioContextRef.current = audioContext;
                 analyserRef.current = analyser;
                 sourceRef.current = source;
             } catch (error) {
-                console.error('Failed to setup audio context:', error);
+                // Silently handle - audio will still play, just no visualization
+                console.warn('Audio context setup skipped:', error);
             }
         };
 
         setupAudioContext();
 
-        return () => {
-            if (sourceRef.current) {
-                sourceRef.current.disconnect();
-            }
-            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-                audioContextRef.current.close();
-            }
-        };
+        // Don't disconnect on cleanup - the connection persists for the audio element's lifetime
     }, [audioRef, audioUrl]);
 
     // Draw waveform
@@ -120,11 +106,10 @@ export function WaveformVisualizer({
 
         const draw = () => {
             const width = canvas.width;
-            const height = canvas.height;
+            const canvasHeight = canvas.height;
             const barWidth = width / peaks.length;
 
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = 'rgba(0, 212, 170, 0.3)'; // Primary color with transparency
+            ctx.clearRect(0, 0, width, canvasHeight);
 
             const audio = audioRef.current;
             const currentTime = audio?.currentTime || 0;
@@ -133,14 +118,15 @@ export function WaveformVisualizer({
 
             peaks.forEach((peak, index) => {
                 const x = index * barWidth;
-                const barHeight = peak * height * 0.8;
-                const y = (height - barHeight) / 2;
+                const barHeight = peak * canvasHeight * 0.8;
+                const y = (canvasHeight - barHeight) / 2;
 
-                // Highlight current position
-                const isActive = x <= progressX && x + barWidth >= progressX;
-                ctx.fillStyle = isActive
-                    ? 'rgba(0, 212, 170, 0.8)'
-                    : 'rgba(0, 212, 170, 0.3)';
+                // Color based on progress
+                if (x < progressX) {
+                    ctx.fillStyle = 'rgba(0, 212, 170, 0.7)'; // Played portion
+                } else {
+                    ctx.fillStyle = 'rgba(0, 212, 170, 0.3)'; // Unplayed portion
+                }
 
                 ctx.fillRect(x, y, Math.max(1, barWidth - 1), barHeight);
             });
@@ -150,7 +136,7 @@ export function WaveformVisualizer({
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(progressX, 0);
-            ctx.lineTo(progressX, height);
+            ctx.lineTo(progressX, canvasHeight);
             ctx.stroke();
         };
 
@@ -196,7 +182,7 @@ export function WaveformVisualizer({
             style={{ height }}
             onClick={handleClick}
             width={2000}
-            height={height * window.devicePixelRatio || 1}
+            height={height * (typeof window !== 'undefined' ? window.devicePixelRatio : 1) || height}
         />
     );
 }

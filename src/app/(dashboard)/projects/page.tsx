@@ -1,25 +1,27 @@
 import { getProjects } from '@/server/actions/project';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Star, ArrowRight } from 'lucide-react';
 import { CreateProjectDialog } from './components/create-project-dialog';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Contexts',
-    description: 'コンテキストと録音を管理',
+    title: 'Stella | Constella',
+    description: 'あなたのコンテキスト（星）を管理',
 };
 
 export default async function ProjectsPage() {
     const projects = await getProjects();
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">コンテキスト</h1>
-                    <p className="text-gray-400">ナレッジコンテキストと録音を管理</p>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
+                        <Star className="w-8 h-8" />
+                        Stella
+                    </h1>
+                    <p className="text-gray-500 mt-1">あなたのコンテキスト（星）を管理</p>
                 </div>
                 <CreateProjectDialog />
             </div>
@@ -27,19 +29,22 @@ export default async function ProjectsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
                     <Link href={`/projects/${project.id}`} key={project.id} className="group">
-                        <Card className="glass border-white/10 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 h-full flex flex-col justify-between">
+                        <Card className="h-full flex flex-col justify-between group-hover:shadow-lg transition-all duration-200">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-xl font-semibold text-white group-hover:text-primary transition-colors flex justify-between items-start">
+                                <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+                                        <Star className="w-4 h-4 text-white" />
+                                    </div>
                                     {project.name}
                                 </CardTitle>
-                                <CardDescription className="line-clamp-2 text-gray-400 mt-2">
+                                <CardDescription className="line-clamp-2 text-gray-500 mt-2">
                                     {project.description || '説明がありません。'}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-xs text-gray-500 font-mono pt-4 border-t border-white/5 flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-primary/50"></div>
-                                    作成日: {project.createdAt.toLocaleDateString()}
+                                <div className="text-xs text-gray-400 pt-4 border-t border-gray-100 flex items-center justify-between">
+                                    <span>作成日: {project.createdAt.toLocaleDateString()}</span>
+                                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-900 -rotate-45 group-hover:rotate-0 transition-all" />
                                 </div>
                             </CardContent>
                         </Card>
@@ -47,8 +52,10 @@ export default async function ProjectsPage() {
                 ))}
 
                 {projects.length === 0 && (
-                    <div className="col-span-full text-center py-12 bg-black/20 glass rounded-xl border border-dashed border-white/10">
-                        <p className="text-gray-400">コンテキストが見つかりません。最初のコンテキストを作成しましょう！</p>
+                    <div className="col-span-full text-center py-16 rounded-xl border border-dashed border-gray-200 bg-gray-50">
+                        <Star className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Stellaがありません</h3>
+                        <p className="text-gray-500">最初のStellaを作成して、コンテキストを整理しましょう</p>
                     </div>
                 )}
             </div>

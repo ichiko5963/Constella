@@ -1,6 +1,6 @@
 /**
  * オンボーディングページ
- * P1-1: オンボーディング機能
+ * Constella setup wizard
  */
 
 'use client';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { generateFolderStructure, completeOnboarding } from '@/server/actions/onboarding';
 import { toast } from 'sonner';
+import { Star, Users, User, ChevronRight } from 'lucide-react';
 
 type PlanType = 'one' | 'company';
 type Step = 'plan' | 'business' | 'departments' | 'purpose' | 'preview';
@@ -80,9 +81,9 @@ export default function OnboardingPage() {
       });
       setFolderStructure(structure);
       setStep('preview');
-      toast.success('フォルダ構造を生成しました');
+      toast.success('Stella構造を生成しました');
     } catch (error) {
-      toast.error('フォルダ構造の生成に失敗しました');
+      toast.error('Stella構造の生成に失敗しました');
       console.error(error);
     } finally {
       setIsGenerating(false);
@@ -103,10 +104,10 @@ export default function OnboardingPage() {
         },
         folderStructure
       );
-      toast.success('オンボーディングが完了しました！');
+      toast.success('セットアップが完了しました！');
       router.push('/dashboard');
     } catch (error) {
-      toast.error('オンボーディングの完了に失敗しました');
+      toast.error('セットアップの完了に失敗しました');
       console.error(error);
     } finally {
       setIsCompleting(false);
@@ -115,12 +116,12 @@ export default function OnboardingPage() {
 
   const renderFolderTree = (folders: FolderStructure[], depth: number = 0) => {
     return (
-      <ul className={`space-y-1 ${depth > 0 ? 'ml-6 border-l pl-4' : ''}`}>
+      <ul className={`space-y-1 ${depth > 0 ? 'ml-6 border-l border-gray-200 pl-4' : ''}`}>
         {folders.map((folder, index) => (
           <li key={index}>
             <div className="flex items-center gap-2">
-              <span className="text-lg">📁</span>
-              <span className="font-medium">{folder.name}</span>
+              <Star className="w-4 h-4 text-gray-400" />
+              <span className="font-medium text-gray-900">{folder.name}</span>
             </div>
             {folder.children && folder.children.length > 0 && renderFolderTree(folder.children, depth + 1)}
           </li>
@@ -130,73 +131,80 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-2xl w-full bg-card rounded-xl shadow-lg p-8">
-        {/* ステップインジケーター */}
+    <div className="min-h-screen flex items-center justify-center bg-white p-4">
+      <div className="max-w-2xl w-full bg-white rounded-2xl border border-gray-200 shadow-xl p-8">
+        {/* Step Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             {['plan', 'business', 'purpose', 'preview'].map((s, i) => {
               const stepIndex = ['plan', 'business', 'departments', 'purpose', 'preview'].indexOf(step);
               const currentIndex = ['plan', 'business', 'departments', 'purpose', 'preview'].indexOf(s as Step);
               const isActive = stepIndex >= currentIndex;
-              
+
               return (
                 <div key={s} className="flex items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                      isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
+                      isActive ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'
                     }`}
                   >
                     {i + 1}
                   </div>
-                  {i < 3 && <div className={`w-12 h-1 ${isActive ? 'bg-primary' : 'bg-muted'}`} />}
+                  {i < 3 && <div className={`w-12 h-1 transition-colors ${isActive ? 'bg-gray-900' : 'bg-gray-100'}`} />}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* プラン選択 */}
+        {/* Plan Selection */}
         {step === 'plan' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h1 className="text-3xl font-bold mb-2">Actoryへようこそ！</h1>
-              <p className="text-muted-foreground">まず、使用プランを選択してください</p>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-900 flex items-center justify-center">
+                <Star className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Constellaへようこそ</h1>
+              <p className="text-gray-500">使用プランを選択してください</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => handlePlanSelect('one')}
-                className="p-6 border-2 rounded-lg hover:border-primary transition-colors text-left"
+                className="p-6 border-2 border-gray-200 rounded-xl hover:border-gray-900 transition-colors text-left group"
               >
-                <div className="text-2xl mb-2">👤</div>
-                <h3 className="font-bold mb-1">Actory for One</h3>
-                <p className="text-sm text-muted-foreground">個人用のナレッジ管理</p>
+                <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-gray-900 flex items-center justify-center mb-3 transition-colors">
+                  <User className="w-6 h-6 text-gray-600 group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1">Personal</h3>
+                <p className="text-sm text-gray-500">個人用のナレッジ管理</p>
               </button>
 
               <button
                 onClick={() => handlePlanSelect('company')}
-                className="p-6 border-2 rounded-lg hover:border-primary transition-colors text-left"
+                className="p-6 border-2 border-gray-200 rounded-xl hover:border-gray-900 transition-colors text-left group"
               >
-                <div className="text-2xl mb-2">🏢</div>
-                <h3 className="font-bold mb-1">Actory for Company</h3>
-                <p className="text-sm text-muted-foreground">チーム・組織用</p>
+                <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-gray-900 flex items-center justify-center mb-3 transition-colors">
+                  <Users className="w-6 h-6 text-gray-600 group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1">Team</h3>
+                <p className="text-sm text-gray-500">チーム・組織用</p>
               </button>
             </div>
           </div>
         )}
 
-        {/* 事業情報入力 */}
+        {/* Business Info */}
         {step === 'business' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">事業情報を入力</h2>
-              <p className="text-muted-foreground">御社の事業構造を教えてください</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">事業情報を入力</h2>
+              <p className="text-gray-500">御社の事業構造を教えてください</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <Label>事業数（1-10）</Label>
+                <Label className="text-gray-700">事業数（1-10）</Label>
                 <Input
                   type="number"
                   min={1}
@@ -209,7 +217,7 @@ export default function OnboardingPage() {
 
               {Array.from({ length: businessCount }).map((_, index) => (
                 <div key={index}>
-                  <Label>事業 {index + 1} の名前</Label>
+                  <Label className="text-gray-700">事業 {index + 1} の名前</Label>
                   <Input
                     value={businessNames[index] || ''}
                     onChange={(e) => {
@@ -228,26 +236,29 @@ export default function OnboardingPage() {
               <Button variant="outline" onClick={() => setStep('plan')}>
                 戻る
               </Button>
-              <Button onClick={handleNextFromBusiness}>次へ</Button>
+              <Button onClick={handleNextFromBusiness}>
+                次へ
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
             </div>
           </div>
         )}
 
-        {/* 部門情報入力 */}
+        {/* Departments Info */}
         {step === 'departments' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">部門情報を入力</h2>
-              <p className="text-muted-foreground">各事業の部門を教えてください</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">部門情報を入力</h2>
+              <p className="text-gray-500">各事業の部門を教えてください</p>
             </div>
 
             <div className="space-y-6">
               {businessNames.map((businessName, businessIndex) => (
-                <div key={businessIndex} className="border rounded-lg p-4 space-y-4">
-                  <h3 className="font-bold">{businessName}</h3>
-                  
+                <div key={businessIndex} className="border border-gray-200 rounded-xl p-4 space-y-4">
+                  <h3 className="font-bold text-gray-900">{businessName}</h3>
+
                   <div>
-                    <Label>部門数（1-10）</Label>
+                    <Label className="text-gray-700">部門数（1-10）</Label>
                     <Input
                       type="number"
                       min={1}
@@ -256,7 +267,7 @@ export default function OnboardingPage() {
                       onChange={(e) => {
                         const count = parseInt(e.target.value) || 1;
                         setDepartmentCounts({ ...departmentCounts, [businessIndex]: count });
-                        const newNames = Array(count).fill('').map((_, i) => 
+                        const newNames = Array(count).fill('').map((_, i) =>
                           departmentNames[businessIndex]?.[i] || ''
                         );
                         setDepartmentNames({ ...departmentNames, [businessIndex]: newNames });
@@ -267,7 +278,7 @@ export default function OnboardingPage() {
 
                   {Array.from({ length: departmentCounts[businessIndex] || 1 }).map((_, deptIndex) => (
                     <div key={deptIndex}>
-                      <Label>部門 {deptIndex + 1}</Label>
+                      <Label className="text-gray-700">部門 {deptIndex + 1}</Label>
                       <Input
                         value={departmentNames[businessIndex]?.[deptIndex] || ''}
                         onChange={(e) => {
@@ -289,17 +300,20 @@ export default function OnboardingPage() {
               <Button variant="outline" onClick={() => setStep('business')}>
                 戻る
               </Button>
-              <Button onClick={handleNextFromDepartments}>次へ</Button>
+              <Button onClick={handleNextFromDepartments}>
+                次へ
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
             </div>
           </div>
         )}
 
-        {/* 主な用途選択 */}
+        {/* Purpose Selection */}
         {step === 'purpose' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">主な用途を選択</h2>
-              <p className="text-muted-foreground">Actoryで何をしたいですか？（複数選択可）</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">主な用途を選択</h2>
+              <p className="text-gray-500">Constellaで何をしたいですか？（複数選択可）</p>
             </div>
 
             <div className="space-y-3">
@@ -310,7 +324,14 @@ export default function OnboardingPage() {
                 { value: 'content', label: 'コンテンツ生成' },
                 { value: 'other', label: 'その他' },
               ].map((option) => (
-                <label key={option.value} className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+                    mainPurpose.includes(option.value)
+                      ? 'border-gray-900 bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={mainPurpose.includes(option.value)}
@@ -321,9 +342,9 @@ export default function OnboardingPage() {
                         setMainPurpose(mainPurpose.filter(p => p !== option.value));
                       }
                     }}
-                    className="w-5 h-5"
+                    className="w-5 h-5 rounded border-gray-300"
                   />
-                  <span className="font-medium">{option.label}</span>
+                  <span className="font-medium text-gray-900">{option.label}</span>
                 </label>
               ))}
             </div>
@@ -336,21 +357,21 @@ export default function OnboardingPage() {
                 戻る
               </Button>
               <Button onClick={handleGenerateStructure} disabled={isGenerating || mainPurpose.length === 0}>
-                {isGenerating ? 'フォルダ構造を生成中...' : 'フォルダ構造を生成'}
+                {isGenerating ? 'Stella構造を生成中...' : 'Stella構造を生成'}
               </Button>
             </div>
           </div>
         )}
 
-        {/* プレビュー */}
+        {/* Preview */}
         {step === 'preview' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold mb-2">フォルダ構造のプレビュー</h2>
-              <p className="text-muted-foreground">自動生成されたフォルダ構造を確認してください</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Stella構造のプレビュー</h2>
+              <p className="text-gray-500">自動生成されたStella構造を確認してください</p>
             </div>
 
-            <div className="border rounded-lg p-6 bg-muted/20 max-h-96 overflow-y-auto">
+            <div className="border border-gray-200 rounded-xl p-6 bg-gray-50 max-h-96 overflow-y-auto">
               {renderFolderTree(folderStructure)}
             </div>
 
@@ -368,4 +389,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

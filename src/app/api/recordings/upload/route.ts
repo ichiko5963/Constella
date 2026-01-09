@@ -31,13 +31,17 @@ export async function POST(req: NextRequest) {
         }
 
         // ファイル形式チェック
+        // Note: MediaRecorder may return MIME types with codecs like "audio/webm;codecs=opus"
         const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/m4a', 'audio/webm', 'audio/ogg'];
-        const validExtensions = ['.mp3', '.wav', '.m4a', '.webm', '.ogg'];
+        const validExtensions = ['.mp3', '.wav', '.m4a', '.webm', '.ogg', '.mp4'];
         const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
-        const isValidType = validTypes.includes(file.type) || validExtensions.includes(fileExt);
+        // Extract base MIME type (before semicolon) for comparison
+        const baseMimeType = file.type.split(';')[0].trim();
+        const isValidType = validTypes.includes(baseMimeType) || validExtensions.includes(fileExt);
 
         if (!isValidType) {
-            return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
+            console.log('Invalid file type:', file.type, 'base:', baseMimeType, 'ext:', fileExt);
+            return NextResponse.json({ error: `Unsupported file type: ${file.type}` }, { status: 400 });
         }
 
         // ファイルサイズチェック（50MB制限）

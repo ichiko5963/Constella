@@ -7,11 +7,11 @@ import { eq, desc } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { PlayCircle, Clock } from 'lucide-react';
+import { Mic, Clock, Star } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'All Recordings',
-    description: 'Browse and search all your meeting recordings.',
+    title: 'Recordings | Constella',
+    description: 'Browse and search all your voice recordings.',
 };
 
 export default async function RecordingsPage() {
@@ -27,65 +27,85 @@ export default async function RecordingsPage() {
     });
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
-            <h1 className="text-3xl font-bold text-white tracking-tight">録音</h1>
+        <div className="max-w-7xl mx-auto space-y-8">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">録音</h1>
+                    <p className="text-gray-500 mt-1">あなたの思考を星として記録</p>
+                </div>
+            </div>
 
-            <div className="w-full mb-8">
+            <div className="w-full h-[320px]">
                 <RecorderTriggerCard />
             </div>
 
-            {/* 録音インポート機能 */}
-            <div className="mb-8">
-                <RecordingImport />
-            </div>
+            {/* Recording Import */}
+            <RecordingImport />
 
-            <div className="grid grid-cols-1 gap-8">
-                <Card className="glass border-white/10 bg-black/40">
-                    <CardHeader className="border-b border-white/5">
-                        <CardTitle className="text-white">すべての録音</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        {userRecordings.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500">
-                                <PlayCircle className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                <p>録音が見つかりません。プロジェクトを作成して録音を開始しましょう。</p>
+            {/* Recordings List */}
+            <Card>
+                <CardHeader className="border-b border-gray-100">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                        <Mic className="w-5 h-5" />
+                        すべての録音
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                    {userRecordings.length === 0 ? (
+                        <div className="text-center py-16">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                                <Mic className="w-8 h-8 text-gray-400" />
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {userRecordings.map((rec) => (
-                                    <Link key={rec.id} href={`/recordings/${rec.id}`}>
-                                        <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all duration-200 group">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                                    <PlayCircle className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-white font-medium group-hover:text-primary transition-colors">
-                                                        録音 {rec.transcription ? '(文字起こし済み)' : `#${rec.id}`}
-                                                    </h3>
-                                                    <p className="text-sm text-gray-400 flex items-center gap-2">
-                                                        <span className="truncate max-w-[200px]">{rec.project?.name || 'プロジェクトなし'}</span>
-                                                        <span>•</span>
-                                                        <span>{rec.createdAt.toLocaleDateString()}</span>
-                                                    </p>
-                                                </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">録音がありません</h3>
+                            <p className="text-gray-500 max-w-sm mx-auto">
+                                上のRecorderをタップして、思考を星として記録しましょう。
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {userRecordings.map((rec) => (
+                                <Link key={rec.id} href={`/recordings/${rec.id}`}>
+                                    <div className="flex items-center justify-between p-4 rounded-xl bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all duration-200 group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 group-hover:bg-gray-900 group-hover:text-white transition-colors">
+                                                <Mic className="w-5 h-5" />
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${rec.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                                                    rec.status === 'processing' ? 'bg-blue-500/10 text-blue-400 animate-pulse' :
-                                                        'bg-gray-500/10 text-gray-400'
-                                                    }`}>
-                                                    {rec.status}
-                                                </span>
+                                            <div>
+                                                <h3 className="text-gray-900 font-medium group-hover:text-gray-700 transition-colors">
+                                                    {rec.transcription ? '録音 (文字起こし済み)' : `録音 #${rec.id}`}
+                                                </h3>
+                                                <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                                                    {rec.project && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Star className="w-3 h-3" />
+                                                            {rec.project.name}
+                                                        </span>
+                                                    )}
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {rec.createdAt.toLocaleDateString()}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${
+                                                rec.status === 'completed'
+                                                    ? 'bg-gray-900 text-white'
+                                                    : rec.status === 'processing' || rec.status === 'transcribing'
+                                                        ? 'bg-gray-200 text-gray-700 animate-pulse'
+                                                        : 'bg-gray-100 text-gray-600'
+                                            }`}>
+                                                {rec.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }

@@ -12,26 +12,29 @@ import { useRouter } from 'next/navigation';
 
 // We map generic statuses to Kanban columns
 const COLUMNS = [
-    { 
-        id: 'pending', 
-        title: 'To Do', 
-        gradient: 'from-gray-500/20 via-gray-400/15 to-gray-500/20',
-        borderColor: 'border-gray-400/30',
-        textColor: 'text-gray-200'
+    {
+        id: 'pending',
+        title: 'To Do',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200',
+        textColor: 'text-gray-700',
+        badgeColor: 'bg-gray-200 text-gray-700'
     },
-    { 
-        id: 'in_progress', 
-        title: 'In Progress', 
-        gradient: 'from-blue-500/20 via-blue-400/15 to-blue-500/20',
-        borderColor: 'border-blue-400/30',
-        textColor: 'text-blue-200'
+    {
+        id: 'in_progress',
+        title: 'In Progress',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+        textColor: 'text-blue-700',
+        badgeColor: 'bg-blue-100 text-blue-700'
     },
-    { 
-        id: 'completed', 
-        title: 'Done', 
-        gradient: 'from-green-500/20 via-green-400/15 to-green-500/20',
-        borderColor: 'border-green-400/30',
-        textColor: 'text-green-200'
+    {
+        id: 'completed',
+        title: 'Done',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200',
+        textColor: 'text-green-700',
+        badgeColor: 'bg-green-100 text-green-700'
     },
 ];
 
@@ -170,9 +173,10 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                             count={colTasks.length}
                             isEmpty={colTasks.length === 0}
                             taskIds={colTasks.map(t => t.id)}
-                            gradient={col.gradient}
+                            bgColor={col.bgColor}
                             borderColor={col.borderColor}
                             textColor={col.textColor}
+                            badgeColor={col.badgeColor}
                         >
                             {colTasks.map(task => (
                                 <TaskCard key={task.id} task={task} />
@@ -192,12 +196,13 @@ export function TaskBoard({ initialTasks }: { initialTasks: Task[] }) {
                         <div>
                             <span className="block mb-2 text-2xl">✓</span>
                             タスクをここにドロップすると<br />
-                            <span className="text-green-400 font-semibold">完了として非表示</span>になります
+                            <span className="text-green-600 font-semibold">完了として非表示</span>になります
                         </div>
                     }
-                    gradient="from-green-500/20 via-green-400/15 to-green-500/20"
-                    borderColor="border-green-400/30"
-                    textColor="text-green-200"
+                    bgColor="bg-green-50"
+                    borderColor="border-green-200"
+                    textColor="text-green-700"
+                    badgeColor="bg-green-100 text-green-700"
                 >
                     {/* Done列にはタスクは表示されない */}
                     {null}

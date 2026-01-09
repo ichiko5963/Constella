@@ -9,16 +9,12 @@ import { motion, AnimatePresence } from "framer-motion";
 export function GlobalRecorderManager() {
     const { isRecording, isImmersiveOpen, openImmersive } = useRecording();
 
-    // If immersive is open, the FAB should probably be hidden or transformed?
-    // Actually, if immersive is open, the full screen overlay covers everything, so z-index will handle it.
-    // But let's hide the FAB when immersive is open to be clean.
-
     return (
         <>
-            {/* The Recorder Component (Controlled by Context for visibility) */}
+            {/* The Recorder Component */}
             <AudioRecorder />
 
-            {/* Floating Action Button */}
+            {/* Floating Action Button - Constella Design */}
             <AnimatePresence>
                 {!isImmersiveOpen && (
                     <motion.div
@@ -30,12 +26,11 @@ export function GlobalRecorderManager() {
                         <Button
                             onClick={() => openImmersive()}
                             size="lg"
-                            className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-emerald-400 hover:from-primary/90 hover:to-emerald-400/90 text-black shadow-[0_0_20px_rgba(0,212,170,0.4)] hover:shadow-[0_0_35px_rgba(0,212,170,0.6)] transition-all duration-300 hover:scale-110 flex items-center justify-center p-0"
+                            className="h-14 w-14 rounded-full bg-gray-900 hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center p-0 border border-gray-700"
                         >
-                            <Mic className="w-8 h-8" />
-                            {/* Pulse effect if recording is handled in background? (Not yet implemented fully but placeholder) */}
+                            <Mic className="w-6 h-6" />
                             {isRecording && (
-                                <span className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-75"></span>
+                                <span className="absolute inset-0 rounded-full animate-ping bg-gray-600 opacity-75"></span>
                             )}
                         </Button>
                     </motion.div>

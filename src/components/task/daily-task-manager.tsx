@@ -20,7 +20,6 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
     const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
     const [isPending, startTransition] = useTransition();
 
-    // selectedDateをメモ化して、日付部分だけを比較
     const normalizedDate = useMemo(() => {
         const date = selectedDate || new Date();
         return startOfDay(date);
@@ -43,12 +42,11 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
         }
     };
 
-    // 選択された日付のタスクをフィルタリング
     const tasks = useMemo(() => {
         if (!normalizedDate) return [];
         const dayStart = startOfDay(normalizedDate);
         const dayEnd = endOfDay(normalizedDate);
-        
+
         return allTasks.filter((task: any) => {
             if (!task.dueDate) return false;
             const dueDate = new Date(task.dueDate);
@@ -91,7 +89,6 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
     const pendingTasks = filteredTasks.filter(t => t.status !== 'completed' && t.status !== 'approved');
     const completedTasks = filteredTasks.filter(t => t.status === 'completed' || t.status === 'approved');
 
-    // 今日のタスクを取得
     const todayTasks = useMemo(() => {
         return allTasks.filter((task: any) => {
             if (!task.dueDate) return false;
@@ -105,13 +102,13 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
 
     if (isLoading) {
         return (
-            <Card className="glass border-white/10 bg-black/40">
+            <Card className="border-gray-200">
                 <CardHeader>
-                    <CardTitle className="text-white">日々のタスク管理</CardTitle>
+                    <CardTitle className="text-gray-900">日々のタスク管理</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-200 border-t-gray-600"></div>
                     </div>
                 </CardContent>
             </Card>
@@ -119,26 +116,26 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
     }
 
     return (
-        <Card className="glass border-white/10 bg-black/40">
+        <Card className="border-gray-200">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                    <Calendar className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <Calendar className="h-5 w-5 text-gray-600" />
                     日々のタスク管理
                 </CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardDescription className="text-gray-500">
                     {format(normalizedDate || new Date(), 'yyyy年M月d日 (EEEE)', { locale: ja })}のタスク
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* 今日のタスクセクション */}
                 {isToday(normalizedDate) && (
-                    <div className="space-y-3 pb-4 border-b border-white/10">
-                        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-primary" />
+                    <div className="space-y-3 pb-4 border-b border-gray-100">
+                        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-gray-500" />
                             今日のタスク ({todayTasks.length})
                         </h3>
                         {todayTasks.length === 0 ? (
-                            <p className="text-xs text-gray-500">今日のタスクはありません</p>
+                            <p className="text-xs text-gray-400">今日のタスクはありません</p>
                         ) : (
                             <div className="space-y-2">
                                 {todayPendingTasks.length > 0 && (
@@ -146,11 +143,11 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                         {todayPendingTasks.map((task: any) => (
                                             <div
                                                 key={task.id}
-                                                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                                                className="p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <h4 className="text-sm font-medium text-white">{task.title}</h4>
+                                                        <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
                                                     </div>
                                                     <Button
                                                         variant="ghost"
@@ -159,7 +156,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                                         disabled={isPending}
                                                         className="h-6 w-6 p-0"
                                                     >
-                                                        <CheckSquare className="h-3 w-3" />
+                                                        <CheckSquare className="h-3.5 w-3.5 text-gray-400" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -171,11 +168,11 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                         {todayCompletedTasks.map((task: any) => (
                                             <div
                                                 key={task.id}
-                                                className="p-2 rounded-lg border border-white/10 bg-white/5 line-through"
+                                                className="p-3 rounded-lg border border-gray-200 bg-gray-50"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <h4 className="text-sm font-medium text-white">{task.title}</h4>
+                                                        <h4 className="text-sm font-medium text-gray-500 line-through">{task.title}</h4>
                                                     </div>
                                                     <Button
                                                         variant="ghost"
@@ -184,7 +181,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                                         disabled={isPending}
                                                         className="h-6 w-6 p-0"
                                                     >
-                                                        <CheckSquare className="h-3 w-3 text-green-400" />
+                                                        <CheckSquare className="h-3.5 w-3.5 text-green-500" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -199,15 +196,15 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                 {/* 選択日付のタスクセクション */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-white">
+                        <h3 className="text-sm font-medium text-gray-700">
                             {getDateLabel()}のタスク
                         </h3>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                             <Button
                                 variant={filter === 'all' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setFilter('all')}
-                                className="h-7 text-xs"
+                                className={`h-7 text-xs px-2 ${filter === 'all' ? 'bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}
                             >
                                 すべて
                             </Button>
@@ -215,7 +212,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                 variant={filter === 'pending' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setFilter('pending')}
-                                className="h-7 text-xs"
+                                className={`h-7 text-xs px-2 ${filter === 'pending' ? 'bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}
                             >
                                 未完了
                             </Button>
@@ -223,7 +220,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                 variant={filter === 'completed' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setFilter('completed')}
-                                className="h-7 text-xs"
+                                className={`h-7 text-xs px-2 ${filter === 'completed' ? 'bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}
                             >
                                 完了
                             </Button>
@@ -231,29 +228,29 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                     </div>
 
                     {filteredTasks.length === 0 ? (
-                        <div className="text-center py-6 text-gray-500">
-                            <CheckSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <div className="text-center py-6 text-gray-400">
+                            <CheckSquare className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                             <p className="text-sm">{getDateLabel()}のタスクはありません</p>
                         </div>
                     ) : (
                         <>
                             {pendingTasks.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="text-xs font-semibold text-gray-400 flex items-center gap-2">
-                                        <Clock className="h-3 w-3 text-yellow-400" />
+                                    <h4 className="text-xs font-medium text-gray-500 flex items-center gap-2">
+                                        <Clock className="h-3 w-3 text-yellow-500" />
                                         未完了 ({pendingTasks.length})
                                     </h4>
                                     <div className="space-y-1.5">
                                         {pendingTasks.map((task) => (
                                             <div
                                                 key={task.id}
-                                                className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                                                className="p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <h4 className="text-sm font-medium text-white">{task.title}</h4>
+                                                        <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
                                                         {task.description && (
-                                                            <p className="text-xs text-gray-400 mt-1">{task.description}</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{task.description}</p>
                                                         )}
                                                     </div>
                                                     <Button
@@ -263,7 +260,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                                         disabled={isPending}
                                                         className="h-6 w-6 p-0"
                                                     >
-                                                        <CheckSquare className="h-3 w-3" />
+                                                        <CheckSquare className="h-3.5 w-3.5 text-gray-400" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -273,21 +270,21 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                             )}
                             {completedTasks.length > 0 && (
                                 <div className="space-y-2">
-                                    <h4 className="text-xs font-semibold text-gray-400 flex items-center gap-2">
-                                        <CheckSquare className="h-3 w-3 text-green-400" />
+                                    <h4 className="text-xs font-medium text-gray-500 flex items-center gap-2">
+                                        <CheckSquare className="h-3 w-3 text-green-500" />
                                         完了 ({completedTasks.length})
                                     </h4>
                                     <div className="space-y-1.5 opacity-60">
                                         {completedTasks.map((task) => (
                                             <div
                                                 key={task.id}
-                                                className="p-2 rounded-lg border border-white/10 bg-white/5 line-through"
+                                                className="p-3 rounded-lg border border-gray-200 bg-gray-50"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <h4 className="text-sm font-medium text-white">{task.title}</h4>
+                                                        <h4 className="text-sm font-medium text-gray-500 line-through">{task.title}</h4>
                                                         {task.description && (
-                                                            <p className="text-xs text-gray-400 mt-1">{task.description}</p>
+                                                            <p className="text-xs text-gray-400 mt-1 line-through">{task.description}</p>
                                                         )}
                                                     </div>
                                                     <Button
@@ -297,7 +294,7 @@ export function DailyTaskManager({ selectedDate }: DailyTaskManagerProps) {
                                                         disabled={isPending}
                                                         className="h-6 w-6 p-0"
                                                     >
-                                                        <CheckSquare className="h-3 w-3 text-green-400" />
+                                                        <CheckSquare className="h-3.5 w-3.5 text-green-500" />
                                                     </Button>
                                                 </div>
                                             </div>

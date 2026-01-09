@@ -15,8 +15,8 @@ export default async function TasksPage() {
         <div className="p-8 h-[calc(100vh-theme(spacing.16))] flex flex-col">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">タスク管理</h1>
-                    <p className="text-gray-400">タスクをドラッグ&ドロップで移動できます</p>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">タスク管理</h1>
+                    <p className="text-gray-500 text-sm">タスクをドラッグ&ドロップで移動できます</p>
                 </div>
                 <CreateTaskDialog />
             </div>

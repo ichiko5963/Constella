@@ -47,7 +47,7 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
         if (!normalizedDate) return [];
         const dayStart = startOfDay(normalizedDate);
         const dayEnd = endOfDay(normalizedDate);
-        
+
         return allTasks.filter((task: any) => {
             if (!task.dueDate) return false;
             const dueDate = new Date(task.dueDate);
@@ -103,30 +103,30 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
 
     if (isLoading) {
         return (
-            <div className="w-80 h-full border-r border-white/10 bg-black/20 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <div className="w-80 h-full border-r border-gray-200 bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-200 border-t-gray-600"></div>
             </div>
         );
     }
 
     return (
-        <div className="w-80 h-full border-r border-white/10 bg-black/20 flex flex-col">
-            <div className="p-4 border-b border-white/10">
+        <div className="w-80 h-full border-r border-gray-200 bg-gray-50 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
-                    <CheckSquare className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-bold text-white">タスク管理</h2>
+                    <CheckSquare className="h-5 w-5 text-gray-700" />
+                    <h2 className="text-lg font-semibold text-gray-900">タスク管理</h2>
                 </div>
-                
+
                 {/* 今日のタスクサマリー */}
                 {isToday(normalizedDate) && todayTasks.length > 0 && (
-                    <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="mb-4 p-3 rounded-lg bg-white border border-gray-200">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-semibold text-white">今日のタスク</span>
-                            <span className="text-xs text-gray-400">{todayTasks.length}件</span>
+                            <span className="text-sm font-medium text-gray-900">今日のタスク</span>
+                            <span className="text-xs text-gray-500">{todayTasks.length}件</span>
                         </div>
-                        <div className="flex gap-2 text-xs">
-                            <span className="text-yellow-400">未完了: {todayPendingTasks.length}</span>
-                            <span className="text-green-400">完了: {todayCompletedTasks.length}</span>
+                        <div className="flex gap-3 text-xs">
+                            <span className="text-yellow-600">未完了: {todayPendingTasks.length}</span>
+                            <span className="text-green-600">完了: {todayCompletedTasks.length}</span>
                         </div>
                     </div>
                 )}
@@ -137,7 +137,7 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
                         variant={filter === 'all' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setFilter('all')}
-                        className="h-7 text-xs px-2"
+                        className={`h-7 text-xs px-2 ${filter === 'all' ? 'bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}
                     >
                         すべて
                     </Button>
@@ -145,7 +145,7 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
                         variant={filter === 'pending' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setFilter('pending')}
-                        className="h-7 text-xs px-2"
+                        className={`h-7 text-xs px-2 ${filter === 'pending' ? 'bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}
                     >
                         未完了
                     </Button>
@@ -153,7 +153,7 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
                         variant={filter === 'completed' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setFilter('completed')}
-                        className="h-7 text-xs px-2"
+                        className={`h-7 text-xs px-2 ${filter === 'completed' ? 'bg-gray-900 text-white' : 'border-gray-200 text-gray-600'}`}
                     >
                         完了
                     </Button>
@@ -163,14 +163,14 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {/* 選択日付のタスク */}
                 <div>
-                    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
                         {getDateLabel()}のタスク ({tasks.length})
                     </h3>
 
                     {filteredTasks.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            <CheckSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <div className="text-center py-8 text-gray-400">
+                            <CheckSquare className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                             <p className="text-xs">{getDateLabel()}のタスクはありません</p>
                         </div>
                     ) : (
@@ -180,17 +180,17 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
                                     {pendingTasks.map((task) => (
                                         <div
                                             key={task.id}
-                                            className="p-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                                            className="p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                                             onClick={() => handleToggleComplete(task.id, task.status)}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-sm font-medium text-white truncate">{task.title}</h4>
+                                                    <h4 className="text-sm font-medium text-gray-900 truncate">{task.title}</h4>
                                                     {task.description && (
-                                                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+                                                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{task.description}</p>
                                                     )}
                                                 </div>
-                                                <CheckSquare className="h-4 w-4 text-gray-400 ml-2 flex-shrink-0" />
+                                                <CheckSquare className="h-4 w-4 text-gray-300 ml-2 flex-shrink-0" />
                                             </div>
                                         </div>
                                     ))}
@@ -201,14 +201,14 @@ export function TaskSidebar({ selectedDate }: TaskSidebarProps) {
                                     {completedTasks.map((task) => (
                                         <div
                                             key={task.id}
-                                            className="p-2 rounded-lg border border-white/10 bg-white/5 line-through cursor-pointer"
+                                            className="p-3 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer"
                                             onClick={() => handleToggleComplete(task.id, task.status)}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-sm font-medium text-white truncate">{task.title}</h4>
+                                                    <h4 className="text-sm font-medium text-gray-500 truncate line-through">{task.title}</h4>
                                                 </div>
-                                                <CheckSquare className="h-4 w-4 text-green-400 ml-2 flex-shrink-0" />
+                                                <CheckSquare className="h-4 w-4 text-green-500 ml-2 flex-shrink-0" />
                                             </div>
                                         </div>
                                     ))}

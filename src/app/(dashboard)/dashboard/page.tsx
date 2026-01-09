@@ -74,11 +74,11 @@ export default async function DashboardPage() {
         <div className="space-y-10 max-w-7xl mx-auto">
             {/* Hero Section - Clean White Design */}
             <div className="space-y-3">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
-                    おかえりなさい、{session.user.name?.split(' ')[0]}
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
+                    今日はどんな物語を聞かせてくれますか？
                 </h1>
-                <p className="text-gray-500 max-w-xl text-lg">
-                    あなたの思考を星のように記録し、意味のある星座へと繋げましょう。
+                <p className="text-gray-500 max-w-xl text-base">
+                    あなたの思考を星として記録し、意味のある星座へと繋げましょう。
                 </p>
             </div>
 

@@ -1,17 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Upload, Play, Loader2, ArrowLeft, Maximize2, Minimize2, X } from 'lucide-react';
+import { Mic, Square, Loader2, X, Star } from 'lucide-react';
 import { toast } from 'sonner';
-import { createRecordingUploadUrl, updateRecordingStatus } from '@/server/actions/recording';
-import { processRecording } from '@/server/actions/process-audio';
 import { useRouter } from 'next/navigation';
-import { AuroraVisualizer } from './aurora-visualizer';
-import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
+import { StarryVisualizer } from './starry-visualizer';
+import { motion } from 'framer-motion';
 import { useRecording } from '@/lib/recording-context';
-import { normalizeAudioFormat } from '@/lib/audio-converter';
 
 export function AudioRecorder({ projectId }: { projectId?: number }) {
     const { isImmersiveOpen, closeImmersive, activeProjectId } = useRecording();
@@ -21,31 +17,23 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
     const [elapsedTime, setElapsedTime] = useState(0);
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [isConverting, setIsConverting] = useState(false);
-    const [conversionProgress, setConversionProgress] = useState(0);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    // Audio Context for Visualizer
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
-    // State to trigger re-render for visualizer to pick up analyser
     const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
 
     const router = useRouter();
-
-    // Auto-start visualizer when immersive opens if recording/blob exists? 
-    // Or just rely on user interaction.
-    // Ideally, if the user opens the recorder, they want to record.
 
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            // Setup Audio Context & Analyser
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             audioContextRef.current = new AudioContextClass();
             analyserRef.current = audioContextRef.current.createAnalyser();
@@ -66,47 +54,25 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
 
             mediaRecorderRef.current.onstop = async () => {
                 const originalBlob = new Blob(chunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
-                
-                // Stop audio context streams to save resources
+
                 if (stream) stream.getTracks().forEach(track => track.stop());
                 if (audioContextRef.current) audioContextRef.current.close();
                 setAnalyser(null);
 
-                // Safari問題対応: 音声フォーマットを正規化
-                try {
-                    setIsConverting(true);
-                    setConversionProgress(0);
-                    
-                    const normalizedBlob = await normalizeAudioFormat(
-                        originalBlob,
-                        'wav',
-                        (progress) => setConversionProgress(progress)
-                    );
-                    
-                    setAudioBlob(normalizedBlob);
-                    toast.success('音声フォーマットを正規化しました');
-                } catch (error) {
-                    console.error('Audio conversion failed:', error);
-                    // 変換に失敗した場合は元のBlobを使用
-                    setAudioBlob(originalBlob);
-                    toast.warning('音声フォーマットの変換に失敗しました。元の形式でアップロードします。');
-                } finally {
-                    setIsConverting(false);
-                    setConversionProgress(0);
-                }
+                setAudioBlob(originalBlob);
+                toast.success('録音が完了しました');
             };
 
             mediaRecorderRef.current.start();
             setIsRecording(true);
 
-            // Timer
             const startTime = Date.now();
             timerRef.current = setInterval(() => {
                 setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
             }, 1000);
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            toast.error('Cannot access microphone. Please check permissions.');
+            toast.error('マイクにアクセスできません。権限を確認してください。');
         }
     };
 
@@ -126,41 +92,85 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
         setAudioBlob(null);
         setElapsedTime(0);
         if (timerRef.current) clearInterval(timerRef.current);
-        toast.info('Recording cancelled');
+        toast.info('録音がキャンセルされました');
     };
 
     const handleUpload = async () => {
         if (!audioBlob) return;
         setIsUploading(true);
+        setUploadProgress(0);
 
         try {
-            // Pass effectiveProjectId (can be undefined)
-            const result = await createRecordingUploadUrl(effectiveProjectId, audioBlob.type);
+            // Use server-side upload to avoid CORS issues
+            const formData = new FormData();
 
-            if (!result.success || !result.url) {
-                throw new Error(result.error || 'Failed to get upload URL');
+            // Create a file from blob with proper extension
+            const mimeType = audioBlob.type || 'audio/webm';
+            const extension = mimeType.split('/')[1] || 'webm';
+            const file = new File([audioBlob], `recording.${extension}`, { type: mimeType });
+
+            formData.append('file', file);
+            if (effectiveProjectId) {
+                formData.append('projectId', effectiveProjectId.toString());
             }
 
-            await fetch(result.url, {
-                method: 'PUT',
-                body: audioBlob,
-                headers: { 'Content-Type': audioBlob.type },
+            // Upload via server API with progress tracking
+            const xhr = new XMLHttpRequest();
+
+            const result = await new Promise<{ success: boolean; recordingId?: number; error?: string }>((resolve, reject) => {
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        setUploadProgress((e.loaded / e.total) * 100);
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            resolve(response);
+                        } catch {
+                            reject(new Error('レスポンスの解析に失敗しました'));
+                        }
+                    } else {
+                        try {
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            reject(new Error(errorResponse.error || `アップロード失敗 (${xhr.status})`));
+                        } catch {
+                            reject(new Error(`アップロード失敗 (${xhr.status})`));
+                        }
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    reject(new Error('ネットワークエラーが発生しました'));
+                });
+
+                xhr.addEventListener('abort', () => {
+                    reject(new Error('アップロードが中断されました'));
+                });
+
+                xhr.open('POST', '/api/recordings/upload');
+                xhr.send(formData);
             });
 
-            await updateRecordingStatus(result.recordingId!, 'transcribing');
+            if (!result.success || !result.recordingId) {
+                throw new Error(result.error || 'アップロードに失敗しました');
+            }
 
-            processRecording(result.recordingId!).catch(console.error);
-
-            toast.success('Upload complete! Processing in background.');
+            toast.success('アップロード完了！文字起こし中...');
             closeImmersive();
+            setAudioBlob(null);
+            setElapsedTime(0);
             router.refresh();
             router.push(`/recordings/${result.recordingId}`);
 
         } catch (error) {
             console.error('Upload failed:', error);
-            toast.error('Upload failed: ' + error); // Show specific error
+            toast.error(error instanceof Error ? error.message : 'アップロードに失敗しました');
         } finally {
             setIsUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -170,7 +180,6 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // If not open, don't render anything (global instance)
     if (!isImmersiveOpen) return null;
 
     return (
@@ -178,9 +187,9 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#020205] via-[#050510] to-[#0a101f] text-white overflow-hidden"
+            className="fixed inset-0 z-[9999] bg-gray-900 text-white overflow-hidden"
         >
-            <AuroraVisualizer analyser={analyser} />
+            <StarryVisualizer analyser={analyser} />
 
             {/* UI Layer */}
             <div className="absolute inset-0 z-20 flex flex-col justify-between p-8 md:p-12 pointer-events-none">
@@ -188,13 +197,14 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                 <div className="flex justify-between items-start pointer-events-auto">
                     <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse shadow-[0_0_10px_#EF4444]' : 'bg-primary shadow-[0_0_10px_#00D4AA]'}`} />
-                            <h2 className="text-xs font-mono text-primary tracking-[0.3em] uppercase opacity-80">
-                                {isRecording ? 'Recording Active' : 'System Ready'}
+                            <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-white animate-pulse shadow-[0_0_10px_#fff]' : 'bg-white/60'}`} />
+                            <h2 className="text-xs font-medium text-white/80 tracking-[0.3em] uppercase">
+                                {isRecording ? 'Recording Active' : isUploading ? 'Uploading...' : 'System Ready'}
                             </h2>
                         </div>
-                        <p className="text-white/40 text-[10px] tracking-widest uppercase font-light">
-                            {effectiveProjectId ? `Project ID: ${effectiveProjectId}` : 'Quick Memo Mode'}
+                        <p className="text-white/40 text-[10px] tracking-widest uppercase font-light flex items-center gap-2">
+                            <Star className="w-3 h-3" />
+                            {effectiveProjectId ? `Stella ID: ${effectiveProjectId}` : 'Quick Memo Mode'}
                         </p>
                     </div>
 
@@ -209,8 +219,9 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                             }
                             closeImmersive();
                         }}
-                        className="rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-md border border-white/5 w-12 h-12 cursor-pointer z-50"
+                        className="rounded-full bg-white/5 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-md border border-white/10 w-12 h-12 cursor-pointer z-50"
                         type="button"
+                        disabled={isUploading}
                     >
                         <X className="w-6 h-6 pointer-events-none" />
                     </Button>
@@ -228,8 +239,12 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
 
                     {/* Actions */}
                     <div className="flex items-center gap-6">
-                        {!isRecording && !audioBlob && (
-                            <Button onClick={startRecording} className="start-btn h-24 px-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 backdrop-blur-md text-white tracking-[0.2em] uppercase transition-all duration-500 hover:scale-105 hover:border-primary/50 hover:shadow-[0_0_40px_rgba(200,162,200,0.3)] text-lg font-light">
+                        {!isRecording && !audioBlob && !isUploading && (
+                            <Button
+                                onClick={startRecording}
+                                className="start-btn h-24 px-12 rounded-full bg-white/5 border border-white/20 hover:bg-white/10 backdrop-blur-md text-white tracking-[0.2em] uppercase transition-all duration-500 hover:scale-105 hover:border-white/40 hover:shadow-[0_0_40px_rgba(255,255,255,0.15)] text-lg font-light"
+                            >
+                                <Mic className="w-5 h-5 mr-3" />
                                 録音をする
                             </Button>
                         )}
@@ -247,49 +262,48 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
 
                                 <Button
                                     onClick={stopRecording}
-                                    className="h-24 w-24 rounded-full bg-red-500/10 border border-red-500/50 hover:bg-red-500/20 text-red-400 backdrop-blur-md transition-all duration-300 hover:scale-110 flex items-center justify-center group shadow-[0_0_40px_rgba(239,68,68,0.2)]"
+                                    className="h-24 w-24 rounded-full bg-white/10 border border-white/30 hover:bg-white/20 text-white backdrop-blur-md transition-all duration-300 hover:scale-110 flex items-center justify-center group shadow-[0_0_40px_rgba(255,255,255,0.1)]"
                                 >
-                                    <Square className="w-8 h-8 fill-current group-hover:drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                                    <Square className="w-8 h-8 fill-current group-hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                                 </Button>
                             </div>
                         )}
 
-                        {isConverting && (
+                        {isUploading && (
                             <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
-                                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                                <Loader2 className="w-12 h-12 animate-spin text-white" />
                                 <div className="text-center space-y-2">
-                                    <p className="text-white/80 text-sm tracking-widest uppercase">音声フォーマットを変換中...</p>
+                                    <p className="text-white/80 text-sm tracking-widest uppercase">アップロード中...</p>
                                     <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-primary transition-all duration-300"
-                                            style={{ width: `${conversionProgress * 100}%` }}
+                                        <div
+                                            className="h-full bg-white transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
                                         />
                                     </div>
-                                    <p className="text-white/40 text-xs">{(conversionProgress * 100).toFixed(0)}%</p>
+                                    <p className="text-white/40 text-xs">{uploadProgress.toFixed(0)}%</p>
                                 </div>
                             </div>
                         )}
 
-                        {audioBlob && !isConverting && (
+                        {audioBlob && !isUploading && (
                             <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-300">
                                 <div className="flex gap-6">
                                     <Button
                                         variant="outline"
                                         onClick={() => { setAudioBlob(null); setElapsedTime(0); startRecording(); }}
-                                        className="h-14 px-8 border-white/10 text-gray-400 hover:text-white hover:bg-white/5 rounded-full uppercase tracking-widest text-xs"
+                                        className="h-14 px-8 border-white/20 text-white/60 hover:text-white hover:bg-white/5 rounded-full uppercase tracking-widest text-xs bg-transparent"
                                     >
-                                        Retry
+                                        再録音
                                     </Button>
                                     <Button
                                         onClick={handleUpload}
                                         disabled={isUploading}
-                                        className="h-14 px-10 bg-primary hover:bg-primary/90 text-black font-bold rounded-full uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(0,212,170,0.4)] hover:shadow-[0_0_35px_rgba(0,212,170,0.6)] transition-all duration-300"
+                                        className="h-14 px-10 bg-white hover:bg-white/90 text-gray-900 font-bold rounded-full uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.5)] transition-all duration-300"
                                     >
-                                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                        {isUploading ? 'Processing...' : 'Process'}
+                                        処理開始
                                     </Button>
                                 </div>
-                                <p className="text-white/40 text-[10px] tracking-widest uppercase">Review content before processing</p>
+                                <p className="text-white/40 text-[10px] tracking-widest uppercase">文字起こしと議事録を生成します</p>
                             </div>
                         )}
                     </div>
@@ -299,10 +313,11 @@ export function AudioRecorder({ projectId }: { projectId?: number }) {
                 <div className="flex justify-between items-end text-[10px] text-white/20 font-mono tracking-widest uppercase pointer-events-auto">
                     <div>
                         <span className="block">Audio Stream: 48kHz</span>
-                        <span className="block">Encoding: WebM/Opus</span>
+                        <span className="block">Format: WebM/Opus</span>
                     </div>
-                    <div>
-                        Neural Engine: Ready
+                    <div className="flex items-center gap-2">
+                        <Star className="w-3 h-3" />
+                        Constella Recording Engine
                     </div>
                 </div>
             </div>

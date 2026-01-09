@@ -37,12 +37,12 @@ export function CalendarEventsList() {
     if (isLoading) {
         return (
             <Card>
-                <CardHeader>
-                    <CardTitle>今後の会議</CardTitle>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-gray-900">今後の会議</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-200 border-t-gray-600"></div>
                     </div>
                 </CardContent>
             </Card>
@@ -51,34 +51,34 @@ export function CalendarEventsList() {
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                    <Calendar className="h-4 w-4 text-gray-600" />
                     今後の会議
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs text-gray-500">
                     カレンダーから同期された会議イベント
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 {upcomingEvents.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                        <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>今後の会議はありません</p>
+                    <div className="text-center py-8 text-gray-400">
+                        <Calendar className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                        <p className="text-sm">今後の会議はありません</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {upcomingEvents.map((event) => (
                             <div
                                 key={event.id}
-                                className="p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                                className="p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors"
                             >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1 space-y-2">
-                                        <h3 className="font-semibold text-white">{event.title}</h3>
-                                        <div className="flex flex-col gap-1 text-sm text-gray-400">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4" />
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 space-y-1.5 min-w-0">
+                                        <h3 className="font-medium text-gray-900 text-sm truncate">{event.title}</h3>
+                                        <div className="flex flex-col gap-1 text-xs text-gray-500">
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className="h-3.5 w-3.5" />
                                                 <span>
                                                     {new Date(event.startTime).toLocaleString('ja-JP', {
                                                         month: 'short',
@@ -89,20 +89,20 @@ export function CalendarEventsList() {
                                                 </span>
                                             </div>
                                             {event.location && (
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="h-4 w-4" />
-                                                    <span>{event.location}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <MapPin className="h-3.5 w-3.5" />
+                                                    <span className="truncate">{event.location}</span>
                                                 </div>
                                             )}
                                             {event.attendees && (
-                                                <div className="flex items-center gap-2">
-                                                    <Users className="h-4 w-4" />
+                                                <div className="flex items-center gap-1.5">
+                                                    <Users className="h-3.5 w-3.5" />
                                                     <span>{JSON.parse(event.attendees).length}名</span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
+                                    <div className="flex flex-col items-end gap-1.5 shrink-0">
                                         {event.meetingLink && (
                                             <AutoJoinButton
                                                 eventId={event.id}
@@ -118,9 +118,9 @@ export function CalendarEventsList() {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => window.open(event.meetingLink!, '_blank')}
-                                                className="flex items-center gap-2"
+                                                className="flex items-center gap-1.5 h-7 text-xs border-gray-200 text-gray-600 hover:bg-gray-100"
                                             >
-                                                <Video className="h-4 w-4" />
+                                                <Video className="h-3.5 w-3.5" />
                                                 参加
                                             </Button>
                                         )}
@@ -132,7 +132,7 @@ export function CalendarEventsList() {
                 )}
             </CardContent>
             {/* カレンダー連携ボタン */}
-            <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+            <div className="px-6 pb-4 pt-2 border-t border-gray-100 space-y-2">
                 <CalendarIntegrationButtons />
             </div>
         </Card>
@@ -176,7 +176,7 @@ function CalendarIntegrationButtons() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-200 border-t-gray-500"></div>
             </div>
         );
     }
@@ -186,31 +186,31 @@ function CalendarIntegrationButtons() {
             {/* Google Calendar連携 */}
             <Button
                 onClick={handleConnectGoogle}
-                variant={googleIntegration ? "outline" : "default"}
+                variant="outline"
                 size="sm"
-                className={`w-full justify-start ${
-                    googleIntegration 
-                        ? "border-green-500/30 text-green-400 hover:bg-green-500/10" 
-                        : "bg-primary text-black hover:bg-primary/90"
+                className={`w-full justify-start text-xs h-8 ${
+                    googleIntegration
+                        ? "border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
+                        : "border-gray-200 text-gray-700 hover:bg-gray-100"
                 }`}
             >
-                <Calendar className="h-4 w-4 mr-2" />
-                {googleIntegration ? 'Googleカレンダー連携済み' : 'Googleカレンダーと連携'}
+                <Calendar className="h-3.5 w-3.5 mr-2" />
+                {googleIntegration ? 'Google連携済み' : 'Googleカレンダー'}
             </Button>
 
             {/* Zoom連携 */}
             <Button
                 onClick={handleConnectZoom}
-                variant={zoomIntegration ? "outline" : "default"}
+                variant="outline"
                 size="sm"
-                className={`w-full justify-start ${
-                    zoomIntegration 
-                        ? "border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 dark:hover:bg-blue-500/10" 
-                        : "bg-blue-600 text-white hover:bg-blue-700"
+                className={`w-full justify-start text-xs h-8 ${
+                    zoomIntegration
+                        ? "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100"
+                        : "border-gray-200 text-gray-700 hover:bg-gray-100"
                 }`}
             >
-                <Video className="h-4 w-4 mr-2" />
-                {zoomIntegration ? 'Zoom連携済み' : 'Zoomと連携'}
+                <Video className="h-3.5 w-3.5 mr-2" />
+                {zoomIntegration ? 'Zoom連携済み' : 'Zoom'}
             </Button>
         </div>
     );

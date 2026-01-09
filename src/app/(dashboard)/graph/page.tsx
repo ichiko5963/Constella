@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getProjectGraph } from '@/server/actions/graph';
 import { toast } from 'sonner';
+import { Network } from 'lucide-react';
 
 interface Project {
   id: number;
@@ -95,7 +96,7 @@ export default function GraphPage() {
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-muted-foreground">
-              <div className="text-4xl mb-4">📊</div>
+              <Network className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <div>プロジェクトを選択してグラフを表示</div>
             </div>
           </div>

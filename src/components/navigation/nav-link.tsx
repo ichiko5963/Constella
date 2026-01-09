@@ -22,7 +22,6 @@ export function NavLink({ href, children, className = '', onClick }: NavLinkProp
         if (onClick) {
             onClick();
         }
-        // 即座に遷移
         router.push(href);
     };
 
@@ -31,10 +30,9 @@ export function NavLink({ href, children, className = '', onClick }: NavLinkProp
             href={href}
             onClick={handleClick}
             prefetch={true}
-            className={`${className} ${isActive ? 'bg-white/10 text-white' : ''}`}
+            className={`${className} ${isActive ? 'bg-gray-200 text-gray-900' : ''}`}
         >
             {children}
         </Link>
     );
 }
-

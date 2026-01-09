@@ -68,7 +68,8 @@ export const files = sqliteTable("file", {
     projectId: integer("projectId").notNull().references(() => projects.id),
     name: text("name").notNull(),
     description: text("description"),
-    fileType: text("fileType").default('meeting_notes'), // enum not natively supported in sqlite the same way, using text
+    content: text("content"), // ノートやMarkdownの本文
+    fileType: text("fileType").default('meeting_notes'), // folder, note, markdown, meeting_notes
     parentFileId: integer("parentFileId"), // for nesting if implemented via adjacency list
     aiGenerated: integer("aiGenerated", { mode: "boolean" }).default(false),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false),

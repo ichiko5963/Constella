@@ -249,3 +249,69 @@ export async function revokeShareToken(noteId: number): Promise<{ success: boole
     }
 }
 
+/**
+ * ノート（テキストファイル）を作成
+ */
+export async function createNote(
+    projectId: number,
+    title: string,
+    content: string,
+    parentFileId?: number | null
+): Promise<{ success: boolean; fileId?: number; error?: string }> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return { success: false, error: 'Unauthorized' };
+    }
+
+    try {
+        const [inserted] = await db.insert(files).values({
+            userId: session.user.id,
+            projectId,
+            name: title,
+            fileType: 'note',
+            content: content,
+            parentFileId: parentFileId || null,
+        }).returning();
+
+        revalidatePath(`/projects/${projectId}`);
+        return { success: true, fileId: inserted.id };
+    } catch (error) {
+        console.error('Failed to create note:', error);
+        return { success: false, error: 'Failed to create note' };
+    }
+}
+
+/**
+ * Markdownファイルをインポート
+ */
+export async function importMarkdown(
+    projectId: number,
+    name: string,
+    content: string,
+    parentFileId?: number | null
+): Promise<{ success: boolean; fileId?: number; error?: string }> {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return { success: false, error: 'Unauthorized' };
+    }
+
+    try {
+        const [inserted] = await db.insert(files).values({
+            userId: session.user.id,
+            projectId,
+            name,
+            fileType: 'markdown',
+            content: content,
+            parentFileId: parentFileId || null,
+        }).returning();
+
+        revalidatePath(`/projects/${projectId}`);
+        return { success: true, fileId: inserted.id };
+    } catch (error) {
+        console.error('Failed to import markdown:', error);
+        return { success: false, error: 'Failed to import markdown' };
+    }
+}
+

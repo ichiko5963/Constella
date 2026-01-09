@@ -98,11 +98,28 @@ export function LumiChat({ projectId }: LumiChatProps) {
             });
 
             if (!chatResponse.ok) {
-                const errorData = await chatResponse.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Chat failed');
+                const errorText = await chatResponse.text().catch(() => '');
+                let errorMessage = 'Chat failed';
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    errorMessage = errorText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
-            const { text: lumiText, emotion } = await chatResponse.json();
+            const responseText = await chatResponse.text();
+            let lumiText = 'ごめん、うまく聞き取れなかった...';
+            let emotion = 'neutral';
+
+            try {
+                const data = JSON.parse(responseText);
+                lumiText = data.text || lumiText;
+                emotion = data.emotion || emotion;
+            } catch {
+                console.error('Failed to parse chat response:', responseText);
+            }
 
             const lumiMessage: Message = {
                 id: 'lumi-' + Date.now(),
@@ -264,11 +281,10 @@ export function LumiChat({ projectId }: LumiChatProps) {
         };
         setMessages([greetingMessage]);
 
-        // Start listening IMMEDIATELY - don't wait for TTS
         avatar.resetEmotionLock();
         avatar.onAiResponseFinalized(greeting, 'happy');
 
-        // Play TTS in background (non-blocking)
+        // Play TTS, then start listening after it ends (to avoid picking up Lumi's voice)
         fetch('/api/lumi/tts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -280,18 +296,33 @@ export function LumiChat({ projectId }: LumiChatProps) {
                 const audio = new Audio(audioUrl);
                 audio.playbackRate = 1.5;
                 audioElementRef.current = audio;
+                setIsSpeaking(true);
 
                 audio.onended = () => {
+                    setIsSpeaking(false);
                     URL.revokeObjectURL(audioUrl);
                     avatar.onExpressionEnd();
+                    // Start listening AFTER TTS ends
+                    if (isSessionActiveRef.current) startListening();
                 };
 
-                audio.play().catch(() => {});
-            }
-        }).catch(() => {});
+                audio.onerror = () => {
+                    setIsSpeaking(false);
+                    if (isSessionActiveRef.current) startListening();
+                };
 
-        // Start listening immediately
-        setTimeout(() => startListening(), 100);
+                audio.play().catch(() => {
+                    setIsSpeaking(false);
+                    if (isSessionActiveRef.current) startListening();
+                });
+            } else {
+                // TTS failed, start listening anyway
+                if (isSessionActiveRef.current) startListening();
+            }
+        }).catch(() => {
+            // TTS failed, start listening anyway
+            if (isSessionActiveRef.current) startListening();
+        });
     };
 
     const endSession = async () => {

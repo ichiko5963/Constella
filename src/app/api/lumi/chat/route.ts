@@ -79,10 +79,24 @@ export async function POST(req: NextRequest) {
             emotion: emotion,
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Lumi chat error:', error);
+        console.error('Error details:', error?.message, error?.status, error?.code);
+
+        // More specific error message
+        let errorMessage = 'Failed to process chat';
+        if (error?.status === 401) {
+            errorMessage = 'OpenAI API key invalid';
+        } else if (error?.status === 429) {
+            errorMessage = 'Rate limit exceeded';
+        } else if (error?.code === 'insufficient_quota') {
+            errorMessage = 'OpenAI quota exceeded';
+        } else if (error?.message) {
+            errorMessage = error.message;
+        }
+
         return NextResponse.json(
-            { error: 'Failed to process chat' },
+            { error: errorMessage },
             { status: 500 }
         );
     }
